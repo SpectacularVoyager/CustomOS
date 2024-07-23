@@ -71,3 +71,5 @@ void __attribute__((cdecl)) GDT_Load(GDTDescriptor* descriptor,uint16_t codeSegm
 void GDT_Initialize(){
 	GDT_Load(&g_GDTDescriptor,GDT_CODE_SEGMENT,GDT_DATA_SEGMENT);
 }
+
+

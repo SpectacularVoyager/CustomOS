@@ -2,6 +2,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include "gdt.h"
+#include "idt.h"
 #include "printf.h"
 #include "term.h"
 
@@ -25,6 +26,7 @@
 void kernel_main(void) 
 {
 	GDT_Initialize();
+	IDT_Initialize();
 	terminal_initialize();
 	terminal_setcolor(vga_entry_color(VGA_COLOR_GREEN,VGA_COLOR_BLACK));
 	printf("HELLO WORLD\n");

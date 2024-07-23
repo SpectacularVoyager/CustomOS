@@ -1,6 +1,7 @@
 ;;https://osdev.wiki/wiki/Multiboot1_Bare_Bones_with_NASM
 
 %include "src/gdt.asm"
+%include "src/idt.asm"
 MBALIGN  equ  1 << 0            ; align loaded modules on page boundaries
 MEMINFO  equ  1 << 1            ; provide memory map
 MBFLAGS  equ  MBALIGN | MEMINFO ; this is the Multiboot 'flag' field
