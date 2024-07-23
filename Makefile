@@ -15,10 +15,12 @@ boot:
 kernel:
 	@i686-elf-gcc -c $(SOURCE)/kernel.c -o $(OUT)/kernel.o -std=gnu99 -ffreestanding $(CFLAGS)
 	@i686-elf-gcc -c $(SOURCE)/printf.c -o $(OUT)/printf.o -std=gnu99 -ffreestanding $(CFLAGS)
+	@i686-elf-gcc -c $(SOURCE)/term.c -o $(OUT)/term.o -std=gnu99 -ffreestanding $(CFLAGS)
+	@i686-elf-gcc -c $(SOURCE)/gdt.c -o $(OUT)/gdt.o -std=gnu99 -ffreestanding $(CFLAGS)
 	@#i686-elf-g++ -c kernel.c++ -o kernel.o -ffreestanding -O2 -Wall -Wextra -fno-exceptions -fno-rtti
 
 link:
-	@i686-elf-gcc -T linker.ld -o $(ISO) -ffreestanding -O2 -nostdlib $(OUT)/boot.o $(OUT)/kernel.o $(OUT)/printf.o -lgcc
+	@i686-elf-gcc -T linker.ld -o $(ISO) -ffreestanding -O2 -nostdlib $(shell find -name '*.o') -lgcc
 
 build:
 	@grub-mkrescue -o iso.iso ISO

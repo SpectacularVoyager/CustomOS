@@ -1,8 +1,9 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include "term.c"
+#include "gdt.h"
 #include "printf.h"
+#include "term.h"
 
 /*
  * USE PRINTF from here
@@ -23,7 +24,9 @@
 
 void kernel_main(void) 
 {
+	GDT_Initialize();
 	terminal_initialize();
+	terminal_setcolor(vga_entry_color(VGA_COLOR_GREEN,VGA_COLOR_BLACK));
 	printf("HELLO WORLD\n");
 	printf("0x%x\n",100);
 }
