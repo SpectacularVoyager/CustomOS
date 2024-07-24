@@ -4,8 +4,9 @@
 #include "gdt.h"
 #include "idt.h"
 #include "isr.h"
-#include "printf.h"
+#include "stdio.h"
 #include "term.h"
+#include "io.h"
 
 /*
  * USE PRINTF from here
