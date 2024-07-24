@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include "gdt.h"
 #include "idt.h"
+#include "isr.h"
 #include "printf.h"
 #include "term.h"
 
@@ -27,8 +28,13 @@ void kernel_main(void)
 {
 	GDT_Initialize();
 	IDT_Initialize();
+	ISR_Initialize();
 	terminal_initialize();
 	terminal_setcolor(vga_entry_color(VGA_COLOR_GREEN,VGA_COLOR_BLACK));
 	printf("HELLO WORLD\n");
 	printf("0x%x\n",100);
+	__asm("int $0x2");
+	printf("HELLO WORLD\n");
+	__asm("int $0x3");
+	printf("HELLO WORLD\n");
 }
