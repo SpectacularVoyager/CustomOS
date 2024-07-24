@@ -31,3 +31,5 @@ void IRQ_ClearMask(uint8_t IRQline);
 
 uint16_t pic_GetIRR(void);
 uint16_t PIC_GetISR(void);
+
+void PIC_SendEOI(uint8_t irq);

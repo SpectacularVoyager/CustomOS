@@ -21,6 +21,8 @@ kernel:
 	@i686-elf-gcc -c $(SOURCE)/isr.c -o $(OUT)/isr.o -std=gnu99 -ffreestanding $(CFLAGS)
 	@i686-elf-gcc -c $(SOURCE)/pic.c -o $(OUT)/pic.o -std=gnu99 -ffreestanding $(CFLAGS)
 	@i686-elf-gcc -c $(SOURCE)/io.c -o $(OUT)/io.o -std=gnu99 -ffreestanding $(CFLAGS)
+	@i686-elf-gcc -c $(SOURCE)/irq.c -o $(OUT)/irq.o -std=gnu99 -ffreestanding $(CFLAGS)
+	@i686-elf-gcc -c $(SOURCE)/pit.c -o $(OUT)/pit.o -std=gnu99 -ffreestanding $(CFLAGS)
 	@#i686-elf-g++ -c kernel.c++ -o kernel.o -ffreestanding -O2 -Wall -Wextra -fno-exceptions -fno-rtti
 
 link:
