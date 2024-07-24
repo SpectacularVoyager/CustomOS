@@ -26,6 +26,8 @@ section .text
 global _start:function (_start.end - _start)
 _start:
 	mov esp, stack_top
+	push eax			;;GRUB DATA
+	push ebx			;;GRUB DATA
 	cli
 	extern kernel_main
 	call kernel_main
