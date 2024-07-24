@@ -26,8 +26,8 @@ void PIT_SetCount(unsigned count) {
 	EnableInterrupts();
 	return;
 }
-void PIT_Initialize(){
-    uint16_t divisor = PIT_FREQUENCY / 20;
+void PIT_Initialize(int freq){
+    uint16_t divisor = PIT_FREQUENCY / freq;
 	DisableInterrupts();
 	outb(PIT_PORT_MODE,PIT_SELECT_CHANNEL_0|PIT_ACCESS_HILOBYTE|PIT_MODE2);
     outb(PIT_PORT0, (uint8_t)(divisor & 0xFF));

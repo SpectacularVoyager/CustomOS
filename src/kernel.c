@@ -8,7 +8,8 @@
 #include "term.h"
 #include "irq.h"
 #include "io.h"
-#include "pit.h"
+#include "drivers/timer.h"
+#include "drivers/keyboard.h"
 
 /*
  * USE PRINTF from here
@@ -25,10 +26,6 @@
 #if !defined(__i386__)
 #error "This tutorial needs to be compiled with a ix86-elf compiler"
 #endif
-int __count__=0;
-void TimerHandler(Registers* r){
-	//printf("INT %d\n",__count__++);	
-}
 
 void kernel_main(void) 
 {
@@ -39,12 +36,13 @@ void kernel_main(void)
 	IRQ_Initialize();
 	terminal_initialize();
 	terminal_setcolor(vga_entry_color(VGA_COLOR_GREEN,VGA_COLOR_BLACK));
-	PIT_Initialize();
-	IRQ_RegisterHandler(0,TimerHandler);
+	Keyboard_Install();
+	TimerInitialize();
 	EnableInterrupts();
-	__asm__ __volatile__("sti");
 	printf("HELLO WORLD\n");
+	sleepf(0.5);
 	printf("0x%x\n",100);
 	printf("HELLO WORLD\n");
+	while(1);
 	while(1);
 }

@@ -26,7 +26,7 @@
 #define PIT_BCD					0x1
 
 #define PIT_FREQUENCY 1193182
-void PIT_Initialize();
+void PIT_Initialize(int freq);
 
 //1 to 3       Operating mode :
 //                0 0 0 = Mode 0 (interrupt on terminal count)
