@@ -14,6 +14,16 @@ inb:
     in al, dx
     ret
 
+global EnableInterrupts
+EnableInterrupts:
+	sti
+    ret
+
+global DisableInterrupts
+DisableInterrupts:
+	cli
+    ret
+
 global Panic
 Panic:
     cli
