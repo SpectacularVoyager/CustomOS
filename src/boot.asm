@@ -4,6 +4,7 @@
 %include "src/idt.asm"
 %include "src/isr.asm"
 %include "src/io.asm"
+%include "src/paging.asm"
 MBALIGN  equ  1 << 0            ; align loaded modules on page boundaries
 MEMINFO  equ  1 << 1            ; provide memory map
 MBFLAGS  equ  MBALIGN | MEMINFO ; this is the Multiboot 'flag' field

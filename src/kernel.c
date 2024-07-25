@@ -8,6 +8,7 @@
 #include "term.h"
 #include "irq.h"
 #include "io.h"
+#include "paging.h"
 #include "drivers/timer.h"
 #include "drivers/keyboard.h"
 #include "multiboot.h"
@@ -31,23 +32,24 @@
 
 void __attribute__((cdecl)) kernel_main(multiboot_info_t* mbd, unsigned int magic) 
 {
-
+	Paging_Init();
 	DisableInterrupts();	
 	GDT_Initialize();
 	IDT_Initialize();
 	ISR_Initialize();
 	IRQ_Initialize();
+	EnableInterrupts();
 	terminal_initialize();
 	terminal_setcolor(vga_entry_color(VGA_COLOR_RED,VGA_COLOR_BLACK));
 	printf("0x%x\n",magic);
 	Keyboard_Install();
 	TimerInitialize();
-	EnableInterrupts();
     if(!(mbd->flags >> 6 & 0x1)) {
 		printf("invalid memory map given by GRUB bootloader");
         Panic();
     } 
 	int i;
+
 	//TODO FIX MAYBE
     for(i = 0; i < mbd->mmap_length; 
         i += sizeof(multiboot_memory_map_t)) 

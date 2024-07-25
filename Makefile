@@ -23,6 +23,7 @@ kernel:
 	@i686-elf-gcc -c $(SOURCE)/io.c -o $(OUT)/io.o -std=gnu99 -ffreestanding $(CFLAGS)
 	@i686-elf-gcc -c $(SOURCE)/irq.c -o $(OUT)/irq.o -std=gnu99 -ffreestanding $(CFLAGS)
 	@i686-elf-gcc -c $(SOURCE)/pit.c -o $(OUT)/pit.o -std=gnu99 -ffreestanding $(CFLAGS)
+	@i686-elf-gcc -c $(SOURCE)/paging.c -o $(OUT)/paging.o -std=gnu99 -ffreestanding $(CFLAGS)
 	@i686-elf-gcc -c $(SOURCE)/drivers/keyboard.c -o $(OUT)/keyboard.o -std=gnu99 -ffreestanding $(CFLAGS)
 	@i686-elf-gcc -c $(SOURCE)/drivers/timer.c -o $(OUT)/timer.o -std=gnu99 -ffreestanding $(CFLAGS)
 	@i686-elf-gcc -c $(SOURCE)/drivers/pci.c -o $(OUT)/pci.o -std=gnu99 -ffreestanding $(CFLAGS)
