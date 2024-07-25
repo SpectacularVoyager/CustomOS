@@ -14,6 +14,22 @@ inb:
     in al, dx
     ret
 
+global outportw
+outportw:
+    [bits 32]
+    mov dx, [esp + 4]
+    mov al, [esp + 8]
+    out dx, ax
+    ret
+
+global inportw
+inportw:
+    [bits 32]
+    mov dx, [esp + 4]
+    xor eax, eax
+    in ax, dx
+    ret
+
 global EnableInterrupts
 EnableInterrupts:
 	sti

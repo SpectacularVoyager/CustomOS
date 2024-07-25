@@ -87,7 +87,12 @@ void __attribute__((cdecl)) kernel_main(multiboot_info_t* mbd, unsigned int magi
 	}
 	//NIC_8254X_Init(devices);
 	//printf("%08x",*((uint32_t*)0x800000));
-	RTL_8139_Init(devices);
+	
+	RTL_8139 rtl;
+	RTL_8139_Init(devices,&rtl);
+//	NIC_8254X nic;
+//	NIC_8254X_Init(devices,&nic);
+
 	
 	while(1);
 	while(1);

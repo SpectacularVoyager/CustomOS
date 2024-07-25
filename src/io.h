@@ -4,6 +4,9 @@
 void __attribute__((cdecl)) outb(uint16_t port, uint8_t value);
 uint8_t __attribute__((cdecl)) inb(uint16_t port);
 
+void __attribute__((cdecl)) outportw(uint16_t port, uint16_t value);
+uint16_t __attribute__((cdecl)) inportw(uint16_t port);
+
 void __attribute__((cdecl)) EnableInterrupts();
 void __attribute__((cdecl)) DisableInterrupts();
 

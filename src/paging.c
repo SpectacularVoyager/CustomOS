@@ -27,6 +27,7 @@ void Paging_Init(){
 	
 	
 	page_directory[0] = ((uint32_t)first_page_table) | 3;
+	//page_directory[1018] = ((uint32_t)first_page_table) | 3;
 	//page_directory[1] = ((uint32_t)first_page_table) | 3;
 	loadPageDirectory(page_directory);
 	enablePaging();
