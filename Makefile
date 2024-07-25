@@ -25,6 +25,7 @@ kernel:
 	@i686-elf-gcc -c $(SOURCE)/pit.c -o $(OUT)/pit.o -std=gnu99 -ffreestanding $(CFLAGS)
 	@i686-elf-gcc -c $(SOURCE)/drivers/keyboard.c -o $(OUT)/keyboard.o -std=gnu99 -ffreestanding $(CFLAGS)
 	@i686-elf-gcc -c $(SOURCE)/drivers/timer.c -o $(OUT)/timer.o -std=gnu99 -ffreestanding $(CFLAGS)
+	@i686-elf-gcc -c $(SOURCE)/drivers/pci.c -o $(OUT)/pci.o -std=gnu99 -ffreestanding $(CFLAGS)
 	@#i686-elf-g++ -c kernel.c++ -o kernel.o -ffreestanding -O2 -Wall -Wextra -fno-exceptions -fno-rtti
 
 link:
@@ -36,6 +37,6 @@ build:
 isMultiBoot:
 	@./isMultiBoot.sh $(ISO)
 run: all
-	@qemu-system-i386 -cdrom iso.iso
+	@qemu-system-i386 -net nic,model=e1000 -hda iso.iso
 debug: all
-	@qemu-system-i386 -cdrom iso.iso -monitor stdio
+	@qemu-system-i386 -net nic,model=e1000 -hda iso.iso -monitor stdio

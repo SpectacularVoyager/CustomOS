@@ -11,7 +11,7 @@
 #include "drivers/timer.h"
 #include "drivers/keyboard.h"
 #include "multiboot.h"
-
+#include "drivers/pci.h"
 /*
  * USE PRINTF from here
  * https://github.com/mpaland/printf
@@ -47,13 +47,14 @@ void __attribute__((cdecl)) kernel_main(multiboot_info_t* mbd, unsigned int magi
         Panic();
     } 
 	int i;
+	//TODO FIX MAYBE
     for(i = 0; i < mbd->mmap_length; 
         i += sizeof(multiboot_memory_map_t)) 
     {
         multiboot_memory_map_t* mmmt = 
             (multiboot_memory_map_t*) (mbd->mmap_addr + i);
 
-        printf("Start Addr: %x | Length: %x | Size: %x | Type: %d\n",
+        printf("Start Addr: %lx | Length: %lx | Size: %x | Type: %d\n",
             mmmt->addr, mmmt->len, mmmt->size, mmmt->type);
 
         if(mmmt->type == MULTIBOOT_MEMORY_AVAILABLE) {
@@ -72,6 +73,14 @@ void __attribute__((cdecl)) kernel_main(multiboot_info_t* mbd, unsigned int magi
 	printf("0x%x\n",100);
 	printf("HELLO WORLD\n");
 
+	//ATAPIO_AttachIRQHandler();
+	//ATAPIO_Identify();
+	PCI_Initiate();
+	PCI_device* devices=PCI_GetDevices();
+	printf("DETECTED %d devices\n",PCI_GetDeviceCount());
+	for(uint16_t i=0;i<PCI_GetDeviceCount();i++){
+		PCI_Device_Print(&devices[i]);
+	}
 
 	while(1);
 	while(1);

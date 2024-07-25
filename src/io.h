@@ -10,3 +10,7 @@ void __attribute__((cdecl)) DisableInterrupts();
 void __attribute__((cdecl)) Panic();
 
 void io_wait();
+
+uint32_t inportl(uint16_t portid);
+
+void outportl(uint16_t portid, uint32_t value);

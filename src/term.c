@@ -60,6 +60,13 @@ void terminal_putchar(char c)
 		terminal_newline();
 		return;
 	}
+	if(c=='\t'){
+		terminal_putchar(' ');
+		terminal_putchar(' ');
+		terminal_putchar(' ');
+		terminal_putchar(' ');
+		return;
+	}
 	terminal_putentryat(c, terminal_color, terminal_column, terminal_row);
 	if (++terminal_column == VGA_WIDTH) {
 		terminal_column = 0;
