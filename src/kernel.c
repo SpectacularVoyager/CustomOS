@@ -12,6 +12,7 @@
 #include "drivers/keyboard.h"
 #include "multiboot.h"
 #include "drivers/pci.h"
+#include "drivers/8254x.h"
 /*
  * USE PRINTF from here
  * https://github.com/mpaland/printf
@@ -55,7 +56,7 @@ void __attribute__((cdecl)) kernel_main(multiboot_info_t* mbd, unsigned int magi
             (multiboot_memory_map_t*) (mbd->mmap_addr + i);
 
         printf("Start Addr: %lx | Length: %lx | Size: %x | Type: %d\n",
-            mmmt->addr, mmmt->len, mmmt->size, mmmt->type);
+            mmmt->addr_low, mmmt->len_low, mmmt->size, mmmt->type);
 
         if(mmmt->type == MULTIBOOT_MEMORY_AVAILABLE) {
             /* 
@@ -79,8 +80,10 @@ void __attribute__((cdecl)) kernel_main(multiboot_info_t* mbd, unsigned int magi
 	PCI_device* devices=PCI_GetDevices();
 	printf("DETECTED %d devices\n",PCI_GetDeviceCount());
 	for(uint16_t i=0;i<PCI_GetDeviceCount();i++){
-		PCI_Device_Print(&devices[i]);
+		//PCI_Device_Print(&devices[i]);
 	}
+	//NIC_8254X_Init(devices);
+	
 
 	while(1);
 	while(1);

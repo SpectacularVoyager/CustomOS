@@ -9,6 +9,13 @@ PCI_device* PCI_GetDevices(){
 uint16_t PCI_GetDeviceCount(){
 	return PCI_dev_count;
 }
+PCI_device* PCI_GetFromID(uint16_t vendor,uint16_t device_id){
+	for(uint16_t i=0;i<PCI_GetDeviceCount();i++){
+		if(devices[i].vendor_id==vendor&&devices[i].device_id==device_id)
+			return &devices[i];
+	}
+	return 0;
+}
 
 uint16_t PCI_ConfigReadWord(uint8_t bus, uint8_t slot, uint8_t func, uint8_t offset) {
     uint32_t address;
@@ -35,6 +42,10 @@ uint16_t PCI_CheckVendor(uint8_t bus, uint8_t slot,uint8_t function) {
     } return (vendor);
 }
 void PCI_Device_Print(PCI_device* d){
+	if(!d){
+		printf("DEVICE:NULL\n");
+		return;
+	}
 	printf("VENDOR 0x%X DEVICE 0x%X\n",d->vendor_id,d->device_id);
 	printf("\tLOCATION [%d][%d][%d]\n",d->bus&0xFF,d->slot&0xFF,d->function&0xFF);
 	printf("\tCLASS : 0X%02X  SUBCLASS : 0X%02X  PROG_IF : 0X%02X\n",d->class_id,d->subclass_id,d->progIF);
@@ -85,8 +96,7 @@ void PCI_ReadDevice(PCI_device* device,uint16_t bus,uint8_t slot,uint8_t functio
 	device->bist=(headerbist>>8)&0xFF;
 }
 
-void GetGeneralDevice(PCI_device *device, PCIGeneralDevice *out) {
-	out->base=*device;
+void PCI_GetGeneralDevice(PCI_device *device, PCIGeneralDevice *out) {
   for (int i = 0; i < 6; i++)
     out->BAR[i] =
         COMBINE_WORD(PCI_ConfigReadWord(device->bus, device->slot, device->function,
@@ -119,4 +129,5 @@ void GetGeneralDevice(PCI_device *device, PCIGeneralDevice *out) {
       device->bus, device->slot, device->function, PCI_MIN_GRANT);
   out->min_grant = EXPORT_BYTE(minGrant_maxLatency, true);
   out->max_latency = EXPORT_BYTE(minGrant_maxLatency, false);
+  out->base=*device;
 }
