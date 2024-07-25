@@ -14,6 +14,7 @@
 #include "multiboot.h"
 #include "drivers/pci.h"
 #include "drivers/8254x.h"
+#include "drivers/rtl8139.h"
 /*
  * USE PRINTF from here
  * https://github.com/mpaland/printf
@@ -73,8 +74,8 @@ void __attribute__((cdecl)) kernel_main(multiboot_info_t* mbd, unsigned int magi
 
 	printf("HELLO WORLD\n");
 	//sleepf(0.5);
-	printf("0x%x\n",100);
-	printf("HELLO WORLD\n");
+	//printf("0x%x\n",100);
+	//printf("HELLO WORLD\n");
 
 	//ATAPIO_AttachIRQHandler();
 	//ATAPIO_Identify();
@@ -85,8 +86,9 @@ void __attribute__((cdecl)) kernel_main(multiboot_info_t* mbd, unsigned int magi
 		//PCI_Device_Print(&devices[i]);
 	}
 	//NIC_8254X_Init(devices);
+	//printf("%08x",*((uint32_t*)0x800000));
+	RTL_8139_Init(devices);
 	
-
 	while(1);
 	while(1);
 }

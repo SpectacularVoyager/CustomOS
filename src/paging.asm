@@ -3,6 +3,9 @@ global loadPageDirectory
 loadPageDirectory:
 	push ebp
 	mov ebp,esp
+	mov eax, cr4
+	or eax, 0x00000010
+	mov cr4, eax
 	mov eax,[esp+8]
 	mov cr3,eax
 	mov esp,ebp

@@ -27,7 +27,7 @@ kernel:
 	@i686-elf-gcc -c $(SOURCE)/drivers/keyboard.c -o $(OUT)/keyboard.o -std=gnu99 -ffreestanding $(CFLAGS)
 	@i686-elf-gcc -c $(SOURCE)/drivers/timer.c -o $(OUT)/timer.o -std=gnu99 -ffreestanding $(CFLAGS)
 	@i686-elf-gcc -c $(SOURCE)/drivers/pci.c -o $(OUT)/pci.o -std=gnu99 -ffreestanding $(CFLAGS)
-	@i686-elf-gcc -c $(SOURCE)/drivers/8254x.c -o $(OUT)/8254x.o -std=gnu99 -ffreestanding $(CFLAGS)
+	@i686-elf-gcc -c $(SOURCE)/drivers/rtl8139.c -o $(OUT)/rtl8139.o -std=gnu99 -ffreestanding $(CFLAGS)
 	@#i686-elf-g++ -c kernel.c++ -o kernel.o -ffreestanding -O2 -Wall -Wextra -fno-exceptions -fno-rtti
 
 link:

@@ -14,6 +14,7 @@
   ((first) ? ((target) & ~0xFF00) : (((target) & ~0x00FF) >> 8))
 void PCI_Initiate();
 
+
 typedef struct{
   uint16_t bus;
   uint16_t slot;
@@ -60,6 +61,11 @@ uint16_t PCI_GetDeviceCount();
 
 void PCI_GetGeneralDevice(PCI_device *device, PCIGeneralDevice *out);
 
+void PCI_Refresh(PCI_device* device);
+
+void PCI_ConfigWriteWord(uint8_t bus, uint8_t slot, uint8_t func, uint8_t offset,uint32_t val);
+
+void PCI_DeviceConfigWriteWord(PCI_device* d, uint8_t offset,uint32_t val);
 #define PCI_VENDOR_ID 0x00
 #define PCI_DEVICE_ID 0x02
 #define PCI_COMMAND 0x04
