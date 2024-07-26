@@ -19,7 +19,7 @@ outportw:
     [bits 32]
     mov dx, [esp + 4]
     mov al, [esp + 8]
-    out dx, ax
+    out word dx, ax
     ret
 
 global inportw
@@ -27,7 +27,7 @@ inportw:
     [bits 32]
     mov dx, [esp + 4]
     xor eax, eax
-    in ax, dx
+    in word ax, dx
     ret
 
 global EnableInterrupts

@@ -41,4 +41,7 @@ void RTL_8139_Init(PCI_device* devices,RTL_8139* rtl){
 	outportw(ioaddr + 0x3C, 0x0005); // Sets the TOK and ROK bits high
 	outportl(ioaddr + 0x44, 0xf | (1 << 7)); // (1 << 7) is the WRAP bit, 0xf is AB+AM+APM+AAP
 	outb(ioaddr + 0x37, 0x0C); // Sets the RE and TE bits high
+							   //
+	outportl(ioaddr+0x20,((0x1)<<21)|0x100);
+	printf("0x%x",inportl(ioaddr+0x20));
 }

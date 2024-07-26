@@ -42,4 +42,4 @@ isMultiBoot:
 run: all
 	@qemu-system-i386 -net nic,model=rtl8139 -hda iso.iso
 debug: all
-	@qemu-system-i386 -net nic,model=e1000 -hda iso.iso -monitor stdio
+	@qemu-system-i386 -net nic,model=rtl8139 -hda iso.iso -monitor stdio
