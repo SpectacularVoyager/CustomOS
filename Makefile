@@ -8,6 +8,7 @@ CFLAGS?=-O2 -g
 CFLAGS:=$(CFLAGS) -Wall -Wextra
 QEMU=qemu-system-x86_64
 CC=x86_64-elf-gcc
+CC32=i686-elf-gcc
 
 all: boot kernel link build isMultiBoot
 

@@ -9,4 +9,5 @@
 void kernel_main() 
 {
 	printf("HELLO");
+	while(1);
 }
