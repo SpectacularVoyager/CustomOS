@@ -41,6 +41,8 @@ _start:
 	push eax			;;GRUB DATA
 	push ebx			;;GRUB DATA
 	cli
+	extern load_kernel32
+	call load_kernel32
 	call PagingInit
 	extern kernel_main
 	jmp gdt64.code:long_mode_start
