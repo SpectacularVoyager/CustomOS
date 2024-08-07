@@ -6,6 +6,7 @@ ISO=$(BUILD)/os.bin
 CFLAGS?=-O2 -g
 # Add mandatory options to CFLAGS:
 CFLAGS:=$(CFLAGS) -Wall -Wextra
+QEMU=qemu-system-x86_64
 
 all: boot kernel link build isMultiBoot
 
@@ -29,6 +30,7 @@ kernel:
 	@i686-elf-gcc -c $(SOURCE)/drivers/pci.c -o $(OUT)/pci.o -std=gnu99 -ffreestanding $(CFLAGS)
 	@i686-elf-gcc -c $(SOURCE)/drivers/rtl8139.c -o $(OUT)/rtl8139.o -std=gnu99 -ffreestanding $(CFLAGS)
 	@i686-elf-gcc -c $(SOURCE)/drivers/8254x.c -o $(OUT)/8254x.o -std=gnu99 -ffreestanding $(CFLAGS)
+	@i686-elf-gcc -c $(SOURCE)/longmode/longmode.c -o $(OUT)/8254x.o -std=gnu99 -ffreestanding $(CFLAGS)
 	@#i686-elf-g++ -c kernel.c++ -o kernel.o -ffreestanding -O2 -Wall -Wextra -fno-exceptions -fno-rtti
 
 link:
@@ -40,6 +42,6 @@ build:
 isMultiBoot:
 	@./isMultiBoot.sh $(ISO)
 run: all
-	@qemu-system-i386 -net nic,model=rtl8139 -hda iso.iso
+	@$(QEMU) -net nic,model=rtl8139 -hda iso.iso
 debug: all
-	@qemu-system-i386 -net nic,model=e1000 -hda iso.iso -monitor stdio
+	@$(QEMU) -net nic,model=e1000 -hda iso.iso -monitor stdio

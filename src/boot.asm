@@ -5,6 +5,8 @@
 %include "src/isr.asm"
 %include "src/io.asm"
 %include "src/paging.asm"
+%include "src/longmode/longmode.asm"
+%include "src/paging/paging.asm"
 MBALIGN  equ  1 << 0            ; align loaded modules on page boundaries
 MEMINFO  equ  1 << 1            ; provide memory map
 MBFLAGS  equ  MBALIGN | MEMINFO ; this is the Multiboot 'flag' field
@@ -24,6 +26,20 @@ align 16
 	stack_top:
 section .text
 
+global PagingInit
+PagingInit:
+	call Paging_SetUpTables
+
+	; setup recursive paging
+	mov eax, p4_table
+	or eax, 0b11 ; present + writable
+	mov [p4_table + 511 * 8], eax
+
+	call Paging_Enable
+	lgdt [gdt64.pointer]
+
+	ret
+
 global _start:function (_start.end - _start)
 _start:
 	mov esp, stack_top
@@ -31,6 +47,8 @@ _start:
 	push ebx			;;GRUB DATA
 	cli
 	extern kernel_main
+	;call PagingInit
+	;jmp gdt64.code:kernel_main
 	call kernel_main
 	cli
 .hang:	hlt
