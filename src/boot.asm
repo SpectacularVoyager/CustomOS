@@ -1,10 +1,5 @@
 ;;https://osdev.wiki/wiki/Multiboot1_Bare_Bones_with_NASM
 
-;%include "src/gdt.asm"
-;%include "src/idt.asm"
-;%include "src/isr.asm"
-;%include "src/io.asm"
-;%include "src/paging.asm"
 %include "src/longmode/longmode.asm"
 %include "src/paging/paging.asm"
 MBALIGN  equ  1 << 0            ; align loaded modules on page boundaries
