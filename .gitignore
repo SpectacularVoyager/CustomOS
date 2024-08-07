@@ -1,3 +1,3 @@
-ISO/*
 out/*
 iso.iso
+ISO/boot/*.bin
