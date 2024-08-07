@@ -1,7 +1,6 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include "term.h"
 /*
  * USE PRINTF from here
  * https://github.com/mpaland/printf
