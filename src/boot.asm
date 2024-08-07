@@ -46,11 +46,13 @@ _start:
 	push eax			;;GRUB DATA
 	push ebx			;;GRUB DATA
 	cli
+	call PagingInit
 	extern kernel_main
-	;call PagingInit
-	;jmp gdt64.code:kernel_main
-	call kernel_main
+	jmp gdt64.code:long_mode_start
+	mov dword [0xb8000], 0x2f4b2f4f
 	cli
 .hang:	hlt
 	jmp .hang
 .end:
+
+%include "src/longmode/long_mode_init.asm"
