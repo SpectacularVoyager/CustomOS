@@ -34,6 +34,7 @@
 
 #include <stdarg.h>
 #include <stddef.h>
+#include "../vga/term.h"
 
 
 #ifdef __cplusplus

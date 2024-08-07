@@ -17,6 +17,7 @@ boot:
 kernel:
 	@$(CC) -c $(SOURCE)/kernel.c -o $(OUT)/kernel.o -std=gnu99 -ffreestanding $(CFLAGS)
 	@$(CC) -c $(SOURCE)/vga/term.c -o $(OUT)/term.o -std=gnu99 -ffreestanding $(CFLAGS)
+	@$(CC) -c $(SOURCE)/printf/printf.c -o $(OUT)/printf.o -std=gnu99 -ffreestanding $(CFLAGS)
 
 link:
 	@$(CC) -T linker.ld -o $(ISO) -ffreestanding -O2 -nostdlib $(shell find -name '*.o') -lgcc
