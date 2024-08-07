@@ -11,7 +11,5 @@ long_mode_start:
   mov gs, ax
 
   extern kernel_main
-  mov byte [0xb8000],'a'
-  mov byte [0xb8002],'b'
   call kernel_main
   hlt
