@@ -2,15 +2,15 @@
 #include <stddef.h>
 #include <stdint.h>
 #include "stdlib/stdio.h"
-#include "multiboot.h"
+#include "grub/multiboot.h"
+
+#include "interrupts/idt.h"
 /*
  * USE PRINTF from here
  * https://github.com/mpaland/printf
  * */
-void kernel_main(multiboot_info_t* mbd,int magic) 
+void kernel_main(multiboot_info_t* mbd,int magic,int cs) 
 {
-	printf("HELLO %x\n",magic);
-	printf("%x\n",MULTIBOOT_BOOTLOADER_MAGIC);
 
 	/* Make sure the magic number matches for memory mapping*/
 	if(magic != MULTIBOOT_BOOTLOADER_MAGIC) {
@@ -42,5 +42,10 @@ void kernel_main(multiboot_info_t* mbd,int magic)
 			 */
 		}
 	}
+
+	printf("%x\n",MULTIBOOT_BOOTLOADER_MAGIC);
+	printf("%d\n",(int)cs);
+	IDT_Initialize(0);
+	//printf("%d",1/0);
 	while(1);
 }

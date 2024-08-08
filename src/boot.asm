@@ -2,6 +2,9 @@
 bits 32
 %include "src/longmode/longmode.asm"
 %include "src/paging/paging.asm"
+%include "src/longmode/long_mode_init.asm"
+
+bits 32
 MBALIGN  equ  1 << 0            ; align loaded modules on page boundaries
 MEMINFO  equ  1 << 1            ; provide memory map
 MBFLAGS  equ  MBALIGN | MEMINFO ; this is the Multiboot 'flag' field
@@ -48,9 +51,12 @@ _start:
 	mov esp, stack_top
 	sub esp,8
 
-	extern long_mode_start
+	;extern long_mode_start
 	jmp gdt64.code:long_mode_start
 	cli
 .hang:	hlt
 	jmp .hang
 .end:
+
+%include "src/interrupts/idt.asm"
+%include "src/interrupts/isr.asm"
