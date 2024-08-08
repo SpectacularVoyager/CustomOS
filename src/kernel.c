@@ -45,7 +45,7 @@ void kernel_main(multiboot_info_t* mbd,int magic,int cs)
 
 	printf("%x\n",MULTIBOOT_BOOTLOADER_MAGIC);
 	printf("%d\n",(int)cs);
-	IDT_Initialize(0);
+	//IDT_Initialize(0);
 	//printf("%d",1/0);
 	while(1);
 }

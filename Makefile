@@ -11,8 +11,10 @@ QEMU=qemu-system-x86_64
 CC=x86_64-elf-gcc
 CC32=i686-elf-gcc
 
-all: boot kernel link build isMultiBoot
+all: clean boot kernel link build isMultiBoot
 
+clean:
+	@rm -r $(OUT)
 boot:
 	@mkdir -p out/x86
 	@nasm -felf64 $(SOURCE)/boot.asm -o $(OUT)/boot.o
