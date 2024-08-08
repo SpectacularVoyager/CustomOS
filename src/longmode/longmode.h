@@ -2,6 +2,12 @@
 #include "stdint.h"
 #include "stdbool.h"
 
+struct LongModeData{
+	bool enabled;
+	char arr[12];
+	uint32_t cpu_feat[2];
+};
+
 int LongMode_CheckCPUID();
 
 int __attribute__((cdecl)) LongMode_GetVendor(void* str);
@@ -11,6 +17,7 @@ bool __attribute__((cdecl)) LongMode_A20STATUS();
 void __attribute__((cdecl)) LongMode_EnableA20();
 
 int LongMode_Setup();
+int __attribute__((cdecl)) LongMode_Enable();
 
 enum {
     CPUID_FEAT_ECX_SSE3         = 1 << 0,

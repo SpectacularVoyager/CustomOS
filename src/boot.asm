@@ -1,5 +1,5 @@
 ;;https://osdev.wiki/wiki/Multiboot1_Bare_Bones_with_NASM
-
+bits 32
 %include "src/longmode/longmode.asm"
 %include "src/paging/paging.asm"
 MBALIGN  equ  1 << 0            ; align loaded modules on page boundaries
@@ -38,17 +38,19 @@ PagingInit:
 global _start:function (_start.end - _start)
 _start:
 	mov esp, stack_top
+	push ebx
 	push eax			;;GRUB DATA
-	push ebx			;;GRUB DATA
 	cli
 	extern load_kernel32
+	mov byte [0xb8000],'a'
 	call load_kernel32
-	call PagingInit
-	extern kernel_main
+	;call PagingInit
+	mov esp, stack_top
+	sub esp,8
+
+	extern long_mode_start
 	jmp gdt64.code:long_mode_start
 	cli
 .hang:	hlt
 	jmp .hang
 .end:
-
-%include "src/longmode/long_mode_init.asm"

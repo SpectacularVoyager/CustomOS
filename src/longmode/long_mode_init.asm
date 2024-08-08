@@ -11,5 +11,12 @@ long_mode_start:
   mov gs, ax
 
   extern kernel_main
+	pop rax
+	xor rbx,rbx
+	mov ebx,eax
+	shr rax,32
+	mov rsi,rbx
+	;add rdi,gdt64.code
+	mov rdi,rax
   call kernel_main
   hlt

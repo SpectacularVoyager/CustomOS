@@ -1,4 +1,4 @@
-[bits 32]
+bits 32
 global LongMode_CheckCPUID
 LongMode_CheckCPUID:
     pushfd                               ;Save EFLAGS
@@ -51,6 +51,14 @@ LongMode_LongModeSupported:
 	ret
 	.NoLongMode:
 	mov eax,0
+	ret
+
+global LongMode_Enable
+LongMode_Enable:
+	mov ecx, 0xC0000080          ; Set the C-register to 0xC0000080, which is the EFER MSR.
+    rdmsr                        ; Read from the model-specific register.
+    or eax, 1 << 8               ; Set the LM-bit which is the 9th bit (bit 8).
+    wrmsr                        ; Write to the model-specific register.
 	ret
 
 global LongMode_A20STATUS
