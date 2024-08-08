@@ -7,8 +7,10 @@ CFLAGS?=-O2 -g
 # Add mandatory options to CFLAGS:
 CFLAGS:=$(CFLAGS) -Wall -Wextra
 
-all: boot kernel link build isMultiBoot
+all: clean boot kernel link build isMultiBoot
 
+clean:
+	@rm -r $(OUT)
 boot:
 	@nasm -felf32 $(SOURCE)/boot.asm -o $(OUT)/boot.o
 
