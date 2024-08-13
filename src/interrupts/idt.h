@@ -1,5 +1,9 @@
 #pragma once
 #include "stdint.h"
+typedef struct{
+	long interrupt;
+	long reg;
+} int_reg;
 
 typedef struct {
 	uint16_t    isr_low;      // The lower 16 bits of the ISR's address

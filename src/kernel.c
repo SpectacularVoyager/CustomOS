@@ -9,9 +9,7 @@
  * USE PRINTF from here
  * https://github.com/mpaland/printf
  * */
-void kernel_main(multiboot_info_t* mbd,int magic,int cs) 
-{
-
+void printMultiboot(multiboot_info_t* mbd,int magic){
 	/* Make sure the magic number matches for memory mapping*/
 	if(magic != MULTIBOOT_BOOTLOADER_MAGIC) {
 		printf("MULTIBOOT WTF\n");
@@ -43,9 +41,13 @@ void kernel_main(multiboot_info_t* mbd,int magic,int cs)
 		}
 	}
 
+}
+void kernel_main(multiboot_info_t* mbd,int magic,int cs) 
+{
+
 	printf("%x\n",MULTIBOOT_BOOTLOADER_MAGIC);
 	printf("%d\n",(int)cs);
-	//IDT_Initialize(0);
-	//printf("%d",1/0);
+	IDT_Initialize(cs);
+	printf("%d\n",1/0);
 	while(1);
 }
