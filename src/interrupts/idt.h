@@ -1,5 +1,28 @@
 #pragma once
 #include "stdint.h"
+
+typedef struct {
+	long rsp;
+	long segment;
+	long r15;
+	long r14;
+	long r13;
+	long r12;
+	long r11;
+	long r10;
+	long r9;
+	long r8;
+	long rbp;
+	long rdi;
+	long rsi;
+	long rdx;
+	long rcx;
+	long rbx;
+	long rax;
+	long t2;
+	long interupt;
+}__attribute__((packed)) registers ;
+
 typedef struct{
 	long interrupt;
 	long reg;
@@ -45,3 +68,5 @@ void IDT_EnableGate(int interupt);
 void IDT_DisableGate(int interupt);
 
 void IDT_Load(idtr_t* descriptor);
+
+typedef void (*ISRFunction)(registers* r);

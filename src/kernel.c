@@ -5,6 +5,7 @@
 #include "grub/multiboot.h"
 
 #include "interrupts/idt.h"
+#include "interrupts/irq.h"
 /*
  * USE PRINTF from here
  * https://github.com/mpaland/printf
@@ -46,8 +47,8 @@ void kernel_main(multiboot_info_t* mbd,int magic,int cs)
 {
 
 	printf("%x\n",MULTIBOOT_BOOTLOADER_MAGIC);
-	printf("%d\n",(int)cs);
 	IDT_Initialize(cs);
-	printf("%d\n",1/0);
+	IRQ_Initialize();
+	//printf("%d\n",1/0);
 	while(1);
 }
