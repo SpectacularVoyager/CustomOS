@@ -10,7 +10,7 @@ CFLAGS:=$(CFLAGS) -Wall -Wextra
 all: clean boot kernel link build isMultiBoot
 
 clean:
-	@rm -r $(OUT)
+	@rm -r $(OUT)/*
 boot:
 	@nasm -felf32 $(SOURCE)/boot.asm -o $(OUT)/boot.o
 
