@@ -22,31 +22,88 @@ isr_stub_table:
 %assign i i+1 
 %endrep
 
+	global ISR0
 extern ISR_Handler
-
+;typedef struct{
+;		uint64_t r15;
+;		uint64_t r14;
+;		uint64_t r13;
+;		uint64_t r12;
+;		uint64_t r11;
+;		uint64_t r10;
+;		uint64_t r9;
+;		uint64_t r8;
+;		uint64_t rbp;
+;		uint64_t rdi;
+;		uint64_t rsi;
+;		uint64_t rdx;
+;		uint64_t rcx;
+;		uint64_t rbx;
+;		uint64_t rax;
+;
+;		uint64_t   rip;
+;		uint64_t   cs;
+;		uint64_t   rflags;
+;		uint64_t   rsp;
+;		uint64_t   ss;
+;	} __attribute__((__packed__)) State;
 isr_common:
-	;pusha
+	push rbp
+	mov rbp,rsp
+
+	push rax
+	push rbx
+	push rcx
+	push rdx
+	push rsi
+	push rdi
+	push rbp
+	push r8
+	push r9
+	push r10
+	push r11
+	push r12
+	push r13
+	push r14
+	push r15
+
 	xor rax,rax
-	;mov ax,ds
-	;push eax
+	mov ax,ds
+	push rax
 
-	;mov ax,0x10
-	;mov ds,ax
-	;mov es,ax
-	;mov fs,ax
-	;mov gs,ax
+	mov ax,0x10
+	mov ds,ax
+	mov es,ax
+	mov fs,ax
+	mov gs,ax
 
-	;push esp
+	push rsp
 	call ISR_Handler
-	;add esp,4
+	add esp,4
 
-	;pop eax
-	;mov ds,ax
-	;mov es,ax
-	;mov fs,ax
-	;mov gs,ax
+	pop rax
+	mov ds,ax
+	mov es,ax
+	mov fs,ax
+	mov gs,ax
 
-	;popa
+	pop r15
+	pop r14
+	pop r13
+	pop r12
+	pop r11
+	pop r10
+	pop r9
+	pop r8
+	pop rbp
+	pop rdi
+	pop rsi
+	pop rdx
+	pop rcx
+	pop rbx
+	pop rax
+
+	pop rbp
 	add rsp,8
 	iret
 
