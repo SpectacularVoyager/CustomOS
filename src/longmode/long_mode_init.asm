@@ -18,6 +18,9 @@ long_mode_start:
 	mov rsi,rbx
 	;add rdi,gdt64.code
 	mov rdi,rax
-	mov rdx,gdt64.code
+	xor rax,rax
+	mov ax,cs
+	mov rdx,rax
+	;mov rdx,gdt64.code
   call kernel_main
   hlt
