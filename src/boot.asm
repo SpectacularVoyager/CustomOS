@@ -5,17 +5,21 @@ bits 32
 %include "src/longmode/long_mode_init.asm"
 
 bits 32
-MBALIGN  equ  1 << 0            ; align loaded modules on page boundaries
-MEMINFO  equ  1 << 1            ; provide memory map
-MBFLAGS  equ  MBALIGN | MEMINFO ; this is the Multiboot 'flag' field
-MAGIC    equ  0x1BADB002        ; 'magic number' lets bootloader find the header
-CHECKSUM equ -(MAGIC + MBFLAGS)   ; checksum of above, to prove we are multiboot
+MAGIC		equ	0xe85250d6        ; 'magic number' lets bootloader find the header
+ARCH		equ	0
+LEN			equ multiboot_end-multiboot_start
+CHECKSUM	equ	0x100000000 - (MAGIC + ARCH + LEN)   ; checksum of above, to prove we are multiboot
 
 section .multiboot
 align 4
+multiboot_start:
 	dd MAGIC
-	dd MBFLAGS
+	dd ARCH
+	dd LEN
 	dd CHECKSUM
+	dd 0
+	dd 8
+multiboot_end:
 
 section .bss
 align 16
