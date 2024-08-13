@@ -2,19 +2,6 @@
 #include "isr.h"
 #include "../stdlib/stdio.h"
 
-
-void ISR_Handler(uint64_t* regs) {
-	registers* r=(registers*)regs;
-	printf("EXECPTION:%d\t HALTING IMMEDIATELY\n",r->interupt);
-	
-    __asm__ volatile ("cli; hlt"); // Completely hangs the computer
-}
-
-ISRHandler g_ISRHandlers[256];
-
-void ISR_addHandler(int interrupt,ISRHandler handler){
-	g_ISRHandlers[interrupt]=handler;
-}
 static const char* const g_Exceptions[] = {
     "Divide by zero error",
     "Debug",
@@ -49,3 +36,24 @@ static const char* const g_Exceptions[] = {
     "Security Exception",
     ""
 };
+
+ISRHandler g_ISRHandlers[256];
+void ISR_Handler(uint64_t* regs) {
+	registers* r=(registers*)regs;
+	
+	
+	int _int=r->interupt;
+	if(g_ISRHandlers[_int]){
+		g_ISRHandlers[_int](r);
+	}else if(_int>=32){
+		printf("UNHANDLED INTERRUPT %d\n",_int);
+	}else{
+		//printf("EXECPTION:%d\t HALTING IMMEDIATELY\n",r->interupt);
+		printf("UNHANDLED EXCEPTION[%d] %s\n",_int,g_Exceptions[_int]);
+		__asm__ volatile ("cli; hlt"); // Completely hangs the computer
+	}
+}
+
+void ISR_addHandler(int interrupt,ISRHandler handler){
+	g_ISRHandlers[interrupt]=handler;
+}
