@@ -47,9 +47,11 @@ extern ISR_Handler
 ;		uint64_t   rsp;
 ;		uint64_t   ss;
 ;	} __attribute__((__packed__)) State;
+
+isr_uncommon:
+	add rsp,8
+	iret
 isr_common:
-	push rbp
-	mov rbp,rsp
 	push rax
 	push rbx
 	push rcx
@@ -69,25 +71,20 @@ isr_common:
 	mov ax,ds
 	push rax
 
-	mov ax,0x00
 	mov ds,ax
 	mov es,ax
 	mov fs,ax
 	mov gs,ax
 
-	push rsp
 	mov rdi,rsp
 
-
 	call ISR_Handler
-	add rsp,4
 
 	pop rax
 	mov ds,ax
 	mov es,ax
 	mov fs,ax
 	mov gs,ax
-
 
 	pop r15
 	pop r14
@@ -104,12 +101,9 @@ isr_common:
 	pop rcx
 	pop rbx
 	pop rax
-	;popa
-	pop rbp
-	add rsp,8
+	add rsp,16
 
-
-	iret
+	iretq
 
 ISR_NOERROR 0
 ISR_NOERROR 1

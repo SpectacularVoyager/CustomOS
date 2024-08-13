@@ -17,7 +17,7 @@ clean:
 	@rm -r $(OUT)
 boot:
 	@mkdir -p out/x86
-	@nasm -felf64 $(SOURCE)/boot.asm -o $(OUT)/boot.o
+	@nasm -g -felf64 $(SOURCE)/boot.asm -o $(OUT)/boot.o
 
 kernel:
 	@$(CC) -c $(SOURCE)/kernel32.c -o $(OUT)/kernel32.o -std=gnu99 -ffreestanding $(CFLAGS)
@@ -43,3 +43,9 @@ run: all
 	@$(QEMU) -net nic,model=rtl8139 -hda iso.iso
 debug: all
 	@$(QEMU) -net nic,model=e1000 -hda iso.iso -monitor stdio
+gdb: all
+	@$(QEMU) -s -S -net nic,model=e1000 -hda iso.iso
+	# TO RUN
+	# make gdb
+	# gdb ISO/boot/os.bin
+	# In GDB: target remote :1234

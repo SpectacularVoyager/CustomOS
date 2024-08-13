@@ -1,6 +1,7 @@
 #pragma once
 #include "isr.h"
 #include "../stdlib/stdio.h"
+#include "idt.h"
 
 static const char* const g_Exceptions[] = {
     "Divide by zero error",
@@ -41,8 +42,9 @@ ISRHandler g_ISRHandlers[256];
 void ISR_Handler(uint64_t* regs) {
 	registers* r=(registers*)regs;
 	
-	printf("SEGMENT\t%d\n",r->segment);
+	//printRegs(r);
 	int _int=r->interupt;
+	r->interupt=_int;
 	if(g_ISRHandlers[_int]){
 		g_ISRHandlers[_int](r);
 	}else if(_int>=32){

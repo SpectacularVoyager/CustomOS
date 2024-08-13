@@ -20,6 +20,7 @@ void putch(char ch){
 	}
 	if(ch=='\t'){
 		c=c+8-(c%4);
+		return;
 	}
 	if(c>=COL){
 		c=0;

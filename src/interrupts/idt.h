@@ -2,7 +2,6 @@
 #include "stdint.h"
 
 typedef struct {
-	long rsp;
 	long segment;
 	long r15;
 	long r14;
@@ -19,9 +18,12 @@ typedef struct {
 	long rcx;
 	long rbx;
 	long rax;
-	long t2;
 	long interupt;
+	long zero;
+	long rip,cs,rflags,rsp,ss;
 }__attribute__((packed)) registers ;
+
+void printRegs(registers* r);
 
 typedef struct{
 	long interrupt;

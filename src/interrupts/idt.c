@@ -37,3 +37,29 @@ void IDT_Initialize(uint16_t code){
 	IDT_Load(&g_IDTDescriptor);
 
 }
+
+void printRegs(registers* r){
+	printf("[REGISTERS]\n");
+	printf("r15	\t%x\n",r->r15);
+	printf("r14	\t%x\n",r->r14);
+	printf("r13	\t%x\n",r->r13);
+	printf("r12	\t%x\n",r->r12);
+	printf("r11	\t%x\n",r->r11);
+	printf("r10	\t%x\n",r->r10);
+	printf("r9	\t%x\n",r->r9);
+	printf("r8	\t%x\n",r->r8);
+	printf("rbp	\t%x\n",r->rbp);
+	printf("rdi	\t%x\n",r->rdi);
+	printf("rsi	\t%x\n",r->rsi);
+	printf("rdx	\t%x\n",r->rdx);
+	printf("rcx	\t%x\n",r->rcx);
+	printf("rbx	\t%x\n",r->rbx);
+	printf("rax	\t%x\n",r->rax);
+	printf("interupt\t%x\n",r->interupt);
+	printf("IP  \t%x\n",r->rip);
+	printf("CS  \t%x\n",r->cs);
+	printf("RFLAGS \t%x\n",r->rflags);
+	printf("RSP  \t%x\n",r->rsp);
+	printf("SS  \t%x\n",r->ss);
+
+}
