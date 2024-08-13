@@ -1,4 +1,3 @@
-#pragma once
 #include "isr.h"
 #include "../stdlib/stdio.h"
 #include "idt.h"

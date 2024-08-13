@@ -6,6 +6,7 @@
 
 #include "interrupts/idt.h"
 #include "interrupts/irq.h"
+#include "drivers/pci.h"
 /*
  * USE PRINTF from here
  * https://github.com/mpaland/printf
@@ -22,7 +23,7 @@ void printMultiboot(multiboot_info_t* mbd,int magic){
 	}
 
 	/* Loop through the memory map and display the values */
-	int i;
+	unsigned int i;
 	for(i = 0; i < mbd->mmap_length; 
 			i += sizeof(multiboot_memory_map_t)) 
 	{
@@ -49,6 +50,14 @@ void kernel_main(multiboot_info_t* mbd,int magic,int cs)
 	printf("%x\n",MULTIBOOT_BOOTLOADER_MAGIC);
 	IDT_Initialize(cs);
 	IRQ_Initialize();
+	PCI_Initiate();
+	
+	PCI_device* devices=PCI_GetDevices();
+	printf("DETECTED %d devices\n",PCI_GetDeviceCount());
+	for(uint16_t i=0;i<PCI_GetDeviceCount();i++){
+		PCI_Device_Print(&devices[i]);
+	}
+	
 	//printf("%d\n",1/0);
 	while(1);
 }

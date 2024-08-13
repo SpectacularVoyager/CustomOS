@@ -10,14 +10,14 @@ struct LongModeData{
 
 int LongMode_CheckCPUID();
 
-int __attribute__((cdecl)) LongMode_GetVendor(void* str);
-int __attribute__((cdecl)) LongMode_GetFeatures(uint32_t* arr);
-bool __attribute__((cdecl)) LongMode_LongModeSupported();
-bool __attribute__((cdecl)) LongMode_A20STATUS();
-void __attribute__((cdecl)) LongMode_EnableA20();
+int LongMode_GetVendor(void* str);
+int LongMode_GetFeatures(uint32_t* arr);
+bool LongMode_LongModeSupported();
+bool LongMode_A20STATUS();
+void LongMode_EnableA20();
 
 int LongMode_Setup();
-int __attribute__((cdecl)) LongMode_Enable();
+int LongMode_Enable();
 
 enum {
     CPUID_FEAT_ECX_SSE3         = 1 << 0,

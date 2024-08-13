@@ -12,7 +12,6 @@ idtr_t g_IDTDescriptor={sizeof(g_IDT)-1,g_IDT};
 
 
 void IDT_SetGate(int interupt,void* base,uint16_t segmentDescriptor,uint8_t flags){
-	idt_entry_t* a=&g_IDT[interupt];
 	g_IDT[interupt].isr_low  = WORD((long)base,0);
 	g_IDT[interupt].isr_mid  = WORD((long)base,1);
 	g_IDT[interupt].isr_high = DWORD((long)base,1);

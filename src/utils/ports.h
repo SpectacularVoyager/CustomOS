@@ -1,4 +1,5 @@
 #pragma once
+#include "stdint.h"
 inline unsigned char inb(unsigned short int port)
 {
         unsigned char ret;
@@ -9,6 +10,18 @@ inline unsigned char inb(unsigned short int port)
 inline void outb(unsigned short int port, unsigned char value)
 {
         asm volatile ("outb %%al,%%dx": :"d" (port), "a"(value));
+}
+
+inline unsigned long inportl(unsigned short port)
+{
+	unsigned long result;
+	__asm__ __volatile__("inl %%dx, %%eax" : "=a" (result) : "dN" (port));
+	return result;
+}
+
+inline void outportl(unsigned short port, unsigned long data)
+{
+	__asm__ __volatile__("outl %%eax, %%dx" : : "d" (port), "a" (data));
 }
 
 inline void io_wait()

@@ -30,6 +30,7 @@ kernel:
 	@$(CC) -c $(SOURCE)/interrupts/irq.c -o $(OUT)/irq.o -std=gnu99 -ffreestanding $(CFLAGS)
 	@$(CC) -c $(SOURCE)/interrupts/isrgen.c -o $(OUT)/isrgen.o -std=gnu99 -ffreestanding $(CFLAGS)
 	@$(CC) -c $(SOURCE)/drivers/pic.c -o $(OUT)/pic.o -std=gnu99 -ffreestanding $(CFLAGS)
+	@$(CC) -c $(SOURCE)/drivers/pci.c -o $(OUT)/pci.o -std=gnu99 -ffreestanding $(CFLAGS)
 
 link:
 	@$(CC) -T linker.ld -o $(ISO) -ffreestanding -O2 -nostdlib $(shell find -name '*.o') -lgcc
@@ -49,3 +50,5 @@ gdb: all
 	# make gdb
 	# gdb ISO/boot/os.bin
 	# In GDB: target remote :1234
+drive:
+	dd if=iso.iso of=/dev/sda status=progress

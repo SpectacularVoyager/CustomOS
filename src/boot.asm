@@ -45,7 +45,6 @@ _start:
 	push eax			;;GRUB DATA
 	cli
 	extern load_kernel32
-	mov byte [0xb8000],'a'
 	call load_kernel32
 	;call PagingInit
 	mov esp, stack_top
