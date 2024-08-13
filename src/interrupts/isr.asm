@@ -66,25 +66,28 @@ isr_common:
 	push r14
 	push r15
 	xor rax,rax
-	mov ax,cs
+	mov ax,ds
 	push rax
 
-	mov ax,0x10
-	;mov ds,ax
-	;mov es,ax
-	;mov fs,ax
-	;mov gs,ax
+	mov ax,0x00
+	mov ds,ax
+	mov es,ax
+	mov fs,ax
+	mov gs,ax
 
 	push rsp
 	mov rdi,rsp
+
+
 	call ISR_Handler
 	add rsp,4
 
 	pop rax
-	;mov ds,ax
-	;mov es,ax
-	;mov fs,ax
-	;mov gs,ax
+	mov ds,ax
+	mov es,ax
+	mov fs,ax
+	mov gs,ax
+
 
 	pop r15
 	pop r14
@@ -104,6 +107,8 @@ isr_common:
 	;popa
 	pop rbp
 	add rsp,8
+
+
 	iret
 
 ISR_NOERROR 0

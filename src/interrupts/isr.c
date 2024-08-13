@@ -41,7 +41,7 @@ ISRHandler g_ISRHandlers[256];
 void ISR_Handler(uint64_t* regs) {
 	registers* r=(registers*)regs;
 	
-	
+	printf("SEGMENT\t%d\n",r->segment);
 	int _int=r->interupt;
 	if(g_ISRHandlers[_int]){
 		g_ISRHandlers[_int](r);
