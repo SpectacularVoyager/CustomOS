@@ -1,3 +1,4 @@
 out/*
 iso.iso
 ISO/boot/*.bin
+logs/*

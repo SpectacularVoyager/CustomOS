@@ -7,6 +7,7 @@
 #include "interrupts/idt.h"
 #include "interrupts/irq.h"
 #include "drivers/pci.h"
+#include "drivers/serial.h"
 /*
  * USE PRINTF from here
  * https://github.com/mpaland/printf
@@ -46,7 +47,7 @@ void printMultiboot(multiboot_info_t* mbd,int magic){
 }
 void kernel_main(multiboot_info_t* mbd,int magic,int cs) 
 {
-
+	kprintf(INFO "BOOTING OS\n");
 	//printf("%x\n",MULTIBOOT_BOOTLOADER_MAGIC);
 	printMultiboot(mbd, magic);
 	IDT_Initialize(cs);
@@ -65,7 +66,5 @@ void kernel_main(multiboot_info_t* mbd,int magic,int cs)
 	//*((uint16_t*)0xA0000)=4;
 	uint64_t* addr=(uint64_t*)mbd->framebuffer_addr;
 	printf("%p\n",mbd->framebuffer_addr);
-	//*addr=0xFFFFFF;
-	//printf("%d\n",1/0);
 	while(1);
 }
