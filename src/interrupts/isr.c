@@ -47,10 +47,10 @@ void ISR_Handler(uint64_t* regs) {
 	if(g_ISRHandlers[_int]){
 		g_ISRHandlers[_int](r);
 	}else if(_int>=32){
-		printf("UNHANDLED INTERRUPT %d\n",_int);
+		kprintf("UNHANDLED INTERRUPT %d\n",_int);
 	}else{
 		//printf("EXECPTION:%d\t HALTING IMMEDIATELY\n",r->interupt);
-		printf("UNHANDLED EXCEPTION[%d] %s\n",_int,g_Exceptions[_int]);
+		kprintf(ERROR "UNHANDLED EXCEPTION[%d] %s\n",_int,g_Exceptions[_int]);
 		__asm__ volatile ("cli; hlt"); // Completely hangs the computer
 	}
 }
