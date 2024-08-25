@@ -6,6 +6,8 @@
 uint16_t atapio_identify[256];
 uint16_t data[256];
 int atapio_lba48;
+
+int req=0;
 uint16_t convertFromPort(uint16_t x){
 
 		return ((x&0xff)<<8)|((x>>8)&0xff);
@@ -46,13 +48,22 @@ void readStuff(uint16_t sectorcount,uint64_t lba){
 	outb(ATAPIO_COMMAND_PORT,ATAPIO_READ_SECTORS_EXT);
 }
 void ATAPIO_HANDLE_IRQ(registers* r){
-	kprintf(TRACE "HARD DISK INT\n");
+	//kprintf(TRACE "HARD DISK INT\n");
 	for(int i=0;i<256;i++){
 		//data[i]=inw(ATAPIO_DATA_PORT);
 		int x=inw(ATAPIO_DATA_PORT);
 		data[i]=convertFromPort(x);
 	}
-	PrintData();
+	//PrintData();
+	req=0;
+}
+uint16_t* ATAPIO_ReadBytes(int sectors,int lba){
+	req=1;
+	readStuff(sectors,lba);
+	while(req==0){
+		//kprintf(INFO"%d\n",req);
+	}
+	return data;
 }
 
 void ATAPIO_Identify(int target){
@@ -99,5 +110,5 @@ void ATAPIO_Identify(int target){
 	}
 	//LBA SELECT
 	//outb(ATAPIO_DRIVE_SELECT_PORT,ATAPIO_MASTER_SELECT|1<<6);
-	readStuff(0,0);	
+	readStuff(1,0x00);	
 }

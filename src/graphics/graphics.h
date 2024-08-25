@@ -10,6 +10,9 @@ typedef struct rgb{
 
 int GraphicsInit(long addr,int w,int h,int bpp);
 
-void SetPixel(int x,int y,RGB r);
 
-void SetPixelHex(int x,int y,int val);
+void SetPixel(int x,int y,uint32_t val);
+
+void SetColor(uint32_t val);
+
+void FillRect(int x,int y,int w,int h);

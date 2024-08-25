@@ -39,3 +39,5 @@
 void ATAPIO_Identify(int target);
 
 void ATAPIO_HANDLE_IRQ(registers* r);
+
+uint16_t* ATAPIO_ReadBytes(int sectors,int lba);

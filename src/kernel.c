@@ -151,10 +151,11 @@ void kernel_main(unsigned long addr,int magic,int cs)
 	for(int i=0;i<w;i++){
 		for(int j=0;j<h;j++){
 			//SetPixelHex(i,j,i+j*w);
-			SetPixelHex(i,j,i|j<<16);
+			SetPixel(i,j,i|j<<16);
 		}
 	}
 
+	//FillRect(100,100,100,100);
 	
 
 	PCI_device* devices=PCI_GetDevices();
@@ -168,5 +169,7 @@ void kernel_main(unsigned long addr,int magic,int cs)
 	//kprintf(TRACE "FRAMEBUFFER:\t%p\n",mbd->framebuffer_addr);
 	
 	ATAPIO_Identify(ATAPIO_MASTER_SELECT);
+	kprintf(TRACE"BEFORE READ\n");
+	kprintf(TRACE "BOOT SECTOR END VALUE:\t%x\n",ATAPIO_ReadBytes(0,0)[255]);
 	while(1);
 }
