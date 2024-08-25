@@ -14,6 +14,7 @@
 #include "paging/paging.h"
 #include "graphics/graphics.h"
 #include "disk/atapio/atapio.h"
+#include "disk/iso/iso.h"
 /*
  * USE PRINTF from here
  * https://github.com/mpaland/printf
@@ -169,7 +170,10 @@ void kernel_main(unsigned long addr,int magic,int cs)
 	//kprintf(TRACE "FRAMEBUFFER:\t%p\n",mbd->framebuffer_addr);
 	
 	ATAPIO_Identify(ATAPIO_MASTER_SELECT);
-	kprintf(TRACE"BEFORE READ\n");
-	kprintf(TRACE "BOOT SECTOR END VALUE:\t%x\n",ATAPIO_ReadBytes(0,0)[255]);
+	uint16_t array[256];
+	ATAPIO_ReadBytes(1,0,array);
+	kprintf(TRACE "BOOT SECTOR END VALUE:\t%x\n",array[255]);
+	//ISO_Init();
+	
 	while(1);
 }

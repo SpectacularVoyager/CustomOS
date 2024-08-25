@@ -52,18 +52,22 @@ void ATAPIO_HANDLE_IRQ(registers* r){
 	for(int i=0;i<256;i++){
 		//data[i]=inw(ATAPIO_DATA_PORT);
 		int x=inw(ATAPIO_DATA_PORT);
-		data[i]=convertFromPort(x);
+		//data[i]=convertFromPort(x);
+		data[i]=x;
 	}
 	//PrintData();
 	req=0;
 }
-uint16_t* ATAPIO_ReadBytes(int sectors,int lba){
+void ATAPIO_ReadBytes(int sectors,int lba,uint16_t array[256]){
 	req=1;
 	readStuff(sectors,lba);
 	while(req==0){
 		//kprintf(INFO"%d\n",req);
 	}
-	return data;
+	while(inb(ATAPIO_COMMAND_PORT)&ATAPIO_STATUS_BUSY);
+	for(int i=0;i<256;i++){
+		array[i]=data[i];
+	}
 }
 
 void ATAPIO_Identify(int target){
@@ -98,9 +102,6 @@ void ATAPIO_Identify(int target){
 	}
 	kprintf(INFO "ATAPIO DETECTED\n");
 	kprintf(TRACE "READING VALUES\n");
-	//for(int i=0;i<256;i++){
-	//	atapio_identify[i]=inw(ATAPIO_DATA_PORT);
-	//}
 	kprintf(TRACE "READ 256 VALUES\n");
 	kprintf(INFO "CAN READ %x LBA28 Addresses\n",getLBA28Addresses());
 	kprintf(INFO "CAN READ %x LBA48 Addresses\n",getLBA48Addresses());
@@ -108,7 +109,4 @@ void ATAPIO_Identify(int target){
 		kprintf(INFO "LBA 48 SUPPORTED\n");
 		atapio_lba48=1;
 	}
-	//LBA SELECT
-	//outb(ATAPIO_DRIVE_SELECT_PORT,ATAPIO_MASTER_SELECT|1<<6);
-	readStuff(1,0x00);	
 }

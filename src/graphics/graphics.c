@@ -33,3 +33,8 @@ void FillRect(int x,int y,int w,int h){
 		}
 	}
 }
+void ClearScreen(){
+	for(int i=0;i<width*height;i++){
+		video[i]=0;
+	}
+}

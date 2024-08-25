@@ -16,3 +16,5 @@ void SetPixel(int x,int y,uint32_t val);
 void SetColor(uint32_t val);
 
 void FillRect(int x,int y,int w,int h);
+
+void ClearScreen();
