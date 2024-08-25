@@ -1,7 +1,11 @@
+#pragma once
+
+
 #include "../interrupts/idt.h"
+#include "../interrupts/irq.h"
 #include "../utils/ports.h"
 #include "../utils/bit.h"
-
+#include "../stdlib/stdio.h"
 typedef struct{
 	char type;
 	char val;
@@ -10,7 +14,6 @@ typedef struct{
 } KeyCode;
 #define KEY_TYPE_ASCII		0x1
 #define KEY_TYPE_FUNCTION	0x2
-#define KEY_TYPE_MODIFIER	0x3
 #define KEY_TYPE_ARROW		0x3
 
 #define KEY_MODIFIER_SHIFT	0
@@ -27,3 +30,6 @@ typedef struct{
 #define KEY_RIGHT_ARROW		1
 #define KEY_UP_ARROW		2
 #define KEY_DOWN_ARROW		3
+
+#include "../processes/processes.h"
+void KeyboardInstall();

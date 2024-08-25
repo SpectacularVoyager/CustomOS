@@ -43,7 +43,8 @@ int isAlphabetic(char c){
 	return (c>='a'&&c<='z');
 }
 char modifiers=0;
-void KeyboardHandler(registers* r){
+char arrow=0;
+void KeyboardHandlerImpl(registers* r){
 	 unsigned char scan_code = inb(0x60);
 	 KeyCode code={};
 	 int kb=kbdus[scan_code&(~0x80)];
@@ -99,5 +100,11 @@ void KeyboardHandler(registers* r){
 				 break;
 		 }
 	 }
+	 
 	 //printf("%c",kbdus[scan_code]);
+	Process_Running()->keyboardHandler(code);
+	//kprintf("%c",kb);
+}
+void KeyboardInstall(){
+	IRQ_RegisterHandler(1,KeyboardHandlerImpl);
 }

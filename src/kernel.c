@@ -9,6 +9,9 @@
 #include "interrupts/irq.h"
 #include "drivers/pci.h"
 #include "drivers/serial.h"
+
+#include "devices/keyboard.h"
+#include "processes/processes.h"
 #include "exceptions/exceptions.h"
 
 #include "paging/paging.h"
@@ -84,6 +87,11 @@ void FrameBufferSetip(struct multiboot_tag_framebuffer* fb){
 	kprintf(INFO "FRAME BUFFER COLOR:\t%d\n",color);
 	kprintf("-----------------[FRAME BUFFER]-----------------"ENDL);
 
+}
+void KernelKeyboardHandler(KeyCode code){
+	if(code.type=KEY_TYPE_ASCII){
+		kprintf("%c",code.val);
+	}
 }
 void kernel_main(unsigned long addr,int magic,int cs) 
 {
@@ -165,6 +173,9 @@ void kernel_main(unsigned long addr,int magic,int cs)
 		PCI_Device_Print(&devices[i]);
 	}
 	IRQ_RegisterHandler(14, ATAPIO_HANDLE_IRQ);
+	ProcessAddKeyboardHandler(KernelKeyboardHandler);
+	KeyboardInstall();
+	
 
 	//uint64_t* addr=(uint64_t*)mbd->framebuffer_addr;
 	//kprintf(TRACE "FRAMEBUFFER:\t%p\n",mbd->framebuffer_addr);
