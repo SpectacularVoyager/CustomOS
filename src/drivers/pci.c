@@ -78,13 +78,15 @@ uint16_t PCI_CheckVendor(uint8_t bus, uint8_t slot,uint8_t function) {
 }
 void PCI_Device_Print(PCI_device* d){
 	if(!d){
-		printf("DEVICE:NULL\n");
+		kprintf("DEVICE:NULL\n");
 		return;
 	}
-	printf("VENDOR 0x%X DEVICE 0x%X\n",d->vendor_id,d->device_id);
-	printf("\tLOCATION [%d][%d][%d]\n",d->bus&0xFF,d->slot&0xFF,d->function&0xFF);
-	printf("\tCLASS : 0X%02X  SUBCLASS : 0X%02X  PROG_IF : 0X%02X\n",d->class_id,d->subclass_id,d->progIF);
-	printf("\tHEADER TYPE 0X%02X\n",d->headerType);
+	kprintf("-----------------[DEVICE 0x%04X 0x%04X]-----------------\n",d->vendor_id,d->device_id);
+	//kprintf("VENDOR 0x%X DEVICE 0x%X\n",d->vendor_id,d->device_id);
+	kprintf("\tLOCATION [%d][%d][%d]\n",d->bus&0xFF,d->slot&0xFF,d->function&0xFF);
+	kprintf("\tCLASS : 0X%02X  SUBCLASS : 0X%02X  PROG_IF : 0X%02X\n",d->class_id,d->subclass_id,d->progIF);
+	kprintf("\tHEADER TYPE 0X%02X\n",d->headerType);
+	kprintf("--------------------------------------------------------\n",d->vendor_id,d->device_id);
 }
 void PCI_Initiate(){
 	PCI_dev_count=0;

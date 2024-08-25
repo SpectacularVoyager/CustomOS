@@ -39,6 +39,7 @@ kernel:
 	@$(CC) -c $(SOURCE)/drivers/serial.c -o $(OUT)/serial.o -std=gnu99 -ffreestanding $(CFLAGS)
 
 	@$(CC) -c $(SOURCE)/graphics/graphics.c -o $(OUT)/graphics.o -std=gnu99 -ffreestanding $(CFLAGS)
+	@$(CC) -c $(SOURCE)/disk/atapio/atapio.c -o $(OUT)/atapio.o -std=gnu99 -ffreestanding $(CFLAGS)
 
 link:
 	@$(CC) -T linker.ld -o $(ISO) -ffreestanding -O2 -nostdlib $(shell find -name '*.o') -lgcc

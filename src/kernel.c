@@ -13,6 +13,7 @@
 
 #include "paging/paging.h"
 #include "graphics/graphics.h"
+#include "disk/atapio/atapio.h"
 /*
  * USE PRINTF from here
  * https://github.com/mpaland/printf
@@ -150,7 +151,7 @@ void kernel_main(unsigned long addr,int magic,int cs)
 	for(int i=0;i<w;i++){
 		for(int j=0;j<h;j++){
 			//SetPixelHex(i,j,i+j*w);
-			SetPixelHex(i,j,i);
+			SetPixelHex(i,j,i|j<<16);
 		}
 	}
 
@@ -161,8 +162,11 @@ void kernel_main(unsigned long addr,int magic,int cs)
 	for(uint16_t i=0;i<PCI_GetDeviceCount();i++){
 		PCI_Device_Print(&devices[i]);
 	}
+	IRQ_RegisterHandler(14, ATAPIO_HANDLE_IRQ);
 
 	//uint64_t* addr=(uint64_t*)mbd->framebuffer_addr;
 	//kprintf(TRACE "FRAMEBUFFER:\t%p\n",mbd->framebuffer_addr);
+	
+	ATAPIO_Identify(ATAPIO_MASTER_SELECT);
 	while(1);
 }
