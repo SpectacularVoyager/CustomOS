@@ -1,3 +1,8 @@
+global p4_table
+global p3_table
+global p2_table
+;global p2_table2
+
 section .bss
 align 4096
 p4_table:
@@ -6,6 +11,9 @@ p3_table:
   resb 4096
 p2_table:
   resb 4096
+
+;p2_table2:
+;  resb 4096
 
 section .rodata
 gdt64:
@@ -59,14 +67,18 @@ Paging_SetUpTables:
   or eax, 0b11 ; present + writable
   mov [p4_table], eax
 
-  ; map first P3 entry to P2 table
+  ;; map first P3 entry to P2 table
   mov eax, p2_table
   or eax, 0b11 ; present + writable
   mov [p3_table], eax
 
+  ;mov eax, p2_table2
+  ;or eax, 0b11 ; present + writable
+  ;mov [p3_table+8], eax
+
   mov ecx, 0
 
-; map ecx-th P2 entry to a huge page that starts at address 2MiB*ecx
+;;; map ecx-th P2 entry to a huge page that starts at address 2MiB*ecx
 .map_p2_table:
   mov eax, 0x200000  ; 2MiB
   mul ecx            ; start address of ecx-th page
@@ -77,4 +89,7 @@ Paging_SetUpTables:
   cmp ecx, 512       ; if counter == 512, the whole P2 table is mapped
   jne .map_p2_table  ; else map the next entry
 
+	mov ecx,0
+	extern PageSetup
+	call PageSetup
   ret

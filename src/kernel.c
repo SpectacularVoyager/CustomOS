@@ -1,6 +1,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include "SerialPrintf/printf.h"
 #include "stdlib/stdio.h"
 #include "grub/multiboot2.h"
 
@@ -8,6 +9,10 @@
 #include "interrupts/irq.h"
 #include "drivers/pci.h"
 #include "drivers/serial.h"
+#include "exceptions/exceptions.h"
+
+#include "paging/paging.h"
+#include "graphics/graphics.h"
 /*
  * USE PRINTF from here
  * https://github.com/mpaland/printf
@@ -133,9 +138,23 @@ void kernel_main(unsigned long addr,int magic,int cs)
 	IDT_Initialize(cs);
 	IRQ_Initialize();
 	PCI_Initiate();
-	video[0]=-1;
-	kprintf(INFO"%x\n",video[0]);
+	ExceptionInit();
+	PageSetup();
+	putPage(0x40000000*3L,512);
+	int w=fb->common.framebuffer_width;
+	int h=fb->common.framebuffer_height;
+	GraphicsInit(
+			fb->common.framebuffer_addr,w,h,
+			fb->common.framebuffer_bpp
+			);
+	for(int i=0;i<w;i++){
+		for(int j=0;j<h;j++){
+			//SetPixelHex(i,j,i+j*w);
+			SetPixelHex(i,j,i);
+		}
+	}
 
+	
 
 	PCI_device* devices=PCI_GetDevices();
 	kprintf(TRACE "DETECTED %d devices\n",PCI_GetDeviceCount());

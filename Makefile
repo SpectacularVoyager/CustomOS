@@ -11,7 +11,7 @@ QEMU=qemu-system-x86_64
 CC=x86_64-elf-gcc
 CC32=i686-elf-gcc
 
-QEMU_FLAGS= -serial file:logs/serial.log -net nic,model=rtl8139 -hda 
+QEMU_FLAGS= -serial file:logs/serial.log -net nic,model=rtl8139 -vga std -hda 
 
 all: clean boot kernel link build isMultiBoot
 
@@ -27,14 +27,18 @@ kernel:
 	@$(CC) -c $(SOURCE)/vga/term.c -o $(OUT)/term.o -std=gnu99 -ffreestanding $(CFLAGS)
 	@$(CC) -c $(SOURCE)/printf/printf.c -o $(OUT)/printf.o -std=gnu99 -ffreestanding $(CFLAGS)
 	@$(CC) -c $(SOURCE)/SerialPrintf/printf.c -o $(OUT)/SerialPrintf.o -std=gnu99 -ffreestanding $(CFLAGS)
+	@$(CC) -c $(SOURCE)/paging/paging.c -o $(OUT)/paging.o -std=gnu99 -ffreestanding $(CFLAGS)
 	@$(CC) -c $(SOURCE)/interrupts/idt.c -o $(OUT)/idt.o -std=gnu99 -ffreestanding $(CFLAGS)
 	@$(CC) -c $(SOURCE)/interrupts/isr.c -o $(OUT)/isr.o -std=gnu99 -ffreestanding $(CFLAGS)
 	@$(CC) -c $(SOURCE)/interrupts/isr.c -o $(OUT)/isr.o -std=gnu99 -ffreestanding $(CFLAGS)
 	@$(CC) -c $(SOURCE)/interrupts/irq.c -o $(OUT)/irq.o -std=gnu99 -ffreestanding $(CFLAGS)
+	@$(CC) -c $(SOURCE)/exceptions/exceptions.c -o $(OUT)/exceptions.o -std=gnu99 -ffreestanding $(CFLAGS)
 	@$(CC) -c $(SOURCE)/interrupts/isrgen.c -o $(OUT)/isrgen.o -std=gnu99 -ffreestanding $(CFLAGS)
 	@$(CC) -c $(SOURCE)/drivers/pic.c -o $(OUT)/pic.o -std=gnu99 -ffreestanding $(CFLAGS)
 	@$(CC) -c $(SOURCE)/drivers/pci.c -o $(OUT)/pci.o -std=gnu99 -ffreestanding $(CFLAGS)
 	@$(CC) -c $(SOURCE)/drivers/serial.c -o $(OUT)/serial.o -std=gnu99 -ffreestanding $(CFLAGS)
+
+	@$(CC) -c $(SOURCE)/graphics/graphics.c -o $(OUT)/graphics.o -std=gnu99 -ffreestanding $(CFLAGS)
 
 link:
 	@$(CC) -T linker.ld -o $(ISO) -ffreestanding -O2 -nostdlib $(shell find -name '*.o') -lgcc
@@ -47,7 +51,7 @@ isMultiBoot:
 run: all
 	@$(QEMU) $(QEMU_FLAGS) iso.iso
 debug: all
-	@$(QEMU) -net nic,model=e1000 -hda iso.iso -monitor stdio
+	@$(QEMU) $(QEMU_FLAGS) iso.iso -monitor stdio
 gdb: all
 	@$(QEMU) -s -S -net nic,model=e1000 -hda iso.iso
 	# TO RUN
