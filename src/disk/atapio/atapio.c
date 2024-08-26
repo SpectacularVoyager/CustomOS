@@ -7,6 +7,10 @@ uint16_t atapio_identify[256];
 uint16_t data[256];
 int atapio_lba48;
 
+uint64_t addressFromLBA(uint64_t LBA){
+	return LBA*0x800;
+}
+
 int req=0;
 uint16_t convertFromPort(uint16_t x){
 
@@ -25,12 +29,12 @@ unsigned long getLBA48Addresses(){
 	return ret;
 	//kprintf("%")
 }
-void PrintData(){
+void PrintData(uint16_t* d){
 	int c=16;
 	for(int i=0;i<256/c;i++){
 		kprintf("\t");
 		for(int j=0;j<c;j++){
-			kprintf("0X%04X\t",data[i*16|j]);
+			kprintf("0X%04X\t",d[i*16|j]);
 		}
 		kprintf("\n");
 	}

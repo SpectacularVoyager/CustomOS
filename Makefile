@@ -23,6 +23,7 @@ boot:
 
 kernel:
 	@$(CC) -c $(SOURCE)/kernel32.c -o $(OUT)/kernel32.o -std=gnu99 -ffreestanding $(CFLAGS)
+	@$(CC) -c $(SOURCE)/gdt32.c -o $(OUT)/gdt32.o -std=gnu99 -ffreestanding $(CFLAGS)
 	@$(CC) -c $(SOURCE)/kernel.c -o $(OUT)/kernel.o -std=gnu99 -ffreestanding $(CFLAGS)
 	@$(CC) -c $(SOURCE)/vga/term.c -o $(OUT)/term.o -std=gnu99 -ffreestanding $(CFLAGS)
 	@$(CC) -c $(SOURCE)/printf/printf.c -o $(OUT)/printf.o -std=gnu99 -ffreestanding $(CFLAGS)

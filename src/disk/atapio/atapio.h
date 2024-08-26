@@ -41,3 +41,7 @@ void ATAPIO_Identify(int target);
 void ATAPIO_HANDLE_IRQ(registers* r);
 
 void ATAPIO_ReadBytes(int sectors,int lba,uint16_t array[256]);
+
+uint64_t addressFromLBA(uint64_t LBA);
+
+void PrintData(uint16_t* d);

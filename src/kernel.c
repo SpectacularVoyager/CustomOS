@@ -18,6 +18,7 @@
 #include "graphics/graphics.h"
 #include "disk/atapio/atapio.h"
 #include "disk/iso/iso.h"
+#include "task/task.h"
 /*
  * USE PRINTF from here
  * https://github.com/mpaland/printf
@@ -37,7 +38,7 @@ void checkMultiboot(unsigned long addr,int magic){
     }
 	kprintf(TRACE "MAGIC:\t%p\n",magic);
 }
-void FrameBufferSetip(struct multiboot_tag_framebuffer* fb){
+void FrameBufferSetup(struct multiboot_tag_framebuffer* fb){
 	kprintf(ENDL "-----------------[FRAME BUFFER]-----------------"ENDL);
 	kprintf(INFO "FRAME BUFFER ADDR:\t%p\n",fb->common.framebuffer_addr);
 	kprintf(INFO "FRAME BUFFER WIDTH:\t%d\n",fb->common.framebuffer_width);
@@ -142,7 +143,7 @@ void kernel_main(unsigned long addr,int magic,int cs)
 		return;
 	}
 
-	FrameBufferSetip(fb);
+	FrameBufferSetup(fb);
 
 	uint64_t* video=(uint64_t*)fb->common.framebuffer_addr;
 	IDT_Initialize(cs);

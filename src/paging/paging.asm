@@ -20,10 +20,12 @@ gdt64:
     dq 0 ; zero entry
 .code: equ $ - gdt64 ; new
     ;dq (1<<43) | (1<<44) | (1<<47) | (1<<53) ; code segment
-	dq (0xA)<<52 | (0x9A)<<40
+	dq (0xA)<<52 | (0x9A)<<40 
 .data: equ $ - gdt64 ; new
     ;dq (1<<43) | (1<<44) | (1<<47) | (1<<53) ; code segment
 	dq (0xC)<<52 | (0x92)<<40
+.tss: equ $-gdt64
+	dq (0x0)<<52 | (0x89)<<40 | (gdt64.tss)<<16 | 8
 .pointer:
   dw $ - gdt64 - 1
   dq gdt64
