@@ -58,7 +58,7 @@ void FrameBufferSetip(struct multiboot_tag_framebuffer* fb){
 
 				for (int i = 0; i < fb->framebuffer_palette_num_colors; i++)
 				{
-					distance = (0xff - palette[i].blue) 
+					distance = (0xff - palette[i].blue)
 						* (0xff - palette[i].blue)
 						+ palette[i].red * palette[i].red
 						+ palette[i].green * palette[i].green;
@@ -72,7 +72,7 @@ void FrameBufferSetip(struct multiboot_tag_framebuffer* fb){
 			break;
 
 		case MULTIBOOT_FRAMEBUFFER_TYPE_RGB:
-			color = ((1 << fb->framebuffer_blue_mask_size) - 1) 
+			color = ((1 << fb->framebuffer_blue_mask_size) - 1)
 				<< fb->framebuffer_blue_field_position;
 			break;
 
@@ -93,7 +93,7 @@ void KernelKeyboardHandler(KeyCode code){
 		kprintf("%c",code.val);
 	}
 }
-void kernel_main(unsigned long addr,int magic,int cs) 
+void kernel_main(unsigned long addr,int magic,int cs)
 {
 	kprintf(INFO "BOOTING OS\n");
 	checkMultiboot(addr, magic);
@@ -104,7 +104,7 @@ void kernel_main(unsigned long addr,int magic,int cs)
 	struct multiboot_tag *tag;
 	for (tag = (struct multiboot_tag *) (addr + 8);
 			tag->type != MULTIBOOT_TAG_TYPE_END;
-			tag = (struct multiboot_tag *) ((multiboot_uint8_t *) tag 
+			tag = (struct multiboot_tag *) ((multiboot_uint8_t *) tag
 				+ ((tag->size + 7) & ~7)))
 	{
 		kprintf (INFO "Tag %d, Size 0x%x\n", tag->type, tag->size);
@@ -113,7 +113,7 @@ void kernel_main(unsigned long addr,int magic,int cs)
 				break;
 			case MULTIBOOT_TAG_TYPE_FRAMEBUFFER:
 				fb=(struct multiboot_tag_framebuffer*) tag;
-				
+
 				break;
 			case MULTIBOOT_TAG_TYPE_MMAP:
 				multiboot_memory_map_t *mmap;
@@ -121,9 +121,9 @@ void kernel_main(unsigned long addr,int magic,int cs)
 				kprintf ("MMAP\n");
 
 				for (mmap = ((struct multiboot_tag_mmap *) tag)->entries;
-						(multiboot_uint8_t *) mmap 
+						(multiboot_uint8_t *) mmap
 						< (multiboot_uint8_t *) tag + tag->size;
-						mmap = (multiboot_memory_map_t *) 
+						mmap = (multiboot_memory_map_t *)
 						((unsigned long) mmap
 						 + ((struct multiboot_tag_mmap *) tag)->entry_size))
 			//		kprintf (" base_addr = 0x%x%x,"
@@ -141,7 +141,7 @@ void kernel_main(unsigned long addr,int magic,int cs)
 		kprintf(ERROR "FB NOT DETECTED\n");
 		return;
 	}
-	
+
 	FrameBufferSetip(fb);
 
 	uint64_t* video=(uint64_t*)fb->common.framebuffer_addr;
@@ -160,12 +160,12 @@ void kernel_main(unsigned long addr,int magic,int cs)
 	for(int i=0;i<w;i++){
 		for(int j=0;j<h;j++){
 			//SetPixelHex(i,j,i+j*w);
-			SetPixel(i,j,i|j<<16);
+			SetPixel(i,j,i<<8|j<<16);
 		}
 	}
 
 	//FillRect(100,100,100,100);
-	
+
 
 	PCI_device* devices=PCI_GetDevices();
 	kprintf(TRACE "DETECTED %d devices\n",PCI_GetDeviceCount());
@@ -175,16 +175,16 @@ void kernel_main(unsigned long addr,int magic,int cs)
 	IRQ_RegisterHandler(14, ATAPIO_HANDLE_IRQ);
 	ProcessAddKeyboardHandler(KernelKeyboardHandler);
 	KeyboardInstall();
-	
+
 
 	//uint64_t* addr=(uint64_t*)mbd->framebuffer_addr;
 	//kprintf(TRACE "FRAMEBUFFER:\t%p\n",mbd->framebuffer_addr);
-	
+
 	ATAPIO_Identify(ATAPIO_MASTER_SELECT);
 	uint16_t array[256];
 	ATAPIO_ReadBytes(1,0,array);
 	kprintf(TRACE "BOOT SECTOR END VALUE:\t%x\n",array[255]);
-	//ISO_Init();
-	
+	ISO_Init();
+
 	while(1);
 }

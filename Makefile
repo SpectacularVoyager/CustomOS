@@ -27,6 +27,7 @@ kernel:
 	@$(CC) -c $(SOURCE)/vga/term.c -o $(OUT)/term.o -std=gnu99 -ffreestanding $(CFLAGS)
 	@$(CC) -c $(SOURCE)/printf/printf.c -o $(OUT)/printf.o -std=gnu99 -ffreestanding $(CFLAGS)
 	@$(CC) -c $(SOURCE)/SerialPrintf/printf.c -o $(OUT)/SerialPrintf.o -std=gnu99 -ffreestanding $(CFLAGS)
+	@$(CC) -c $(SOURCE)/stdlib/string.c -o $(OUT)/string.o -std=gnu99 -ffreestanding $(CFLAGS)
 	@$(CC) -c $(SOURCE)/paging/paging.c -o $(OUT)/paging.o -std=gnu99 -ffreestanding $(CFLAGS)
 	@$(CC) -c $(SOURCE)/interrupts/idt.c -o $(OUT)/idt.o -std=gnu99 -ffreestanding $(CFLAGS)
 	@$(CC) -c $(SOURCE)/interrupts/isr.c -o $(OUT)/isr.o -std=gnu99 -ffreestanding $(CFLAGS)
@@ -43,7 +44,7 @@ kernel:
 	@$(CC) -c $(SOURCE)/disk/atapio/atapio.c -o $(OUT)/atapio.o -std=gnu99 -ffreestanding $(CFLAGS)
 	@$(CC) -c $(SOURCE)/disk/iso/iso.c -o $(OUT)/iso.o -std=gnu99 -ffreestanding $(CFLAGS)
 
-	@$(CC) -c $(SOURCE)/processes/processes.c -o $(OUT)/iso.o -std=gnu99 -ffreestanding $(CFLAGS)
+	@$(CC) -c $(SOURCE)/processes/processes.c -o $(OUT)/process.o -std=gnu99 -ffreestanding $(CFLAGS)
 
 link:
 	@$(CC) -T linker.ld -o $(ISO) -ffreestanding -O2 -nostdlib $(shell find -name '*.o') -lgcc

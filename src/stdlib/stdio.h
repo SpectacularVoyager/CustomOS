@@ -1,3 +1,5 @@
+#pragma once
+
 #include "../printf/printf.h"
 #include "../SerialPrintf/printf.h"
 
