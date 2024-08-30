@@ -90,9 +90,13 @@ void FrameBufferSetup(struct multiboot_tag_framebuffer* fb){
 
 }
 void KernelKeyboardHandler(KeyCode code){
-	if(code.type=KEY_TYPE_ASCII){
+	if(code.type==KEY_TYPE_ARROW && code.pressed){
+		kprintf("ARROW %x\n",code.val);
+	}
+	if(code.type=KEY_TYPE_ASCII && code.pressed){
 		kprintf("%c",code.val);
 	}
+	//kprintf("INT\n");
 }
 void kernel_main(unsigned long addr,int magic,int cs)
 {
@@ -174,8 +178,8 @@ void kernel_main(unsigned long addr,int magic,int cs)
 		PCI_Device_Print(&devices[i]);
 	}
 	IRQ_RegisterHandler(14, ATAPIO_HANDLE_IRQ);
-	ProcessAddKeyboardHandler(KernelKeyboardHandler);
 	KeyboardInstall();
+	KeyboardSetProcess(KernelKeyboardHandler);
 
 
 	//uint64_t* addr=(uint64_t*)mbd->framebuffer_addr;
