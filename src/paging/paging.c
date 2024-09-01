@@ -1,13 +1,16 @@
 #include "paging.h"
 #include"stdint.h"
 #include <stdint.h>
-uint64_t __attribute__((aligned(4096))) fbpage[512];
-uint64_t __attribute__((aligned(4096))) tempPage1[512];
 
+uint64_t __attribute__((aligned(4096))) fbpage[512];
+uint64_t __attribute__((aligned(4096))) tempPage[512];
+unsigned int pageCount=0;
+
+unsigned int page_width=0x40000000;
+PageTable mainTable;
 void PageSetup(){
 	p3_table[0]=(uint64_t)p2_table|0b11;
 	unsigned int fbindex   =0xFD000000;
-	unsigned int page_width=0x40000000;
 	p3_table[fbindex/page_width]=(uint64_t)fbpage|0b11;
 }
 void putPage(uint64_t addr,int size){
@@ -16,11 +19,22 @@ void putPage(uint64_t addr,int size){
 		fbpage[i]=(0x200000L*i+addr)|0b10000011L;
 	}
 }
+Page PageAlloc(){
+	Page page={.offset=pageCount};
+	pageCount++;
+	return page;
+}
 void identitymap(uint64_t addr){
-	unsigned int page_width=0x40000000;
-	p3_table[addr/page_width]=(uint64_t)tempPage1|0b11;
+	p3_table[addr/page_width]=(uint64_t)tempPage|0b11;
 
 	for(int i=0;i<512;i++){
-		tempPage1[i]=(0x200000L*i+addr)|0b10000011L;
+		tempPage[i]=(0x200000L*i+addr)|0b10000011L;
+	}
+}
+void PageCreateEmpty(int id){
+	p3_table[id]=(uint64_t)tempPage|0b11;
+	//USE MALLOC
+	for(int i=0;i<512;i++){
+		tempPage[i]=((0x200000L*i)+0x40000000*2L)|0b10000011L;
 	}
 }

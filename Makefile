@@ -46,6 +46,8 @@ kernel:
 	@$(CC) -c $(SOURCE)/disk/iso/iso.c -o $(OUT)/iso.o -std=gnu99 -ffreestanding $(CFLAGS)
 
 	@$(CC) -c $(SOURCE)/processes/processes.c -o $(OUT)/process.o -std=gnu99 -ffreestanding $(CFLAGS)
+	@$(CC) -c $(SOURCE)/task/task.c -o $(OUT)/task.o -std=gnu99 -ffreestanding $(CFLAGS)
+	@$(CC) -c $(SOURCE)/programs/test.c -o $(OUT)/test.o -std=gnu99 -ffreestanding $(CFLAGS)
 
 link:
 	@$(CC) -T linker.ld -o $(ISO) -ffreestanding -O2 -nostdlib $(shell find -name '*.o') -lgcc

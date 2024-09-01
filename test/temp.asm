@@ -1,6 +1,7 @@
 global _start
 _start:
-	db 0X66
-	db 0X0F
-	db 0X6E
-	db 0XA5
+	mov rax,0
+	db  66 
+	db 	0F 
+	db 	6F 
+	db 	85

@@ -49,3 +49,4 @@ _start:
 
 %include "src/interrupts/idt.asm"
 %include "src/interrupts/isr.asm"
+%include "src/task/task.asm"
