@@ -3,7 +3,7 @@
 void Paging_Disable();
 void PagingInit();
 
-void PageSetup();
+void PageSetup(uint64_t fb_index);
 
 extern uint64_t p4_table[512];
 extern uint64_t p3_table[512];

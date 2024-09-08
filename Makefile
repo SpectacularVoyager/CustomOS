@@ -71,4 +71,5 @@ drive:
 	dd if=iso.iso of=/dev/sda status=progress
 
 log:
+	@truncate -s 0 logs/serial.log
 	@tail -f logs/serial.log 2> /dev/null

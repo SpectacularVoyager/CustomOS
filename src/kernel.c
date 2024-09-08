@@ -102,7 +102,7 @@ void KernelKeyboardHandler(KeyCode code){
 void testMain();
 void kernel_main(unsigned long addr,int magic,int cs)
 {
-	kprintf(INFO "BOOTING OS\n");
+	kprintf(INFO "BOOTING OS[%x]\n",magic);
 	checkMultiboot(addr, magic);
 	unsigned size=*(unsigned*)addr;
 	kprintf (TRACE "MBI SIZE:\t0x%x\n", size);
@@ -154,11 +154,11 @@ void kernel_main(unsigned long addr,int magic,int cs)
 	uint64_t* video=(uint64_t*)fb->common.framebuffer_addr;
 	IDT_Initialize(cs);
 	IRQ_Initialize();
-	PCI_Initiate();
+	//PCI_Initiate();
 	ExceptionInit();
-	PageSetup();
+	PageSetup(fb->common.framebuffer_addr);
 	//PageCreateEmpty(2);
-	putPage(0x40000000*3L,512);
+	putPage((uint64_t)(fb->common.framebuffer_addr/0x40000000)*0x40000000,512);
 	int w=fb->common.framebuffer_width;
 	int h=fb->common.framebuffer_height;
 	GraphicsInit(
@@ -171,6 +171,7 @@ void kernel_main(unsigned long addr,int magic,int cs)
 			SetPixel(i,j,i<<8|j<<16);
 		}
 	}
+	kprintf("PAGING DONE\n");
 
 	//FillRect(100,100,100,100);
 
@@ -185,30 +186,30 @@ void kernel_main(unsigned long addr,int magic,int cs)
 	KeyboardSetProcess(KernelKeyboardHandler);
 
 
-	//uint64_t* addr=(uint64_t*)mbd->framebuffer_addr;
-	//kprintf(TRACE "FRAMEBUFFER:\t%p\n",mbd->framebuffer_addr);
+	//////uint64_t* addr=(uint64_t*)mbd->framebuffer_addr;
+	//////kprintf(TRACE "FRAMEBUFFER:\t%p\n",mbd->framebuffer_addr);
 
-	ATAPIO_Identify(ATAPIO_MASTER_SELECT);
-	uint16_t array[256];
-	ATAPIO_ReadBytes(1,0,array);
-	kprintf(TRACE "BOOT SECTOR END VALUE:\t%x\n",array[255]);
-	//ISO_Init();
-	//Page p=PageAlloc();
-	//int* _addr=(int*)(40000000L*2);
-	//*_addr=0xf0f0f0f0;
-	//kprintf(INFO "%p\n",*_addr);
+	////ATAPIO_Identify(ATAPIO_MASTER_SELECT);
+	////uint16_t array[256];
+	////ATAPIO_ReadBytes(1,0,array);
+	////kprintf(TRACE "BOOT SECTOR END VALUE:\t%x\n",array[255]);
+	//////ISO_Init();
+	//////Page p=PageAlloc();
+	//////int* _addr=(int*)(40000000L*2);
+	//////*_addr=0xf0f0f0f0;
+	//////kprintf(INFO "%p\n",*_addr);
 
-	//TaskInit();	
-	//Task t=TaskCreate(0,0,0,0);
-	Context* current=TaskGetContext();
-	Task task={.PID=0,.entry=(const void(*))kernel_main};
+	//////TaskInit();	
+	//////Task t=TaskCreate(0,0,0,0);
+	////Context* current=TaskGetContext();
+	////Task task={.PID=0,.entry=(const void(*))kernel_main};
 
-	Context c={};
-	memcpy(&c,current,sizeof(Context));
-	c.rip=(uint64_t)testMain;
-	Task t;
-	memcpy(&t.context,&c,sizeof(Context));
-	TaskSwitch(&task,&t);
+	////Context c={};
+	////memcpy(&c,current,sizeof(Context));
+	////c.rip=(uint64_t)testMain;
+	////Task t;
+	////memcpy(&t.context,&c,sizeof(Context));
+	////TaskSwitch(&task,&t);
 
 	while(1);
 }
