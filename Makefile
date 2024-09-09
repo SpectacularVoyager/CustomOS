@@ -11,7 +11,7 @@ QEMU=qemu-system-x86_64
 CC=x86_64-elf-gcc
 CC32=i686-elf-gcc
 
-QEMU_FLAGS= -serial file:logs/serial.log -net nic,model=rtl8139 -m 512M -vga std -hda 
+QEMU_FLAGS=-enable-kvm  -cpu qemu64,+ssse3,+sse4.1,+sse4.2 -serial file:logs/serial.log -net nic,model=rtl8139 -m 512M -vga std -hda 
 
 all: clean boot kernel link build isMultiBoot
 
@@ -48,6 +48,7 @@ kernel:
 	@$(CC) -c $(SOURCE)/processes/processes.c -o $(OUT)/process.o -std=gnu99 -ffreestanding $(CFLAGS)
 	@$(CC) -c $(SOURCE)/task/task.c -o $(OUT)/task.o -std=gnu99 -ffreestanding $(CFLAGS)
 	@$(CC) -c $(SOURCE)/programs/test.c -o $(OUT)/test.o -std=gnu99 -ffreestanding $(CFLAGS)
+	@$(CC) -c $(SOURCE)/programs/pong.c -o $(OUT)/pong.o -std=gnu99 -ffreestanding $(CFLAGS)
 
 link:
 	@$(CC) -T linker.ld -o $(ISO) -ffreestanding -O2 -nostdlib $(shell find -name '*.o') -lgcc
@@ -73,3 +74,10 @@ drive:
 log:
 	@truncate -s 0 logs/serial.log
 	@tail -f logs/serial.log 2> /dev/null
+
+install:
+	sudo grub-install --root-directory=/mnt --no-floppy --modules="normal part_msdos ext2 multiboot " /dev/loop40
+
+usb:
+	sudo mkfs.vfat -F 32 -n YourLabel -I /dev/sda
+

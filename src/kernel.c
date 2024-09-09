@@ -20,6 +20,7 @@
 #include "disk/iso/iso.h"
 #include "task/task.h"
 #include "stdlib/string.h"
+#include "programs/pong.h"
 /*
  * USE PRINTF from here
  * https://github.com/mpaland/printf
@@ -157,7 +158,6 @@ void kernel_main(unsigned long addr,int magic,int cs)
 	//PCI_Initiate();
 	ExceptionInit();
 	PageSetup(fb->common.framebuffer_addr);
-	//PageCreateEmpty(2);
 	putPage((uint64_t)(fb->common.framebuffer_addr/0x40000000)*0x40000000,512);
 	int w=fb->common.framebuffer_width;
 	int h=fb->common.framebuffer_height;
@@ -165,22 +165,22 @@ void kernel_main(unsigned long addr,int magic,int cs)
 			fb->common.framebuffer_addr,w,h,
 			fb->common.framebuffer_bpp
 			);
-	for(int i=0;i<w;i++){
-		for(int j=0;j<h;j++){
-			//SetPixelHex(i,j,i+j*w);
-			SetPixel(i,j,i<<8|j<<16);
-		}
-	}
+	//for(int i=0;i<w;i++){
+	//	for(int j=0;j<h;j++){
+	//		//SetPixelHex(i,j,i+j*w);
+	//		SetPixel(i,j,i<<8|j<<16);
+	//	}
+	//}
 	kprintf("PAGING DONE\n");
 
 	//FillRect(100,100,100,100);
 
 
-	PCI_device* devices=PCI_GetDevices();
-	kprintf(TRACE "DETECTED %d devices\n",PCI_GetDeviceCount());
-	for(uint16_t i=0;i<PCI_GetDeviceCount();i++){
-		PCI_Device_Print(&devices[i]);
-	}
+	//PCI_device* devices=PCI_GetDevices();
+	//kprintf(TRACE "DETECTED %d devices\n",PCI_GetDeviceCount());
+	//for(uint16_t i=0;i<PCI_GetDeviceCount();i++){
+	//	PCI_Device_Print(&devices[i]);
+	//}
 	IRQ_RegisterHandler(14, ATAPIO_HANDLE_IRQ);
 	KeyboardInstall();
 	KeyboardSetProcess(KernelKeyboardHandler);
@@ -210,6 +210,8 @@ void kernel_main(unsigned long addr,int magic,int cs)
 	////Task t;
 	////memcpy(&t.context,&c,sizeof(Context));
 	////TaskSwitch(&task,&t);
+	SwapBuffers();
+	PONG_MAIN();
 
 	while(1);
 }

@@ -18,3 +18,9 @@ void SetColor(uint32_t val);
 void FillRect(int x,int y,int w,int h);
 
 void ClearScreen();
+
+int GetWidth();
+
+int GetHeight();
+
+void SwapBuffers();

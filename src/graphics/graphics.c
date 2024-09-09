@@ -1,20 +1,29 @@
 #include "graphics.h"
 #include "../stdlib/stdio.h"
+#include "../stdlib/string.h"
 
 int width;
 int height;
-
+int bpp;
 uint32_t* video;
+uint32_t* buffer;
 uint32_t color=0xffffffff;
-
-int GraphicsInit(long addr,int w,int h,int bpp){
-	if(bpp!=32){
-		kprintf_("CANNOT INIT WITH BPP %d\n",bpp);
+#define DOUBLE_BUFFERING 
+int GraphicsInit(long addr,int w,int h,int _bpp){
+	if(_bpp!=32){
+		kprintf_("CANNOT INIT WITH BPP %d\n",_bpp);
 		return 1;
 	}
-	video=(uint32_t*)addr;
+
 	width=w;
 	height=h;
+	bpp=_bpp;
+#ifdef DOUBLE_BUFFERING
+	buffer=(uint32_t*)(addr);
+	video=(uint32_t*)(addr+width*height*bpp/2);
+#else
+	video=(uint32_t*)(addr);
+#endif
 	return 0;
 }
 void SetPixel(int x,int y,uint32_t r){
@@ -24,9 +33,22 @@ void SetPixel(int x,int y,uint32_t r){
 void SetColor(uint32_t val){
 	color=val;
 }
+int GetWidth(){
+	return width;
+}
+int GetHeight(){
+	return height;
+}
+void SwapBuffers(){
+#ifdef DOUBLE_BUFFERING
+	for(int i=0;i<width*height;i++){
+		buffer[i]=video[i];
+	}
+#endif
+}
 
 void FillRect(int x,int y,int w,int h){
-	
+
 	for(int i=x;i<x+w;i++){
 		for(int j=y;j<y+h;j++){
 			video[j*width+i]=color;
