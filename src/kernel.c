@@ -100,7 +100,7 @@ void KernelKeyboardHandler(KeyCode code){
 	}
 	//kprintf("INT\n");
 }
-void testMain();
+void Debug();
 void kernel_main(unsigned long addr,int magic,int cs)
 {
 	kprintf(INFO "BOOTING OS[%x]\n",magic);
@@ -158,7 +158,7 @@ void kernel_main(unsigned long addr,int magic,int cs)
 	IRQ_RegisterHandler(14, ATAPIO_HANDLE_IRQ);
 	KeyboardInstall();
 	KeyboardSetProcess(KernelKeyboardHandler);
-	//PCI_Initiate();
+	PCI_Initiate();
 	ExceptionInit();
 	PageSetup(fb->common.framebuffer_addr);
 	putPage((uint64_t)(fb->common.framebuffer_addr/0x40000000)*0x40000000,512);
@@ -179,11 +179,7 @@ void kernel_main(unsigned long addr,int magic,int cs)
 	//FillRect(100,100,100,100);
 
 
-	//PCI_device* devices=PCI_GetDevices();
-	//kprintf(TRACE "DETECTED %d devices\n",PCI_GetDeviceCount());
-	//for(uint16_t i=0;i<PCI_GetDeviceCount();i++){
-	//	PCI_Device_Print(&devices[i]);
-	//}
+	ClearScreen();
 
 
 	//////uint64_t* addr=(uint64_t*)mbd->framebuffer_addr;
@@ -211,7 +207,8 @@ void kernel_main(unsigned long addr,int magic,int cs)
 	////memcpy(&t.context,&c,sizeof(Context));
 	////TaskSwitch(&task,&t);
 	SwapBuffers();
-	PONG_MAIN();
+	//PONG_MAIN();
+	Debug();
 
 	while(1);
 }
