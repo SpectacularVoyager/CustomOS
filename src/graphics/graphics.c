@@ -43,6 +43,13 @@ int GetWidth(){
 int GetHeight(){
 	return height;
 }
+void Flush(int x,int y,int w,int h){
+	for(int i=0;i<w;i++){
+		for(int j=0;j<h;j++){
+			buffer[GET_PIXEL(x+i, y+j)]=video[GET_PIXEL(x+i, y+j)];
+		}
+	}
+}
 void SwapBuffers(){
 #ifdef DOUBLE_BUFFERING
 	for(int i=0;i<width*height;i++){

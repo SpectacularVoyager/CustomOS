@@ -49,6 +49,7 @@ kernel:
 	@$(CC) -c $(SOURCE)/task/task.c -o $(OUT)/task.o -std=gnu99 -ffreestanding $(CFLAGS)
 	@$(CC) -c $(SOURCE)/programs/test.c -o $(OUT)/test.o -std=gnu99 -ffreestanding $(CFLAGS)
 	@$(CC) -c $(SOURCE)/programs/pong.c -o $(OUT)/pong.o -std=gnu99 -ffreestanding $(CFLAGS)
+	@$(CC) -c $(SOURCE)/graphics/graphicsterm.c -o $(OUT)/graphicsterm.o -std=gnu99 -ffreestanding $(CFLAGS)
 
 link:
 	@$(CC) -T linker.ld -o $(ISO) -ffreestanding -O2 -nostdlib $(shell find -name '*.o') -lgcc
