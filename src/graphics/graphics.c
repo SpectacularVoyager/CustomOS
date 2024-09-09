@@ -1,6 +1,7 @@
 #include "graphics.h"
 #include "../stdlib/stdio.h"
 #include "../stdlib/string.h"
+#include "font.h"
 
 int width;
 int height;
@@ -8,6 +9,9 @@ int bpp;
 uint32_t* video;
 uint32_t* buffer;
 uint32_t color=0xffffffff;
+
+
+#define GET_PIXEL(x,y) (y)*width+(x)
 #define DOUBLE_BUFFERING 
 int GraphicsInit(long addr,int w,int h,int _bpp){
 	if(_bpp!=32){
@@ -46,9 +50,24 @@ void SwapBuffers(){
 	}
 #endif
 }
+void WriteString(int x,int y,char* s){
+	int i=0;
+	while(s[i]){
+		WriteChar(x+8*i, y,s[i]);
+		i++;
+	}
+}
+void WriteChar(int x,int y,char c){
+	char *chars=font8x8_basic[c];
+	for(int i=0;i<8;i++){
+		for(int j=0;j<8;j++){
+			int val=(chars[j]>>i)&1;
+			video[GET_PIXEL(x+i, y+j)]=color*val;
+		}
+	}
+}
 
 void FillRect(int x,int y,int w,int h){
-
 	for(int i=x;i<x+w;i++){
 		for(int j=y;j<y+h;j++){
 			video[j*width+i]=color;

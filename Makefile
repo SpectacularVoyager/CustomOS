@@ -11,7 +11,7 @@ QEMU=qemu-system-x86_64
 CC=x86_64-elf-gcc
 CC32=i686-elf-gcc
 
-QEMU_FLAGS=-enable-kvm  -cpu qemu64,+ssse3,+sse4.1,+sse4.2 -serial file:logs/serial.log -net nic,model=rtl8139 -m 512M -vga std -hda 
+QEMU_FLAGS=-serial file:logs/serial.log -net nic,model=rtl8139 -m 512M -vga std -hda 
 
 all: clean boot kernel link build isMultiBoot
 

@@ -7,7 +7,7 @@ int w,h;
 int y1=0,y2=0;
 int pw=20,ph=100;
 int dx=100;
-int speed=3;
+int speed=20;
 
 void DrawRect(Rect* r){
 	FillRect(r->x-r->w/2,r->y+r->h/2,r->w,r->h);
@@ -21,7 +21,6 @@ int dir=0;
 int wp=0,sp=0,upp=0,downp=0;
 int vx=1,vy=1;
 void PongKeyboardHandler(KeyCode code){
-	kprintf("INPUT\n");
 	if(code.type==KEY_TYPE_ASCII && code.pressed&& (code.val|32)=='w'){
 		wp=1;
 	}
@@ -67,8 +66,8 @@ void PONG_MAIN(){
 	while(1){
 		p1.y-=speed*(wp-sp);
 		p2.y-=speed*(upp-downp);
-		
 		ClearScreen();
+		WriteString(10,10,"HELLO WORLD!!");
 		normalize(&p1);
 		normalize(&p2);
 		DrawRect(&p1);

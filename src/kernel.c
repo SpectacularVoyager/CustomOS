@@ -155,6 +155,9 @@ void kernel_main(unsigned long addr,int magic,int cs)
 	uint64_t* video=(uint64_t*)fb->common.framebuffer_addr;
 	IDT_Initialize(cs);
 	IRQ_Initialize();
+	IRQ_RegisterHandler(14, ATAPIO_HANDLE_IRQ);
+	KeyboardInstall();
+	KeyboardSetProcess(KernelKeyboardHandler);
 	//PCI_Initiate();
 	ExceptionInit();
 	PageSetup(fb->common.framebuffer_addr);
@@ -181,9 +184,6 @@ void kernel_main(unsigned long addr,int magic,int cs)
 	//for(uint16_t i=0;i<PCI_GetDeviceCount();i++){
 	//	PCI_Device_Print(&devices[i]);
 	//}
-	IRQ_RegisterHandler(14, ATAPIO_HANDLE_IRQ);
-	KeyboardInstall();
-	KeyboardSetProcess(KernelKeyboardHandler);
 
 
 	//////uint64_t* addr=(uint64_t*)mbd->framebuffer_addr;

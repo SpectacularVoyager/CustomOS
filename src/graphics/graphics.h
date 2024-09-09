@@ -24,3 +24,6 @@ int GetWidth();
 int GetHeight();
 
 void SwapBuffers();
+
+void WriteChar(int x,int y,char c);
+void WriteString(int x,int y,char* s);
