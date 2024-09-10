@@ -12,6 +12,8 @@ long_mode_start:
 
   extern kernel_main
 	pop rax
+	mov rcx,rax
+	pop rax
 	xor rbx,rbx
 	mov ebx,eax
 	shr rax,32

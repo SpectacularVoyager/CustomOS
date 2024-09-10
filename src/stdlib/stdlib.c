@@ -24,7 +24,7 @@ void AssignMallocMemoryMap(struct multiboot_tag *tag){
 			}
 		}
 	}
-	malloc_start+=0x100000;
+	malloc_start+=0x30000;
 	kprintf(INFO "MALLOC DETAILS [%X->%X]\n",malloc_start,malloc_end);
 }
 void MallocSetStart(unsigned long ptr){

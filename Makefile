@@ -11,7 +11,8 @@ QEMU=qemu-system-x86_64
 CC=x86_64-elf-gcc
 CC32=i686-elf-gcc
 
-QEMU_FLAGS=-serial file:logs/serial.log -net nic,model=rtl8139 -m 512M -vga std -hda 
+#QEMU_FLAGS= -cpu qemu64,+ssse3
+QEMU_FLAGS:=$(QEMU_FLAGS) -serial file:logs/serial.log -net nic,model=rtl8139 -m 512M -vga std -hda 
 
 all: clean boot kernel link build isMultiBoot
 
@@ -25,6 +26,7 @@ kernel:
 	@$(CC) -c $(SOURCE)/kernel32.c -o $(OUT)/kernel32.o -std=gnu99 -ffreestanding $(CFLAGS)
 	@$(CC) -c $(SOURCE)/gdt32.c -o $(OUT)/gdt32.o -std=gnu99 -ffreestanding $(CFLAGS)
 	@$(CC) -c $(SOURCE)/kernel.c -o $(OUT)/kernel.o -std=gnu99 -ffreestanding $(CFLAGS)
+	@$(CC) -c $(SOURCE)/grub/multibootutils.c -o $(OUT)/mutlibootutils.o -std=gnu99 -ffreestanding $(CFLAGS)
 	@$(CC) -c $(SOURCE)/vga/term.c -o $(OUT)/term.o -std=gnu99 -ffreestanding $(CFLAGS)
 	@$(CC) -c $(SOURCE)/printf/printf.c -o $(OUT)/printf.o -std=gnu99 -ffreestanding $(CFLAGS)
 	@$(CC) -c $(SOURCE)/SerialPrintf/printf.c -o $(OUT)/SerialPrintf.o -std=gnu99 -ffreestanding $(CFLAGS)

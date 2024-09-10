@@ -3,9 +3,9 @@
 #include "../stdlib/string.h"
 #include "font.h"
 
-int width;
-int height;
-int bpp;
+unsigned long width;
+unsigned long height;
+unsigned long bpp;
 uint32_t* video;
 uint32_t* buffer;
 uint32_t color=0xffffffff;
@@ -24,6 +24,7 @@ int GraphicsInit(long addr,int w,int h,int _bpp){
 	bpp=_bpp;
 #ifdef DOUBLE_BUFFERING
 	buffer=(uint32_t*)(addr);
+	//video=(uint32_t*)(addr+0x900000);
 	video=(uint32_t*)(addr+width*height*bpp/2);
 #else
 	video=(uint32_t*)(addr);

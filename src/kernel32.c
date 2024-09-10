@@ -9,6 +9,7 @@ int LongMode_Setup(){
 	int cpuid=LongMode_CheckCPUID();
 	if(cpuid==0)return 0;
 
+	//int x=LongMode_GetFeatures();
 	//LongMode_GetVendor(arr);
 	int b=LongMode_LongModeSupported();
 	if(b==0){return 0;}

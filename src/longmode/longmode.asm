@@ -27,14 +27,17 @@ LongMode_GetVendor:
 
 global LongMode_GetFeatures
 LongMode_GetFeatures:
-	push ebp
-	mov ebp,esp
+	;;push ebp
+	;;mov ebp,esp
 	mov eax,0x1
 	cpuid
-	mov eax,[esp+8]
-	mov dword [eax+0],edx
-	mov dword [eax+4],ecx
-	pop ebp
+	;mov eax,ecx
+	;shr eax,32
+	;mov eax,edx
+	;;mov eax,[esp+8]
+	;;mov dword [eax+0],edx
+	;;mov dword [eax+4],ecx
+	;;pop ebp
 	ret
 
 global LongMode_LongModeSupported

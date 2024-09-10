@@ -33,12 +33,15 @@ _start:
 	mov esp, stack_top
 	push ebx
 	push eax			;;GRUB DATA
+	call LongMode_GetFeatures
+	push edx
+	push ecx
 	cli
 	extern load_kernel32
 	call load_kernel32
 	;call PagingInit
 	mov esp, stack_top
-	sub esp,8
+	sub esp,16
 
 	;extern long_mode_start
 	jmp gdt64.code:long_mode_start
