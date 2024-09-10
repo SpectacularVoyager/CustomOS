@@ -42,6 +42,7 @@ void graphicsStuff(MULTIBOOT_HEADERS headers){
 }
 void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long cpuid)
 {
+	FPUEnable();
 	kprintf(INFO "BOOTING OS[%x]\n",magic);
 
 #ifdef PRINT_CPUID
@@ -54,7 +55,6 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 		}
 	}
 #endif
-	//FPUEnable();
 	MULTIBOOT_HEADERS headers=MultibootProcessHeaders(multiboot_address);
 	graphicsStuff(headers);
 	AssignMallocMemoryMap(headers.mmap);
@@ -66,7 +66,7 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 	ExceptionInit();
 	KeyboardInstall();
 
-	FPUEnable();
+	PONG_MAIN();
 
 	Debug();
 	while(1);
