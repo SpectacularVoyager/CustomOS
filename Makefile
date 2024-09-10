@@ -29,6 +29,7 @@ kernel:
 	@$(CC) -c $(SOURCE)/printf/printf.c -o $(OUT)/printf.o -std=gnu99 -ffreestanding $(CFLAGS)
 	@$(CC) -c $(SOURCE)/SerialPrintf/printf.c -o $(OUT)/SerialPrintf.o -std=gnu99 -ffreestanding $(CFLAGS)
 	@$(CC) -c $(SOURCE)/stdlib/string.c -o $(OUT)/string.o -std=gnu99 -ffreestanding $(CFLAGS)
+	@$(CC) -c $(SOURCE)/stdlib/stdlib.c -o $(OUT)/stdlib.o -std=gnu99 -ffreestanding $(CFLAGS)
 	@$(CC) -c $(SOURCE)/paging/paging.c -o $(OUT)/paging.o -std=gnu99 -ffreestanding $(CFLAGS)
 	@$(CC) -c $(SOURCE)/interrupts/idt.c -o $(OUT)/idt.o -std=gnu99 -ffreestanding $(CFLAGS)
 	@$(CC) -c $(SOURCE)/interrupts/isr.c -o $(OUT)/isr.o -std=gnu99 -ffreestanding $(CFLAGS)
