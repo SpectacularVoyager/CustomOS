@@ -25,6 +25,7 @@
 #include "grub/multibootutils.h"
 #include "utils/bit.h"
 #include "longmode/longmode.h"
+#include "arch/fpu.h"
 void Debug();
 extern char* cpuid_flags[62];
 void graphicsStuff(MULTIBOOT_HEADERS headers){
@@ -43,6 +44,7 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 {
 	kprintf(INFO "BOOTING OS[%x]\n",magic);
 
+#ifdef PRINT_CPUID
 	kprintf(INFO "CPUID:\t%p\n",cpuid);
 	for(int i=0;i<62;i++){
 		if(BIT(cpuid,i)){
@@ -51,7 +53,8 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 			kprintf(INFO"%s DISABLED\n",cpuid_flags[i]);
 		}
 	}
-	//volatile float f=10.0f;
+#endif
+	//FPUEnable();
 	MULTIBOOT_HEADERS headers=MultibootProcessHeaders(multiboot_address);
 	graphicsStuff(headers);
 	AssignMallocMemoryMap(headers.mmap);
@@ -63,6 +66,7 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 	ExceptionInit();
 	KeyboardInstall();
 
+	FPUEnable();
 
 	Debug();
 	while(1);

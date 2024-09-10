@@ -6,13 +6,13 @@ ISO=$(BUILD)/os.bin
 # Default CFLAGS:
 CFLAGS?=-O2 -g -DDEBUG
 # Add mandatory options to CFLAGS:
-CFLAGS:=$(CFLAGS) -Wall -Wextra
+CFLAGS:=$(CFLAGS) -Wall -Wextra -mfpmath=sse
 QEMU=qemu-system-x86_64
 CC=x86_64-elf-gcc
 CC32=i686-elf-gcc
 
-#QEMU_FLAGS= -cpu qemu64,+ssse3
-QEMU_FLAGS:=$(QEMU_FLAGS) -serial file:logs/serial.log -net nic,model=rtl8139 -m 512M -vga std -hda 
+QEMU_FLAGS= -cpu qemu64,+ssse3,+fpu
+QEMU_FLAGS:=$(QEMU_FLAGS) -serial file:logs/serial.log -net nic,model=rtl8139 -m 512M -vga std -hda
 
 all: clean boot kernel link build isMultiBoot
 
@@ -53,6 +53,7 @@ kernel:
 	@$(CC) -c $(SOURCE)/programs/test.c -o $(OUT)/test.o -std=gnu99 -ffreestanding $(CFLAGS)
 	@$(CC) -c $(SOURCE)/programs/pong.c -o $(OUT)/pong.o -std=gnu99 -ffreestanding $(CFLAGS)
 	@$(CC) -c $(SOURCE)/graphics/graphicsterm.c -o $(OUT)/graphicsterm.o -std=gnu99 -ffreestanding $(CFLAGS)
+	@$(CC) -c $(SOURCE)/arch/fpu.c -o $(OUT)/fpu.o -std=gnu99 -ffreestanding $(CFLAGS)
 
 link:
 	@$(CC) -T linker.ld -o $(ISO) -ffreestanding -O2 -nostdlib $(shell find -name '*.o') -lgcc

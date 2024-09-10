@@ -1,16 +1,18 @@
-global long_mode_start
+	global long_mode_start
 
-section .text
-bits 64
+	section .text
+	bits 64
 long_mode_start:
-  mov ax, gdt64.data
-  mov ss, ax
-  mov ds, ax
-  mov es, ax
-  mov fs, ax
-  mov gs, ax
 
-  extern kernel_main
+
+	mov ax, gdt64.data
+	mov ss, ax
+	mov ds, ax
+	mov es, ax
+	mov fs, ax
+	mov gs, ax
+
+	extern kernel_main
 	pop rax
 	mov rcx,rax
 	pop rax
@@ -24,5 +26,5 @@ long_mode_start:
 	mov ax,cs
 	mov rdx,rax
 	;mov rdx,gdt64.code
-  call kernel_main
-  hlt
+	call kernel_main
+	hlt
