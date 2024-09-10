@@ -30,6 +30,7 @@ gdt64:
   dw $ - gdt64 - 1
   dq gdt64
 
+section .text
 [bits 32]
 global Paging_Disable
 Paging_Disable:
@@ -79,6 +80,7 @@ Paging_SetUpTables:
   ;mov [p3_table+8], eax
 
   mov ecx, 0
+  ;;ret
 
 ;;; map ecx-th P2 entry to a huge page that starts at address 2MiB*ecx
 .map_p2_table:

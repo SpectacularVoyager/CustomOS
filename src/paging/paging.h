@@ -1,5 +1,12 @@
 #include <stdint.h>
 
+#define PAGE_WIDTH 0x40000000
+
+#define PAGE_PRESENT	1<<0
+#define PAGE_READWRITE	1<<1
+#define PAGE_USER		1<<2
+
+
 void Paging_Disable();
 void PagingInit();
 
@@ -9,19 +16,4 @@ extern uint64_t p4_table[512];
 extern uint64_t p3_table[512];
 extern uint64_t p2_table[512];
 
-void putPage(uint64_t addr,int size);
-
-void PageIdentityMap(uint64_t addr);
-
-typedef struct {
-	uint64_t* pageDir;
-	unsigned int page3_offset;
-} PageTable;
-
-typedef struct {
-	PageTable table;
-	unsigned int offset;
-} Page;
-void PageCreateEmpty(int);
-
-Page PageAlloc();
+void AllocatePage(int p,unsigned long address);
