@@ -122,7 +122,7 @@ void PONG_MAIN(){
 		}	
 		if(lastcol!=2){
 			if(collide(p2,b)){
-				float hf=-((p1.y+p1.h/2-b.y))/(p1.h/2.0f);
+				float hf=-((p2.y+p2.h/2-b.y))/(p2.h/2.0f);
 				vy=hf;
 				vx=1;
 				float d=sqrt(vx*vx+vy*vy);

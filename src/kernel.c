@@ -66,7 +66,7 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 	ExceptionInit();
 	KeyboardInstall();
 
-	PONG_MAIN();
+	//PONG_MAIN();
 
 	Debug();
 	while(1);
