@@ -4,7 +4,7 @@ OUT32=out/x86
 BUILD=ISO/boot
 ISO=$(BUILD)/os.bin
 # Default CFLAGS:
-CFLAGS?=-O2 -g -DDEBUG
+CFLAGS?=-O2 -g -DDEBUG_PRINTF
 # Add mandatory options to CFLAGS:
 CFLAGS:=$(CFLAGS) -Wall -Wextra -mfpmath=sse
 QEMU=qemu-system-x86_64
@@ -12,6 +12,9 @@ CC=x86_64-elf-gcc
 CC32=i686-elf-gcc
 
 QEMU_FLAGS= -cpu qemu64,+ssse3,+fpu
+QEMU_FLAGS:=$(QEMU_FLAGS) -usb -device usb-ehci,id=ehci                             \
+        -device usb-host,bus=usb-bus.0,hostbus=3,hostport=1  \
+        -device usb-host,bus=ehci.0,hostbus=1,hostport=1
 QEMU_FLAGS:=$(QEMU_FLAGS) -serial file:logs/serial.log -net nic,model=rtl8139 -m 512M -vga std -hda
 
 all: clean boot kernel link build isMultiBoot
@@ -42,6 +45,7 @@ kernel:
 	@$(CC) -c $(SOURCE)/drivers/pic.c -o $(OUT)/pic.o -std=gnu99 -ffreestanding $(CFLAGS)
 	@$(CC) -c $(SOURCE)/drivers/pci.c -o $(OUT)/pci.o -std=gnu99 -ffreestanding $(CFLAGS)
 	@$(CC) -c $(SOURCE)/drivers/serial.c -o $(OUT)/serial.o -std=gnu99 -ffreestanding $(CFLAGS)
+	@$(CC) -c $(SOURCE)/drivers/ehci/ehci.c -o $(OUT)/ehci.o -std=gnu99 -ffreestanding $(CFLAGS)
 
 	@$(CC) -c $(SOURCE)/graphics/graphics.c -o $(OUT)/graphics.o -std=gnu99 -ffreestanding $(CFLAGS)
 	@$(CC) -c $(SOURCE)/devices/keyboard.c -o $(OUT)/keyboard.o -std=gnu99 -ffreestanding $(CFLAGS)

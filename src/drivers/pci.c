@@ -137,37 +137,38 @@ void PCI_ReadDevice(PCI_device* device,uint16_t bus,uint8_t slot,uint8_t functio
 }
 
 void PCI_GetGeneralDevice(PCI_device *device, PCIGeneralDevice *out) {
-  for (int i = 0; i < 6; i++)
-    out->BAR[i] =
-        COMBINE_WORD(PCI_ConfigReadWord(device->bus, device->slot, device->function,
-                                    PCI_BAR0 + 4 * i + 2),
-                     PCI_ConfigReadWord(device->bus, device->slot, device->function,
-                                    PCI_BAR0 + 4 * i));
+	//FOR BAR 0-6
+	for (int i = 0; i < 6; i++)
+		out->BAR[i] =
+			COMBINE_WORD(PCI_ConfigReadWord(device->bus, device->slot, device->function,
+						PCI_BAR0 + 4 * i + 2),
+					PCI_ConfigReadWord(device->bus, device->slot, device->function,
+						PCI_BAR0 + 4 * i));
 
-  out->subsystem_vendor_id = PCI_ConfigReadWord(
-      device->bus, device->slot, device->function, PCI_SYSTEM_VENDOR_ID);
-  out->subsystem_id = PCI_ConfigReadWord(device->bus, device->slot, device->function,
-                                  PCI_SYSTEM_ID);
+	out->subsystem_vendor_id = PCI_ConfigReadWord(
+			device->bus, device->slot, device->function, PCI_SYSTEM_VENDOR_ID);
+	out->subsystem_id = PCI_ConfigReadWord(device->bus, device->slot, device->function,
+			PCI_SYSTEM_ID);
 
-  out->expansion_rom_address =
-      COMBINE_WORD(PCI_ConfigReadWord(device->bus, device->slot, device->function,
-                                  PCI_EXP_ROM_BASE_ADDR + 2),
-                   PCI_ConfigReadWord(device->bus, device->slot, device->function,
-                                  PCI_EXP_ROM_BASE_ADDR));
+	out->expansion_rom_address =
+		COMBINE_WORD(PCI_ConfigReadWord(device->bus, device->slot, device->function,
+					PCI_EXP_ROM_BASE_ADDR + 2),
+				PCI_ConfigReadWord(device->bus, device->slot, device->function,
+					PCI_EXP_ROM_BASE_ADDR));
 
-  out->capabilities_pointer =
-      EXPORT_BYTE(PCI_ConfigReadWord(device->bus, device->slot, device->function,
-                                 PCI_CAPABILITIES_PTR),
-                  true);
+	out->capabilities_pointer =
+		EXPORT_BYTE(PCI_ConfigReadWord(device->bus, device->slot, device->function,
+					PCI_CAPABILITIES_PTR),
+				true);
 
-  uint32_t interruptLine_interruptPIN = PCI_ConfigReadWord(
-      device->bus, device->slot, device->function, PCI_INTERRUPT_LINE);
-  out->interrupt_line = EXPORT_BYTE(interruptLine_interruptPIN, true);
-  out->interript_pin = EXPORT_BYTE(interruptLine_interruptPIN, false);
+	uint32_t interruptLine_interruptPIN = PCI_ConfigReadWord(
+			device->bus, device->slot, device->function, PCI_INTERRUPT_LINE);
+	out->interrupt_line = EXPORT_BYTE(interruptLine_interruptPIN, true);
+	out->interript_pin = EXPORT_BYTE(interruptLine_interruptPIN, false);
 
-  uint32_t minGrant_maxLatency = PCI_ConfigReadWord(
-      device->bus, device->slot, device->function, PCI_MIN_GRANT);
-  out->min_grant = EXPORT_BYTE(minGrant_maxLatency, true);
-  out->max_latency = EXPORT_BYTE(minGrant_maxLatency, false);
-  out->base=*device;
+	uint32_t minGrant_maxLatency = PCI_ConfigReadWord(
+			device->bus, device->slot, device->function, PCI_MIN_GRANT);
+	out->min_grant = EXPORT_BYTE(minGrant_maxLatency, true);
+	out->max_latency = EXPORT_BYTE(minGrant_maxLatency, false);
+	out->base=*device;
 }

@@ -60,7 +60,7 @@ void _putSerial(char character);
  * \return The number of characters that are written into the array, not counting the terminating null character
  */
 
-#ifdef DEBUG
+#ifdef DEBUG_PRINTF
 #define kprintf kprintf_
 #else
 #define kprintf 

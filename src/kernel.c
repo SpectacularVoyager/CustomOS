@@ -9,6 +9,7 @@
 #include "interrupts/irq.h"
 #include "drivers/pci.h"
 #include "drivers/serial.h"
+#include "drivers/ehci/ehci.h"
 
 #include "devices/keyboard.h"
 #include "processes/processes.h"
@@ -65,7 +66,8 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 	PCI_Initiate();
 	ExceptionInit();
 	KeyboardInstall();
-
+	
+	EHCI_INIT(PCI_GetFromID(0x8086, 0x24CD));
 	//PONG_MAIN();
 
 	Debug();

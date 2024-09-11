@@ -13,14 +13,11 @@
 #define FLAG_RESET(num,flag) num &= ~(flag)
 
 #define COMBINE_BYTE(a,b)	a<<8 |b
-#define COMBINE_WORD(a,b)	a<<16|b
+#define COMBINE_WORD(msb, lsb) (((uint32_t)(msb) << 16) | (lsb))
 #define COMBINE_DWORD(a,b)	a<<32|b
 
 #define FIRST(dummy,...) dummy
 #define LAST(dummy,...) __VA_ARGS__
 
 #define DIV_CEIL(a,b) (a+b-1)/b
-
-//#define COMBINE_BYTES(...)\
-//	FIRST(__VA_ARGS__)|COMBINE_BYTES(LAST(__VA_ARGS__))<<8
 
