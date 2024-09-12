@@ -66,6 +66,10 @@ void PCI_Refresh(PCI_device* device);
 void PCI_ConfigWriteWord(uint8_t bus, uint8_t slot, uint8_t func, uint8_t offset,uint32_t val);
 
 void PCI_DeviceConfigWriteWord(PCI_device* d, uint8_t offset,uint32_t val);
+
+
+void* PCI_GetMMIO(PCI_device* device,void* base);
+
 #define PCI_VENDOR_ID 0x00
 #define PCI_DEVICE_ID 0x02
 #define PCI_COMMAND 0x04

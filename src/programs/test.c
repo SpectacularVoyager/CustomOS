@@ -2,6 +2,10 @@
 #include "../graphics/graphics.h"
 #include "../drivers/pci.h"
 #include "../devices/keyboard.h"
+#include "../disk/iso/iso.h"
+#include "../drivers/acpi/acpi.h"
+
+#include "../drivers/networking/rtl8168/rtl8168.h"
 char* cpuid_flags[62]={
     "CPUID_FEAT_ECX_SSE3         ",
     "CPUID_FEAT_ECX_PCLMUL       ",
@@ -86,9 +90,14 @@ void Debug(){
 	}
 	KeyboardSetProcess(DebugKeyboardHandler);
 	for(int i=0;i<PCI_GetDeviceCount();i++){
-		if(i%7==0)printf("\n");
+		if(i%8==0)printf("\n");
 		printf("[%04X %04X]\t",devices[i].vendor_id,devices[i].device_id);	
-	}	
+	}
+
+	PCI_device* nic=PCI_GetFromID(0x10EC, 0x8168);
+	//ISO_Init();	
 	//SwapBuffers();
+	if(nic)
+		RTL8168_INIT(nic);
 	while(1);
 }

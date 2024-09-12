@@ -135,7 +135,9 @@ void PCI_ReadDevice(PCI_device* device,uint16_t bus,uint8_t slot,uint8_t functio
 	device->headerType=headerbist&0xFF;
 	device->bist=(headerbist>>8)&0xFF;
 }
-
+void* PCI_GetMMIO(PCI_device* device,void* base){
+	return base+((device->bus) << 20 | device->slot << 15 | device->function << 12);
+}
 void PCI_GetGeneralDevice(PCI_device *device, PCIGeneralDevice *out) {
 	//FOR BAR 0-6
 	for (int i = 0; i < 6; i++)

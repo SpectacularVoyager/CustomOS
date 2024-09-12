@@ -1,6 +1,7 @@
 #include "ehci.h"
 #include "../../stdlib/stdio.h"
 #include "../../stdlib/stdlib.h"
+#include "../../stdlib/string.h"
 
 void EHCI_PRINT_USB_REGS(const USB_REGS* regs) {
     kprintf("USB Registers:\n");
@@ -29,7 +30,10 @@ void EHCI_PRINT_USB_CAPABILITIES(const USB_CAPABILITIES *usb_caps) {
 
 void EHCI_INIT(PCI_device* c){
 
-	void* pfl=mallocA(1024*8,4096);
+	void* pfl=mallocA(4096,4096);
+	memset(pfl,0,4096);
+	void* periodic_list = (void*)mallocA(4096,4096);
+	memset(periodic_list, 0, 4096); 
 
 	PCIGeneralDevice controller;
 	PCI_GetGeneralDevice(c,&controller);
@@ -40,15 +44,16 @@ void EHCI_INIT(PCI_device* c){
 	USB_REGS* regs=(USB_REGS*)(ptr+capabilities->CAPLENGTH);
 	EHCI_PRINT_USB_CAPABILITIES(capabilities);
 	EHCI_PRINT_USB_REGS(regs);
+	regs->USB_CMD|=1;
 
 	//SET 4G segment to 0x0 address
 	//SET USB INTR
 	regs->CTRLDSSEGMENT=0x0;
-	regs->USB_INTR|=0x3F;
+	regs->USB_INTR|=1;
 	regs->FRINDEX=0;
-	regs->PERIODICLISTBASE=(unsigned int)pfl;
-
+	regs->PERIODICLISTBASE=(unsigned int)periodic_list;
 	unsigned int _reg=regs->USB_CMD;
+	
 	USB_CMD_REG* cmd=(USB_CMD_REG*)&_reg;
 	cmd->interrupt_threshold=0x8;
 	cmd->prog_frame_list_size=1;

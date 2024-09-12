@@ -1,5 +1,6 @@
 #include "multibootutils.h"
 #include "../stdlib/stdio.h"
+#include "multiboot2.h"
 void MultibootCheck(unsigned long addr,int magic){
 
   if (addr & 7)
@@ -19,6 +20,7 @@ MULTIBOOT_HEADERS MultibootProcessHeaders(unsigned long addr){
 
 	struct multiboot_tag* fb;
 	struct multiboot_tag* mmap;
+	struct multiboot_tag* acpi;
 
 	struct multiboot_tag *tag;
 	for (tag = (struct multiboot_tag *) (addr + 8);
@@ -35,8 +37,11 @@ MULTIBOOT_HEADERS MultibootProcessHeaders(unsigned long addr){
 			case MULTIBOOT_TAG_TYPE_MMAP:
 				mmap=tag;
 				break;
+			case MULTIBOOT_TAG_TYPE_ACPI_OLD:
+				acpi=tag;
+				break;
 		}
 	}
-	MULTIBOOT_HEADERS headers={.fb=fb,.mmap=mmap};
+	MULTIBOOT_HEADERS headers={.fb=fb,.mmap=mmap,.acpi=acpi};
 	return headers;
 }

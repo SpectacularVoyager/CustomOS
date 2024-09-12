@@ -38,6 +38,7 @@ void* malloc(unsigned long size){
 void* mallocA(unsigned long size,unsigned long align){
 	malloc_start=(malloc_start-1)+align-((malloc_start-1)%align);
 	void* start=(void*)malloc_start;
+	kprintf(INFO"MALLOC :\t%p\n",start);
 	malloc_start+=size;
 	return start;
 }
