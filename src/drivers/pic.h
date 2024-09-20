@@ -32,3 +32,5 @@ uint16_t PIC_GetISR(void);
 void PIC_INIT(int offset1,int offset2);
 
 void PIC_sendEOI(uint8_t irq);
+
+void PIC_Disable();

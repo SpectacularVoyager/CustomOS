@@ -51,6 +51,7 @@ kernel:
 	@$(CC) -c $(SOURCE)/drivers/acpi/acpi.c -o $(OUT)/acpi.o -std=gnu99 -ffreestanding $(CFLAGS)
 	@$(CC) -c $(SOURCE)/drivers/ahci/ahci.c -o $(OUT)/ahci.o -std=gnu99 -ffreestanding $(CFLAGS)
 	@$(CC) -c $(SOURCE)/drivers/gpt/gpt.c -o $(OUT)/gpt.o -std=gnu99 -ffreestanding $(CFLAGS)
+	@$(CC) -c $(SOURCE)/drivers/apic/apic.c -o $(OUT)/apic.o -std=gnu99 -ffreestanding $(CFLAGS)
 
 	@$(CC) -c $(SOURCE)/graphics/graphics.c -o $(OUT)/graphics.o -std=gnu99 -ffreestanding $(CFLAGS)
 	@$(CC) -c $(SOURCE)/devices/keyboard.c -o $(OUT)/keyboard.o -std=gnu99 -ffreestanding $(CFLAGS)

@@ -53,6 +53,6 @@ ACPIHeaders ACPI_INIT(RSDP_t* rsdp){
         if (strncmp(h->Signature, "APIC", 4))
             apic= h;
     }
-	return (ACPIHeaders){.mcfg=(MCFGHeader*)mcfg,.fadt=(FADT*)facp,.apic=apic,.rsdt=rsdt};
+	return (ACPIHeaders){.mcfg=(MCFGHeader*)mcfg,.fadt=(FADT*)facp,.apic=(MADT*)apic,.rsdt=rsdt};
 
 }

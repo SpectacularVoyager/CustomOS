@@ -8,6 +8,7 @@
 
 void PageFaultHandler(registers* r){
 	kprintf(ERROR "PAGE FAULT\n");
+	printf(ERROR "PAGE FAULT\n");
 	int error=r->zero;
 	if(BIT(error,PAGE_FAULT_EXCEPTION_WRITE)){
 		kprintf("\tILLEGAL WRITE\n");
@@ -29,6 +30,7 @@ void PageFaultHandler(registers* r){
 }
 void InvalidOpcodeException(registers* r){
 	kprintf(ERROR "INVALID OPCODE\n");
+	printf(ERROR "INVALID OPCODE\n");
 	uint8_t* inst=((uint8_t*)r->rip);
 	kprintf("THE EXCEPTION OCCURED AT %p\n",r->rip);
 	kprintf("THE Next Bytes Are %02X %02X %02X %02X\n",inst[0],inst[1],inst[2],inst[3]);

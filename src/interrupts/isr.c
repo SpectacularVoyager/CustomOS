@@ -44,7 +44,9 @@ void ISR_Handler(uint64_t* regs) {
 	//printRegs(r);
 	int _int=r->interupt;
 	r->interupt=_int;
+
 	if(g_ISRHandlers[_int]){
+		printf("HANDLED INTERRUPT %d\n",_int);
 		g_ISRHandlers[_int](r);
 	}else if(_int>=32){
 		kprintf("UNHANDLED INTERRUPT %d\n",_int);

@@ -30,6 +30,7 @@
 #include "drivers/acpi/acpi.h"
 #include "drivers/ahci/ahci.h"
 #include "drivers/gpt/gpt.h"
+#include "drivers/apic/apic.h"
 void Debug();
 extern char* cpuid_flags[62];
 void graphicsStuff(MULTIBOOT_HEADERS headers){
@@ -82,7 +83,8 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 	//PONG_MAIN();
 	AHCI_INIT(PCI_GetFromType(0x1,0x6));
 
-	GPT_READ();
+	//GPT_READ();
+	APIC_INIT(h.apic);
 
 	Debug();
 	while(1);

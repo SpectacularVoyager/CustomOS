@@ -14,7 +14,7 @@ void IRQ_Handler(registers* r){
 	if(g_IRQHandlers[irq]){
 		g_IRQHandlers[irq](r);
 	}else{
-		//printf("UNHANDLED IRQ %d\n",irq);
+		printf("UNHANDLED IRQ %d\n",irq);
 		if(irq!=0){
 			printf(TRACE"UNHANDLED IRQ %d\n",irq);
 		}
@@ -27,6 +27,8 @@ void IRQ_Initialize(){
 	for(int i=0;i<16;i++){
 		ISR_addHandler(PIC_REMAP_OFFSET+i,IRQ_Handler);
 	}
+
+	PIC_Disable();
 	enableInterrupts();
 	//EnableInterrupts();	
 }
