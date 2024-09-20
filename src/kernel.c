@@ -28,15 +28,17 @@
 #include "longmode/longmode.h"
 #include "arch/fpu.h"
 #include "drivers/acpi/acpi.h"
+#include "drivers/ahci/ahci.h"
+#include "drivers/gpt/gpt.h"
 void Debug();
 extern char* cpuid_flags[62];
 void graphicsStuff(MULTIBOOT_HEADERS headers){
 	struct multiboot_tag_framebuffer* fb=(struct multiboot_tag_framebuffer*)headers.fb;
 	unsigned long addr=fb->common.framebuffer_addr;
 	unsigned long page=addr/PAGE_WIDTH;
-	unsigned long t=2;
-	AllocatePage(page,page*PAGE_WIDTH);
-	AllocatePage(t,t*PAGE_WIDTH);
+	AllocatePage(page,page*PAGE_WIDTH,1<<4);
+	AllocatePage(2,2L*PAGE_WIDTH,1<<4);
+	AllocatePage(1,1L*PAGE_WIDTH,1<<4);
 	GraphicsInit(
 			addr,
 			fb->common.framebuffer_width,
@@ -75,26 +77,13 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 
 	ACPIHeaders h=ACPI_INIT(l);
 	void* base=(void*)h.mcfg->allocations[0].base;
-	
-	//PCI_device* devices=PCI_GetDevices();
-	//for(uint16_t i=0;i<PCI_GetDeviceCount();i++){
-	//	char* ptr=PCI_GetMMIO(&devices[i],(void*)h.mcfg->allocations[0].base);
-	//	kprintf("[%x %x %p]\n",devices[i].device_id,ptr,*((unsigned long*)ptr));
-	//}
-	//PCI_device* n=PCI_GetFromID(0x10EC, 0x8139);
-	//PCIGeneralDevice nic;
-	//PCI_GetGeneralDevice(n,&nic);
-	//unsigned char** bar=PCI_GetMMIO(n,base)+0x14;
-	//unsigned char* ptr=PCI_GetMMIO(n,base);
-	////char* n2=(char*)ptr;
-	//
-	//printf("%p\n",nic.BAR[1]);
-	//printf("%p\n",*(unsigned long*)ptr);
-	//printf("%p\n",*(unsigned int*)bar);
-	//printf("%p\n",**(unsigned long**)bar);
 
 	//EHCI_INIT(PCI_GetFromID(0x8086, 0x24CD));
 	//PONG_MAIN();
+	AHCI_INIT(PCI_GetFromType(0x1,0x6));
+
+	GPT_READ();
+
 	Debug();
 	while(1);
 }

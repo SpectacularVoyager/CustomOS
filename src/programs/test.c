@@ -90,14 +90,15 @@ void Debug(){
 	}
 	KeyboardSetProcess(DebugKeyboardHandler);
 	for(int i=0;i<PCI_GetDeviceCount();i++){
-		if(i%8==0)printf("\n");
-		printf("[%04X %04X]\t",devices[i].vendor_id,devices[i].device_id);	
+		if(i%4==0)printf("\n");
+		printf("[%04X %04X]{%02X %02X %02X}\t",devices[i].vendor_id,devices[i].device_id,devices[i].class_id,devices[i].subclass_id,devices[i].progIF);	
+		//PCI_Device_Print(&devices[i]);
 	}
 
-	PCI_device* nic=PCI_GetFromID(0x10EC, 0x8168);
+	//PCI_device* nic=PCI_GetFromID(0x10EC, 0x8168);
 	//ISO_Init();	
 	//SwapBuffers();
-	if(nic)
-		RTL8168_INIT(nic);
+	//if(nic)
+	//	RTL8168_INIT(nic);
 	while(1);
 }

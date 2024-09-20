@@ -49,7 +49,7 @@ void ISR_Handler(uint64_t* regs) {
 	}else if(_int>=32){
 		kprintf("UNHANDLED INTERRUPT %d\n",_int);
 	}else{
-		//printf("EXECPTION:%d\t HALTING IMMEDIATELY\n",r->interupt);
+		printf("EXECPTION:%d\t HALTING IMMEDIATELY\n",r->interupt);
 		kprintf(ERROR "UNHANDLED EXCEPTION[%d] %s\n",_int,g_Exceptions[_int]);
 		__asm__ volatile ("cli; hlt"); // Completely hangs the computer
 	}

@@ -17,6 +17,14 @@ PCI_device* PCI_GetFromID(uint16_t vendor,uint16_t device_id){
 	return 0;
 }
 
+PCI_device* PCI_GetFromType(int Class,int Subclass){
+	for(uint16_t i=0;i<PCI_GetDeviceCount();i++){
+		if(devices[i].class_id==Class&&devices[i].subclass_id==Subclass)
+			return &devices[i];
+	}
+	return 0;
+}
+
 uint16_t PCI_ConfigReadWord(uint8_t bus, uint8_t slot, uint8_t func, uint8_t offset) {
     uint32_t address;
     uint32_t lbus  = (uint32_t)bus;

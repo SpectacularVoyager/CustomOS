@@ -13,8 +13,8 @@ CC32=i686-elf-gcc
 
 QEMU_FLAGS= -cpu qemu64,+ssse3,+fpu 
 QEMU_FLAGS:= -M q35
-QEMU_FLAGS:=$(QEMU_FLAGS) -usb -device usb-ehci,id=ehci                             \
-        -device usb-host,bus=usb-bus.0,hostbus=3,hostport=1  \
+QEMU_FLAGS:=$(QEMU_FLAGS) -usb -device usb-ehci,id=ehci		\
+        -device usb-host,bus=usb-bus.0,hostbus=3,hostport=1 \
         -device usb-host,bus=ehci.0,hostbus=1,hostport=1
 QEMU_FLAGS:=$(QEMU_FLAGS) -serial file:logs/serial.log -net nic,model=rtl8139 -m 512M -vga std -hda
 
@@ -49,6 +49,8 @@ kernel:
 	@$(CC) -c $(SOURCE)/drivers/ehci/ehci.c -o $(OUT)/ehci.o -std=gnu99 -ffreestanding $(CFLAGS)
 	@$(CC) -c $(SOURCE)/drivers/networking/rtl8168/rtl8168.c -o $(OUT)/rtl8168.o -std=gnu99 -ffreestanding $(CFLAGS)
 	@$(CC) -c $(SOURCE)/drivers/acpi/acpi.c -o $(OUT)/acpi.o -std=gnu99 -ffreestanding $(CFLAGS)
+	@$(CC) -c $(SOURCE)/drivers/ahci/ahci.c -o $(OUT)/ahci.o -std=gnu99 -ffreestanding $(CFLAGS)
+	@$(CC) -c $(SOURCE)/drivers/gpt/gpt.c -o $(OUT)/gpt.o -std=gnu99 -ffreestanding $(CFLAGS)
 
 	@$(CC) -c $(SOURCE)/graphics/graphics.c -o $(OUT)/graphics.o -std=gnu99 -ffreestanding $(CFLAGS)
 	@$(CC) -c $(SOURCE)/devices/keyboard.c -o $(OUT)/keyboard.o -std=gnu99 -ffreestanding $(CFLAGS)
@@ -91,5 +93,5 @@ install:
 	sudo grub-install --root-directory=/mnt --no-floppy --modules="normal part_msdos ext2 multiboot " /dev/loop40
 
 usb:
-	sudo mkfs.vfat -F 32 -n YourLabel -I /dev/sda
+	@cp ISO/boot/os.bin /media/ankush/EFI\ SYSTEM/boot/os.bin
 

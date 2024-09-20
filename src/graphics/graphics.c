@@ -1,6 +1,7 @@
 #include "graphics.h"
 #include "../stdlib/stdio.h"
 #include "../stdlib/string.h"
+#include "../stdlib/stdlib.h"
 #include "font.h"
 
 unsigned long width;
@@ -12,7 +13,7 @@ uint32_t color=0xffffffff;
 
 
 #define GET_PIXEL(x,y) (y)*width+(x)
-#define DOUBLE_BUFFERING 
+//#define DOUBLE_BUFFERING 
 int GraphicsInit(long addr,int w,int h,int _bpp){
 	if(_bpp!=32){
 		kprintf_("CANNOT INIT WITH BPP %d\n",_bpp);
@@ -25,7 +26,7 @@ int GraphicsInit(long addr,int w,int h,int _bpp){
 #ifdef DOUBLE_BUFFERING
 	buffer=(uint32_t*)(addr);
 	//video=(uint32_t*)(addr+0x900000);
-	video=(uint32_t*)(addr+width*height*bpp/2);
+	video=(uint32_t*)mallocA(width*height*bpp,4096);
 #else
 	video=(uint32_t*)(addr);
 #endif
@@ -45,11 +46,13 @@ int GetHeight(){
 	return height;
 }
 void Flush(int x,int y,int w,int h){
+#ifdef DOUBLE_BUFFERING
 	for(int i=0;i<w;i++){
 		for(int j=0;j<h;j++){
 			buffer[GET_PIXEL(x+i, y+j)]=video[GET_PIXEL(x+i, y+j)];
 		}
 	}
+#endif
 }
 void SwapBuffers(){
 #ifdef DOUBLE_BUFFERING

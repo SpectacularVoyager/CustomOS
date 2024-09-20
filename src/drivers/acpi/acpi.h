@@ -1,4 +1,6 @@
 #include "stdint.h"
+#include "base.h"
+#include "madt.h"
 
 
 typedef struct  {
@@ -118,9 +120,11 @@ typedef struct
 	GenericAddressStructure X_GPE1Block;
 }__attribute__((packed)) FADT;
 
+
 typedef struct{
 	FADT* fadt;
 	RSDT* rsdt;
+	MADT* apic;
 	MCFGHeader* mcfg;
 } ACPIHeaders;
 

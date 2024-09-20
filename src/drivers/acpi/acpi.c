@@ -24,20 +24,21 @@ ACPIHeaders ACPI_INIT(RSDP_t* rsdp){
 	
 	RSDT* rsdt;
 	if(rsdp->Revision==0){
-		kprintf("USING ACPI 1.0\n");
+		//printf("USING ACPI 1.0\n");
 		rsdt=(void*)rsdp->RsdtAddress;
 	}else{
-		kprintf(ERROR "WE DO NOT SUPPORT ACPI 2.0\n");
+		printf(ERROR "WE DO NOT SUPPORT ACPI 2.0\n");
 	}
 	//kprintf(INFO"SIGNATURE %4s\n",rsdt->h.Signature);
 	//kprintf(INFO"LENGTH %x\n",rsdt->h.Length);
 	//kprintf(INFO"OEMID %6s\n",rsdt->h.OEMID);
 	//kprintf(INFO"OEM TABLE ID %8s\n",rsdt->h.OEMTableID);
 	if(!ACPISDT_Checksum(&rsdt->h)){
-		kprintf(ERROR "CHECKSUM DOES NOT MATCH\n");
+		printf(ERROR "CHECKSUM DOES NOT MATCH\n");
 	}
-	ACPISDTHeader* facp;
-	ACPISDTHeader* mcfg;
+	ACPISDTHeader* facp=0;
+	ACPISDTHeader* mcfg=0;
+	ACPISDTHeader* apic=0;
 
     int entries = (rsdt->h.Length - sizeof(rsdt->h)) / 4;
 
@@ -49,7 +50,9 @@ ACPIHeaders ACPI_INIT(RSDP_t* rsdp){
             facp= h;
         if (strncmp(h->Signature, "MCFG", 4))
             mcfg= h;
+        if (strncmp(h->Signature, "APIC", 4))
+            apic= h;
     }
-	return (ACPIHeaders){.mcfg=(MCFGHeader*)mcfg,.fadt=(FADT*)facp,.rsdt=rsdt};
+	return (ACPIHeaders){.mcfg=(MCFGHeader*)mcfg,.fadt=(FADT*)facp,.apic=apic,.rsdt=rsdt};
 
 }

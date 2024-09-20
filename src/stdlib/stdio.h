@@ -8,3 +8,5 @@
 #define TRACE "[TRACE]\t"
 #define ERROR "[ERROR]\t"
 #define ENDL "\n"
+
+void SetColor(uint32_t val);

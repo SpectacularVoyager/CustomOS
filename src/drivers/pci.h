@@ -56,7 +56,10 @@ void PCI_ReadDevice(PCI_device* device,uint16_t bus,uint8_t slot,uint8_t functio
 PCI_device* PCI_GetDevices();
 
 void PCI_Device_Print(PCI_device* d);
+
 PCI_device* PCI_GetFromID(uint16_t vendor,uint16_t device_id);
+PCI_device* PCI_GetFromType(int Class,int Subclass);
+
 uint16_t PCI_GetDeviceCount();
 
 void PCI_GetGeneralDevice(PCI_device *device, PCIGeneralDevice *out);

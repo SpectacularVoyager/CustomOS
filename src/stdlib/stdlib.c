@@ -32,13 +32,14 @@ void MallocSetStart(unsigned long ptr){
 }
 void* malloc(unsigned long size){
 	void* start=(void*)malloc_start;
+	kprintf(INFO"MALLOC :\t%p\n",start);
 	malloc_start+=size;
 	return start;
 }
 void* mallocA(unsigned long size,unsigned long align){
 	malloc_start=(malloc_start-1)+align-((malloc_start-1)%align);
 	void* start=(void*)malloc_start;
-	kprintf(INFO"MALLOC :\t%p\n",start);
+	kprintf(INFO"MALLOCA :\t%p\n",start);
 	malloc_start+=size;
 	return start;
 }

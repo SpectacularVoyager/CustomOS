@@ -16,4 +16,4 @@ extern uint64_t p4_table[512];
 extern uint64_t p3_table[512];
 extern uint64_t p2_table[512];
 
-void AllocatePage(int p,unsigned long address);
+void AllocatePage(int p,unsigned long address,unsigned int flags);
