@@ -19,3 +19,5 @@ extern volatile uint64_t p2_table[512];
 void AllocatePage(int p,unsigned long address,unsigned int flags);
 
 void PageRemap(int n,uint64_t offset,uint64_t address,int flags);
+
+void MemoryRemap(uint64_t memory,uint64_t address,int flags);

@@ -31,6 +31,8 @@
 #include "drivers/ahci/ahci.h"
 #include "drivers/gpt/gpt.h"
 #include "drivers/apic/apic.h"
+#include "utils/ports.h"
+#include "utils/utils.h"
 void Debug();
 extern char* cpuid_flags[62];
 //#define PRINT_CPUID
@@ -51,10 +53,24 @@ void graphicsStuff(MULTIBOOT_HEADERS headers){
 			);
 	printf(INFO"FRAMEBUFFER_ADDR:\t%p\n",fb->common.framebuffer_addr);
 }
+void MTRStuff(){
+	SetColor(0xff8c00);
+	uint64_t MTRRCAP=RDMSR(0xFE);
+	uint64_t MTRRdefType=RDMSR(0x2FF);
+	uint64_t MTRRPHYBASE=RDMSR(0x2FF);
+	//WRMSR(0x202,0xFEE00000);
+	//WRMSR(0x203,0xFFC0000800);
+	LOGVAL(MTRRCAP);
+	LOGVAL(MTRRdefType);
+
+	//for(int i=0;i<32;i++){
+	//	printf(TRACE"RDMSR:\t[%p\t%p]\n",RDMSR(0x200+2*i),RDMSR(0x201+2*i));
+	//}
+	SetColor(0xffffff);
+}
 void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long cpuid)
 {
 	FPUEnable();
-	while(1);
 	kprintf(INFO "BOOTING OS[%x]\n",magic);
 
 #ifdef PRINT_CPUID
@@ -72,6 +88,11 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 	//
 	AssignMallocMemoryMap(headers.mmap,0x70000);
 	graphicsStuff(headers);
+	MTRStuff();
+	//PageRemap(4,0,0xFD000000,1<<4);
+	//*(uint32_t*)(0x100000000)=0xff00dd;
+	void* memory=mallocA(0x200000,0x200000);
+	MemoryRemap(0xFEE00000,(uint64_t)memory,1<<4);
 
 
 	printf("HELLO WORLD\n");
@@ -95,8 +116,6 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 	//GPT_READ();
 	APIC_INIT(h.apic);
 
-	PageRemap(4,0,0xFD000000,1<<4);
-	*(uint32_t*)(0x100000000)=0xff00dd;
 	Debug();
 	while(1);
 }

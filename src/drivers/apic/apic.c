@@ -20,7 +20,7 @@ int APIC_INIT(MADT* madt){
 	uint64_t ptr;
 	uint32_t eax,edx;
 	rdmsr(0x1B,&eax,&edx);
-	uint64_t addr=((uint64_t)edx)<<32|eax;
+	volatile uint64_t addr=((uint64_t)edx)<<32|eax;
 	printf(INFO"RDMSR ADDR:\t%x%08x\n",edx,eax);
 	if(!(BIT(eax,11))){
 		printf(ERROR"APIC NOT ENABLED\n",eax);
@@ -39,7 +39,7 @@ int APIC_INIT(MADT* madt){
 		record+=apic_record->length;
 	}
 	printf(INFO"ADDRESS\t%p\n",localAPICaddr);
-	printf(INFO"ADDRESS\t%x\n",*(uint32_t*)(localAPICaddr+0x10));
+	printf(INFO"ADDRESS\t%x\n",*(volatile uint32_t*)(localAPICaddr+0x10));
 	//for(int i=0;i<200;i++){
 	//	for(int j=0;j<80;j++){
 	//		printf("%x",localAPICaddr[i*80+j]);

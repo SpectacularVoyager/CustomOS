@@ -10,6 +10,19 @@ inline void wrmsr(uint32_t msr, uint32_t lo, uint32_t hi)
 {
    asm volatile("wrmsr" : : "a"(lo), "d"(hi), "c"(msr));
 }
+inline uint64_t RDMSR(uint32_t msr)
+{
+	uint32_t lo,hi;
+   asm volatile("rdmsr" : "=a"(lo), "=d"(hi) : "c"(msr));
+   return lo|(((uint64_t)hi)<<32);
+}
+inline void WRMSR(uint32_t msr,uint64_t val)
+{
+	uint32_t lo=(uint32_t)val;
+	uint32_t hi=(uint32_t)(val>>32);
+   asm volatile("wrmsr" : : "a"(lo), "d"(hi), "c"(msr));
+}
+
 
 inline unsigned char inb(unsigned short int port)
 {
