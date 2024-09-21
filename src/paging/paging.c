@@ -33,7 +33,7 @@ void MemoryRemap(uint64_t memory,uint64_t address,int flags){
 	int p=memory/PAGE_WIDTH;
 	int offset=(memory%PAGE_WIDTH)/PAGE_P2_SIZE;
 	uint64_t* table=TABLE(p3_table[p]);
-	kprintf(TRACE"REMAPPING %p to %x[%x]",address,p,offset);
+	kprintf(TRACE"REMAPPING %p to %x[%x]\n",address,p,offset);
 	table[offset]=address|0b10000011L|flags;
 	asm volatile("invlpg (%0)" ::"r" (address) : "memory");
 }

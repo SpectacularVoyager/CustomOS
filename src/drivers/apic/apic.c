@@ -1,12 +1,16 @@
 #include "apic.h"
 #include "../../stdlib/stdio.h"
+#include "../../stdlib/stdlib.h"
 #include "../../utils/ports.h"
 #include "../../utils/bit.h"
 #include <stdint.h>
 
 
 volatile uint8_t* localAPICaddr;
+#define LAPIC_GET(x) (*(uint32_t*)(localAPICaddr+x))
 int APIC_INIT(MADT* madt){
+	void* memory=mallocA(0x200000,0x200000);
+	WRMSR(0x1B,(uint64_t)memory|0x900);
 
 	SetColor(0x00ffff);
 	if(!madt){
@@ -25,7 +29,6 @@ int APIC_INIT(MADT* madt){
 	if(!(BIT(eax,11))){
 		printf(ERROR"APIC NOT ENABLED\n",eax);
 	}
-	printf(INFO"APIC ADDRESS %p\n",localAPICaddr);
 	while(record<((void*)madt)+n){
 		APIC_RECORD* apic_record=((APIC_RECORD*)record);
 		//printf(INFO"APIC RECORD:%x\n",apic_record->type);
@@ -38,17 +41,9 @@ int APIC_INIT(MADT* madt){
 		}
 		record+=apic_record->length;
 	}
-	printf(INFO"ADDRESS\t%p\n",localAPICaddr);
-	printf(INFO"ADDRESS\t%x\n",*(volatile uint32_t*)(localAPICaddr+0x10));
-	//for(int i=0;i<200;i++){
-	//	for(int j=0;j<80;j++){
-	//		printf("%x",localAPICaddr[i*80+j]);
-	//	}
-	//	printf("\n");
-	//}
-	//localAPICaddr=(uint8_t*)addr;
-	//printf(INFO"APIC ADDRESS %p\n",localAPICaddr);
-	//printf(INFO"LAPICID %p\n",*(uint64_t*)localAPICaddr);
-	//asm volatile("INT $0x22");
+
+	printf(INFO"LAPIC ID\t%x\n",LAPIC_GET(0x20));
+	printf(INFO"LAPIC ICR\t%x\n",LAPIC_GET(0x30));
+	printf(INFO"LAPIC ICR\t%x\n",LAPIC_GET(0x300));
 	return 1;
 }
