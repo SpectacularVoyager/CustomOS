@@ -1,11 +1,12 @@
-#include "../grub/multiboot2.h"
-#include "stdio.h"
 #include "stdlib.h"
+#include "stdio.h"
+
+//TODO MALLOC STARTS WITH 0
 
 unsigned long malloc_start=0;
 unsigned long malloc_end=0;
 
-void AssignMallocMemoryMap(struct multiboot_tag *tag){
+void AssignMallocMemoryMap(struct multiboot_tag *tag,uint64_t safe_offset){
 	int i=1;
 	unsigned long malloc_len=0;
 	multiboot_memory_map_t* mmap;
@@ -24,7 +25,7 @@ void AssignMallocMemoryMap(struct multiboot_tag *tag){
 			}
 		}
 	}
-	malloc_start+=0x30000;
+	malloc_start+=safe_offset;
 	kprintf(INFO "MALLOC DETAILS [%X->%X]\n",malloc_start,malloc_end);
 }
 void MallocSetStart(unsigned long ptr){

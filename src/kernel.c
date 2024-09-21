@@ -33,23 +33,28 @@
 #include "drivers/apic/apic.h"
 void Debug();
 extern char* cpuid_flags[62];
+//#define PRINT_CPUID
 void graphicsStuff(MULTIBOOT_HEADERS headers){
 	struct multiboot_tag_framebuffer* fb=(struct multiboot_tag_framebuffer*)headers.fb;
 	unsigned long addr=fb->common.framebuffer_addr;
 	unsigned long page=addr/PAGE_WIDTH;
-	AllocatePage(page,page*PAGE_WIDTH,1<<4);
-	AllocatePage(2,2L*PAGE_WIDTH,1<<4);
-	AllocatePage(1,1L*PAGE_WIDTH,1<<4);
+	AllocatePage(page,page*PAGE_WIDTH,0x10);
+	AllocatePage(1,1L*PAGE_WIDTH,0x10);
+	AllocatePage(2,2L*PAGE_WIDTH,0x10);
+	AllocatePage(3,3L*PAGE_WIDTH,0x10);
+	AllocatePage(4,4L*PAGE_WIDTH,0x10);
 	GraphicsInit(
 			addr,
 			fb->common.framebuffer_width,
 			fb->common.framebuffer_height,
 			fb->common.framebuffer_bpp
 			);
+	printf(INFO"FRAMEBUFFER_ADDR:\t%p\n",fb->common.framebuffer_addr);
 }
 void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long cpuid)
 {
 	FPUEnable();
+	while(1);
 	kprintf(INFO "BOOTING OS[%x]\n",magic);
 
 #ifdef PRINT_CPUID
@@ -63,8 +68,12 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 	}
 #endif
 	MULTIBOOT_HEADERS headers=MultibootProcessHeaders(multiboot_address);
+	//ERROR FIX MALLOC STARTS WITHOUT INIT
+	//
+	AssignMallocMemoryMap(headers.mmap,0x70000);
 	graphicsStuff(headers);
-	AssignMallocMemoryMap(headers.mmap);
+
+
 	printf("HELLO WORLD\n");
 	IDT_Initialize(cs);
 	IRQ_Initialize();
@@ -86,6 +95,8 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 	//GPT_READ();
 	APIC_INIT(h.apic);
 
+	PageRemap(4,0,0xFD000000,1<<4);
+	*(uint32_t*)(0x100000000)=0xff00dd;
 	Debug();
 	while(1);
 }

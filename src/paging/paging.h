@@ -12,8 +12,10 @@ void PagingInit();
 
 void PageSetup(uint64_t fb_index);
 
-extern uint64_t p4_table[512];
-extern uint64_t p3_table[512];
-extern uint64_t p2_table[512];
+extern volatile uint64_t p4_table[512];
+extern volatile uint64_t p3_table[512];
+extern volatile uint64_t p2_table[512];
 
 void AllocatePage(int p,unsigned long address,unsigned int flags);
+
+void PageRemap(int n,uint64_t offset,uint64_t address,int flags);

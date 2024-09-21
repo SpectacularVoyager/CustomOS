@@ -3,6 +3,18 @@
 #include "base.h"
 
 
+#define APIC_PROCESSOR_LOCAL					0
+#define APIC_IO								    1
+#define APIC_IO_INT_SOURCE_OVERRIDE				2
+#define APIC_NMI								3
+#define APIC_LOCAL_NMI							4
+#define APIC_LOCAL_ADDRESS_OVERRIDE				5
+#define APIC_LOCAL_X2_OVERRIDE					9
+
+
+
+
+
 typedef struct {
 	uint8_t type;
 	uint8_t length;
@@ -73,14 +85,3 @@ typedef struct{
 	uint32_t flags;
 	APIC_RECORD records[1];
 } __attribute__((packed)) MADT;
-
-#define APIC_PROCESSOR_LOCAL					0
-#define APIC_IO								    1
-#define APIC_IO_INT_SOURCE_OVERRIDE				2
-#define APIC_NMI								3
-#define APIC_LOCAL_NMI							4
-#define APIC_LOCAL_ADDRESS_OVERRIDE				5
-#define APIC_LOCAL_X2_OVERRIDE					9
-
-
-

@@ -1,5 +1,16 @@
 #pragma once
 #include "stdint.h"
+
+inline void rdmsr(uint32_t msr, uint32_t *lo, uint32_t *hi)
+{
+   asm volatile("rdmsr" : "=a"(*lo), "=d"(*hi) : "c"(msr));
+}
+
+inline void wrmsr(uint32_t msr, uint32_t lo, uint32_t hi)
+{
+   asm volatile("wrmsr" : : "a"(lo), "d"(hi), "c"(msr));
+}
+
 inline unsigned char inb(unsigned short int port)
 {
         unsigned char ret;

@@ -16,7 +16,7 @@ QEMU_FLAGS:= -M q35
 QEMU_FLAGS:=$(QEMU_FLAGS) -usb -device usb-ehci,id=ehci		\
         -device usb-host,bus=usb-bus.0,hostbus=3,hostport=1 \
         -device usb-host,bus=ehci.0,hostbus=1,hostport=1
-QEMU_FLAGS:=$(QEMU_FLAGS) -serial file:logs/serial.log -net nic,model=rtl8139 -m 512M -vga std -hda
+QEMU_FLAGS:=$(QEMU_FLAGS) -serial file:logs/serial.log -net nic,model=rtl8139 -m 2G -vga std -hda
 
 all: clean boot kernel link build isMultiBoot
 
@@ -75,6 +75,8 @@ isMultiBoot:
 	@./isMultiBoot.sh $(ISO)
 run: all
 	@$(QEMU) $(QEMU_FLAGS) iso.iso
+
+# INSPECT MEM x/128b 0xfee00000
 debug: all
 	@$(QEMU) $(QEMU_FLAGS) iso.iso -monitor stdio
 gdb: all
