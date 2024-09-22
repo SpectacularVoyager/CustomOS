@@ -58,8 +58,8 @@ void MTRStuff(){
 	uint64_t MTRRCAP=RDMSR(0xFE);
 	uint64_t MTRRdefType=RDMSR(0x2FF);
 	uint64_t MTRRPHYBASE=RDMSR(0x2FF);
-	//WRMSR(0x202,0xFEE00000);
-	//WRMSR(0x203,0xFFC0000800);
+	WRMSR(0x202,0x200000);
+	WRMSR(0x203,0xFFC0000800);
 	LOGVAL(MTRRCAP);
 	LOGVAL(MTRRdefType);
 
@@ -91,9 +91,6 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 	MTRStuff();
 	//PageRemap(4,0,0xFD000000,1<<4);
 	//*(uint32_t*)(0x100000000)=0xff00dd;
-	kprintf(INFO"VAL\t%p\n",*(uint64_t*)(0xfee00010));
-	void* memory=mallocA(0x200000,0x200000);
-	WRMSR(0x1B,(uint64_t)memory|0x900);
 	//MemoryRemap(0xFEE00000,(uint64_t)memory,1<<4);
 	//kprintf(INFO"VAL\t%p\n",*(uint64_t*)(0xfee00010));
 

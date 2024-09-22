@@ -7,10 +7,11 @@
 
 
 volatile uint8_t* localAPICaddr;
-#define LAPIC_GET(x) (*(uint32_t*)(localAPICaddr+x))
+#define LAPIC_GET(x) ((uint32_t*)(localAPICaddr+x))
 int APIC_INIT(MADT* madt){
 	void* memory=mallocA(0x200000,0x200000);
-	WRMSR(0x1B,(uint64_t)memory|0x900);
+	WRMSR(IA32_APIC_BASE_MSR,
+			(uint64_t)memory|IA32_APIC_BASE_MSR_BSP|IA32_APIC_BASE_MSR_ENABLE);
 
 	SetColor(0x00ffff);
 	if(!madt){
@@ -23,7 +24,7 @@ int APIC_INIT(MADT* madt){
 
 	uint64_t ptr;
 	uint32_t eax,edx;
-	rdmsr(0x1B,&eax,&edx);
+	rdmsr(IA32_APIC_BASE_MSR,&eax,&edx);
 	volatile uint64_t addr=((uint64_t)edx)<<32|eax;
 	printf(INFO"RDMSR ADDR:\t%x%08x\n",edx,eax);
 	if(!(BIT(eax,11))){
@@ -42,8 +43,9 @@ int APIC_INIT(MADT* madt){
 		record+=apic_record->length;
 	}
 
-	printf(INFO"LAPIC ID\t%x\n",LAPIC_GET(0x20));
-	printf(INFO"LAPIC ICR\t%x\n",LAPIC_GET(0x30));
-	printf(INFO"LAPIC ICR\t%x\n",LAPIC_GET(0x300));
+	printf(INFO"LAPIC ID\t%x\n" ,*LAPIC_GET(APIC_LAPIC_ID));
+	printf(INFO"LAPIC VERSION\t%x\n",*LAPIC_GET(APIC_LAPIC_VERSION));
+	//*LAPIC_GET(APIC_LAPIC_SPURIOUS_INTERRUPTS)|=(1<<8|1<<12);
+
 	return 1;
 }
