@@ -20,8 +20,8 @@ QEMU_FLAGS:=$(QEMU_FLAGS) -serial file:logs/serial.log -net nic,model=rtl8139 -m
 
 objects = $(shell find -name "*.c")
 objects := ${objects:.c=.o}
-
 all: boot $(objects) link build isMultiBoot
+all: clean boot $(objects) link build isMultiBoot
 
 clean:
 	mkdir -p $(OUT)
@@ -31,7 +31,11 @@ boot:
 
 $(objects): %.o: %.c
 	@mkdir -p $(shell dirname $(patsubst src/%,out/%,$@))
+<<<<<<< HEAD
 	@$(CC) -c $^ -o $(patsubst src/%,out/%,$@) -std=gnu99 -ffreestanding $(CFLAGS)
+=======
+	$(CC) -c $^ -o $(patsubst src/%,out/%,$@) -std=gnu99 -ffreestanding $(CFLAGS)
+>>>>>>> origin/long
 
 link:
 	@$(CC) -T linker.ld -o $(ISO) -ffreestanding -O2 -nostdlib $(shell find -name '*.o') -lgcc
