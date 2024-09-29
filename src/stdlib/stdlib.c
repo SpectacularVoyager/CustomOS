@@ -28,10 +28,11 @@ void AssignMallocMemoryMap(struct multiboot_tag *tag,uint64_t safe_offset){
 				malloc_len=mmap->len;
 				ms=mmap->addr;
 				me=me+mmap->len;
-				//printf(INFO"MMAP %p\t%p\n",mmap->addr,mmap->len);
 			}
 		}
 	}
+	malloc_start+=safe_offset;
+	kprintf(INFO"MALLOC-> %p\t%p\n",malloc_start,malloc_end);
 	//malloc_start+=safe_offset;
 }
 void MallocDebug(){

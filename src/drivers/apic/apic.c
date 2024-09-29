@@ -41,8 +41,7 @@ void IOAPIC_WRITEIRQ(uint8_t offset,uint64_t val) {
 
 int APIC_INIT(MADT* madt){
 	void* memory=mallocA(0x200000,0x200000);
-	WRMSR(IA32_APIC_BASE_MSR,
-			(uint64_t)memory|IA32_APIC_BASE_MSR_BSP|IA32_APIC_BASE_MSR_ENABLE);
+	//WRMSR(IA32_APIC_BASE_MSR,(uint64_t)memory|IA32_APIC_BASE_MSR_BSP|IA32_APIC_BASE_MSR_ENABLE);
 
 	SetColor(0x00ffff);
 	if(!madt){
@@ -50,6 +49,7 @@ int APIC_INIT(MADT* madt){
 		return 0;
 	}
 	localAPICaddr=(uint8_t*)madt->localAPICaddr;
+
 	int n=madt->h.Length;
 	void* record=madt->records;
 
@@ -76,6 +76,9 @@ int APIC_INIT(MADT* madt){
 		}
 		record+=apic_record->base.length;
 	}
+	printf(INFO"MEM\t%p\n",localAPICaddr);
+	MemoryRemap((uint64_t)memory,0xfee00000,1<<4);
+	localAPICaddr=memory;
 
 	*LAPIC_GET(APIC_LAPIC_SPURIOUS_INTERRUPTS)|=(1<<8);
 	*LAPIC_GET(APIC_LAPIC_SPURIOUS_INTERRUPTS)&=~(0xf);

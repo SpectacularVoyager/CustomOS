@@ -90,7 +90,7 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 	//AssignMallocMemoryMap(headers.mmap,0x70000);
 	AssignMallocMemoryMap(headers.mmap,0x170000);
 	graphicsStuff(headers);
-	MallocDebug();	
+	//MallocDebug();	
 	//MTRStuff();
 	//PageRemap(4,0,0xFD000000,1<<4);
 	//*(uint32_t*)(0x100000000)=0xff00dd;
@@ -99,28 +99,27 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 
 
 	printf("HELLO WORLD\n");
+	IDT_Initialize(cs);
+	IRQ_Initialize();
+	IRQ_RegisterHandler(14, ATAPIO_HANDLE_IRQ);
+	PCI_Initiate();
+	ExceptionInit();
+	KeyboardInstall();
+
+	struct multiboot_tag_new_acpi *acpi=(struct multiboot_tag_new_acpi*)headers.acpi;
+	RSDP_t* l=(RSDP_t*)acpi->rsdp;
+
+	ACPIHeaders h=ACPI_INIT(l);
+	void* base=(void*)h.mcfg->allocations[0].base;
+
+	//EHCI_INIT(PCI_GetFromID(0x8086, 0x24CD));
+	//PONG_MAIN();
+	//AHCI_INIT(PCI_GetFromType(0x1,0x6));
+
+	//GPT_READ();
+	APIC_INIT(h.apic);
+
+	APIC_TIMER_INIT(0x2000000);
+	Debug();
 	while(1);
-	//IDT_Initialize(cs);
-	//IRQ_Initialize();
-	//IRQ_RegisterHandler(14, ATAPIO_HANDLE_IRQ);
-	//PCI_Initiate();
-	//ExceptionInit();
-	//KeyboardInstall();
-
-	//struct multiboot_tag_new_acpi *acpi=(struct multiboot_tag_new_acpi*)headers.acpi;
-	//RSDP_t* l=(RSDP_t*)acpi->rsdp;
-
-	//ACPIHeaders h=ACPI_INIT(l);
-	//void* base=(void*)h.mcfg->allocations[0].base;
-
-	////EHCI_INIT(PCI_GetFromID(0x8086, 0x24CD));
-	////PONG_MAIN();
-	////AHCI_INIT(PCI_GetFromType(0x1,0x6));
-
-	////GPT_READ();
-	////APIC_INIT(h.apic);
-
-	////APIC_TIMER_INIT(0x2000000);
-	//Debug();
-	//while(1);
 }
