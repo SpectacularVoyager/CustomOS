@@ -85,3 +85,13 @@ typedef struct{
 	uint32_t flags;
 	APIC_RECORD records[1];
 } __attribute__((packed)) MADT;
+
+typedef union {
+	APIC_RECORD base;
+	APIC_PROCESSOR_LOCAL_RECORD lapic;
+	APIC_IO_RECORD ioapic;
+	APIC_IO_INT_SOURCE_OVERRIDE_RECORD ioapic_int;
+	APIC_NMI_RECORD nmi;
+	APIC_LOCAL_ADDRESS_OVERRIDE_RECORD address_override;
+	APIC_LOCAL_X2_OVERRIDE_RECORD x2_override;
+}  APIC_RECORD_UNION;

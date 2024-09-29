@@ -8,6 +8,14 @@
 
 volatile uint8_t* localAPICaddr;
 #define LAPIC_GET(x) ((uint32_t*)(localAPICaddr+x))
+
+void APIC_SEND_EOI(){
+	*LAPIC_GET(APIC_LAPIC_EOI)=0;
+}
+uint32_t* LAPIC(unsigned int x){
+	return LAPIC_GET(x);
+}
+
 int APIC_INIT(MADT* madt){
 	void* memory=mallocA(0x200000,0x200000);
 	WRMSR(IA32_APIC_BASE_MSR,
@@ -22,30 +30,34 @@ int APIC_INIT(MADT* madt){
 	int n=madt->h.Length;
 	void* record=madt->records;
 
-	uint64_t ptr;
-	uint32_t eax,edx;
-	rdmsr(IA32_APIC_BASE_MSR,&eax,&edx);
-	volatile uint64_t addr=((uint64_t)edx)<<32|eax;
-	printf(INFO"RDMSR ADDR:\t%x%08x\n",edx,eax);
-	if(!(BIT(eax,11))){
-		printf(ERROR"APIC NOT ENABLED\n",eax);
+	volatile uint64_t addr=RDMSR(IA32_APIC_BASE_MSR);
+	printf(INFO"RDMSR ADDR:\t%p\n",addr);
+	if(!(BIT(addr,11))){
+		printf(ERROR"APIC NOT ENABLED\n",addr);
 	}
-	while(record<((void*)madt)+n){
-		APIC_RECORD* apic_record=((APIC_RECORD*)record);
-		//printf(INFO"APIC RECORD:%x\n",apic_record->type);
 
-		if(apic_record->type==APIC_PROCESSOR_LOCAL){
-			APIC_PROCESSOR_LOCAL_RECORD* local=(APIC_PROCESSOR_LOCAL_RECORD*)apic_record;
+	APIC_IO_RECORD* apicio=0;
+
+	while(record<((void*)madt)+n){
+		APIC_RECORD_UNION* apic_record=((APIC_RECORD_UNION*)record);
+		printf(INFO"APIC RECORD:%x\n",apic_record->base.type);
+
+		if(apic_record->base.type==APIC_IO){
+			apicio=&apic_record->ioapic;
 		}
-		if(apic_record->type==APIC_LOCAL_ADDRESS_OVERRIDE){
+		if(apic_record->base.type==APIC_LOCAL_ADDRESS_OVERRIDE){
 			localAPICaddr=(void*)((APIC_LOCAL_ADDRESS_OVERRIDE_RECORD*)apic_record)->phy_addr;
 		}
-		record+=apic_record->length;
+		record+=apic_record->base.length;
 	}
+
+	*LAPIC_GET(APIC_LAPIC_SPURIOUS_INTERRUPTS)|=(1<<8);
+	*LAPIC_GET(APIC_LAPIC_SPURIOUS_INTERRUPTS)&=~(0xf);
 
 	printf(INFO"LAPIC ID\t%x\n" ,*LAPIC_GET(APIC_LAPIC_ID));
 	printf(INFO"LAPIC VERSION\t%x\n",*LAPIC_GET(APIC_LAPIC_VERSION));
-	//*LAPIC_GET(APIC_LAPIC_SPURIOUS_INTERRUPTS)|=(1<<8|1<<12);
+	printf(INFO"LAPIC SPURIOUS\t%x\n",*LAPIC_GET(APIC_LAPIC_SPURIOUS_INTERRUPTS));
+
 
 	return 1;
 }

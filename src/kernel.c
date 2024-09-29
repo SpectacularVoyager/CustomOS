@@ -33,6 +33,7 @@
 #include "drivers/apic/apic.h"
 #include "utils/ports.h"
 #include "utils/utils.h"
+#include "devices/apic/timer.h"
 void Debug();
 extern char* cpuid_flags[62];
 //#define PRINT_CPUID
@@ -58,8 +59,8 @@ void MTRStuff(){
 	uint64_t MTRRCAP=RDMSR(0xFE);
 	uint64_t MTRRdefType=RDMSR(0x2FF);
 	uint64_t MTRRPHYBASE=RDMSR(0x2FF);
-	WRMSR(0x202,0x200000);
-	WRMSR(0x203,0xFFC0000800);
+	//WRMSR(0x202,0x200000);
+	//WRMSR(0x203,0xFFC0000800);
 	LOGVAL(MTRRCAP);
 	LOGVAL(MTRRdefType);
 
@@ -116,6 +117,7 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 	//GPT_READ();
 	APIC_INIT(h.apic);
 
+	//APIC_TIMER_INIT(0x1000000);
 	Debug();
 	while(1);
 }
