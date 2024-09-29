@@ -83,19 +83,19 @@ void DebugKeyboardHandler(KeyCode code){
 	APIC_SEND_EOI();
 }
 void Debug(){
-	SetColor(0xFF<<8);
-	printf(INFO "HELLO WORLD!!!\n");
-	PCI_device* devices=PCI_GetDevices();
-	printf(TRACE "DETECTED %d devices\n",PCI_GetDeviceCount());
-	for(uint16_t i=0;i<PCI_GetDeviceCount();i++){
-		//PCI_Device_Print(&devices[i]);
-	}
-	KeyboardSetProcess(DebugKeyboardHandler);
-	for(int i=0;i<PCI_GetDeviceCount();i++){
-		if(i%4==0)printf("\n");
-		printf("[%04X %04X]{%02X %02X %02X}\t",devices[i].vendor_id,devices[i].device_id,devices[i].class_id,devices[i].subclass_id,devices[i].progIF);	
-		//PCI_Device_Print(&devices[i]);
-	}
+	//SetColor(0xFF<<8);
+	//printf(INFO "HELLO WORLD!!!\n");
+	//PCI_device* devices=PCI_GetDevices();
+	//printf(TRACE "DETECTED %d devices\n",PCI_GetDeviceCount());
+	//for(uint16_t i=0;i<PCI_GetDeviceCount();i++){
+	//	//PCI_Device_Print(&devices[i]);
+	//}
+	//KeyboardSetProcess(DebugKeyboardHandler);
+	//for(int i=0;i<PCI_GetDeviceCount();i++){
+	//	if(i%4==0)printf("\n");
+	//	printf("[%04X %04X]{%02X %02X %02X}\t",devices[i].vendor_id,devices[i].device_id,devices[i].class_id,devices[i].subclass_id,devices[i].progIF);	
+	//	//PCI_Device_Print(&devices[i]);
+	//}
 
 	//PCI_device* nic=PCI_GetFromID(0x10EC, 0x8168);
 	//ISO_Init();	

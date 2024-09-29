@@ -7,3 +7,5 @@ void* malloc(unsigned long size);
 void* mallocA(unsigned long size,unsigned long align);
 
 void MallocSetStart(unsigned long ptr);
+
+void MallocDebug();

@@ -1,15 +1,18 @@
 #include "stdlib.h"
 #include "stdio.h"
 
-//TODO MALLOC STARTS WITH 0
 
-unsigned long malloc_start=0;
+
+unsigned long malloc_start=0x270000;
 unsigned long malloc_end=0;
 
+unsigned long ms=0;
+unsigned long me=0;
 void AssignMallocMemoryMap(struct multiboot_tag *tag,uint64_t safe_offset){
 	int i=1;
 	unsigned long malloc_len=0;
 	multiboot_memory_map_t* mmap;
+
 	for (mmap = ((struct multiboot_tag_mmap *) tag)->entries;
 			(multiboot_uint8_t *) mmap
 			< (multiboot_uint8_t *) tag + tag->size;
@@ -17,16 +20,22 @@ void AssignMallocMemoryMap(struct multiboot_tag *tag,uint64_t safe_offset){
 			((unsigned long) mmap
 			 + ((struct multiboot_tag_mmap *) tag)->entry_size))
 	{
+
 		if(mmap->type==MULTIBOOT_MEMORY_AVAILABLE){
-			if(malloc_len<mmap->len){
+			if(malloc_len<mmap->len&&mmap->addr<0x10000000){
 				malloc_start=mmap->addr;
 				malloc_end=mmap->len+malloc_start;
 				malloc_len=mmap->len;
+				ms=mmap->addr;
+				me=me+mmap->len;
+				//printf(INFO"MMAP %p\t%p\n",mmap->addr,mmap->len);
 			}
 		}
 	}
-	malloc_start+=safe_offset;
-	kprintf(INFO "MALLOC DETAILS [%X->%X]\n",malloc_start,malloc_end);
+	//malloc_start+=safe_offset;
+}
+void MallocDebug(){
+	printf(INFO"[%p -> %p]\n",ms,me);
 }
 void MallocSetStart(unsigned long ptr){
 	malloc_start=ptr;
