@@ -117,7 +117,7 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 	//GPT_READ();
 	APIC_INIT(h.apic);
 
-	//APIC_TIMER_INIT(0x1000000);
+	APIC_TIMER_INIT(0x2000000);
 	Debug();
 	while(1);
 }

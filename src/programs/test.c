@@ -4,6 +4,7 @@
 #include "../devices/keyboard.h"
 #include "../disk/iso/iso.h"
 #include "../drivers/acpi/acpi.h"
+#include "../drivers/apic/apic.h"
 
 #include "../drivers/networking/rtl8168/rtl8168.h"
 char* cpuid_flags[62]={
@@ -79,6 +80,7 @@ void DebugKeyboardHandler(KeyCode code){
 	if(code.type=KEY_TYPE_ASCII && code.pressed){
 		printf("%c",code.val);
 	}
+	APIC_SEND_EOI();
 }
 void Debug(){
 	SetColor(0xFF<<8);

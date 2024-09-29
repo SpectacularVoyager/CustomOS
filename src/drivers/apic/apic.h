@@ -30,3 +30,7 @@ void APIC_SEND_EOI();
 #define IA32_APIC_BASE_MSR 0x1B
 #define IA32_APIC_BASE_MSR_BSP 0x100 // Processor is a BSP
 #define IA32_APIC_BASE_MSR_ENABLE 0x800
+
+// Memory offsets
+#define IOAPIC_IOREGSEL 0x00
+#define IOAPIC_IOREGWIN 0x10
