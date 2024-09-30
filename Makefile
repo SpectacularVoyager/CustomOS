@@ -30,7 +30,8 @@ boot:
 
 $(objects): %.o: %.c
 	@mkdir -p $(shell dirname $(patsubst src/%,out/%,$@))
-	$(CC) -c $^ -o $(patsubst src/%,out/%,$@) -std=gnu99 -ffreestanding -Isrc/include $(CFLAGS)
+	$(CC) -c $^ -o $(patsubst src/%,out/%,$@) -std=gnu99 \
+		-ffreestanding -Isrc/include -Isrc $(CFLAGS)
 
 link:
 	@$(CC) -T linker.ld -o $(ISO) -ffreestanding -O2 -nostdlib $(shell find -name '*.o') -lgcc

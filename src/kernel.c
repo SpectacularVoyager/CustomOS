@@ -34,6 +34,7 @@
 #include "drivers/apic/apic.h"
 #include "utils/ports.h"
 #include "utils/utils.h"
+#include "arch/nmi.h"
 #include "devices/apic/timer.h"
 void Debug();
 extern char* cpuid_flags[62];
