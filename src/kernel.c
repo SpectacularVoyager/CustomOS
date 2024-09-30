@@ -111,15 +111,15 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 
 	ACPIHeaders h=ACPI_INIT(l);
 	void* base=(void*)h.mcfg->allocations[0].base;
+	APIC_INIT(h.apic);
 
 	//EHCI_INIT(PCI_GetFromID(0x8086, 0x24CD));
 	//PONG_MAIN();
-	//AHCI_INIT(PCI_GetFromType(0x1,0x6));
 
-	//GPT_READ();
-	APIC_INIT(h.apic);
+	AHCI_INIT(PCI_GetFromType(0x1,0x6));
 
-	APIC_TIMER_INIT(0x2000000);
+	GPT_READ();
+	//APIC_TIMER_INIT(0x2000000);
 	Debug();
 	while(1);
 }

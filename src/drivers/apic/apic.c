@@ -61,6 +61,16 @@ int APIC_INIT(MADT* madt){
 
 	APIC_IO_RECORD* ioapic=0;
 
+	printf(INFO"MEM\t%p\n",localAPICaddr);
+	MemoryRemap((uint64_t)memory,0xfee00000,1<<4);
+	localAPICaddr=memory;
+
+	*LAPIC_GET(APIC_LAPIC_SPURIOUS_INTERRUPTS)|=(1<<8);
+	*LAPIC_GET(APIC_LAPIC_SPURIOUS_INTERRUPTS)&=~(0xf);
+
+	printf(INFO"LAPIC ID\t%x\n" ,*LAPIC_GET(APIC_LAPIC_ID));
+	printf(INFO"LAPIC VERSION\t%x\n",*LAPIC_GET(APIC_LAPIC_VERSION));
+	printf(INFO"LAPIC SPURIOUS\t%x\n",*LAPIC_GET(APIC_LAPIC_SPURIOUS_INTERRUPTS));
 	while(record<((void*)madt)+n){
 		APIC_RECORD_UNION* apic_record=((APIC_RECORD_UNION*)record);
 		//printf(INFO"APIC RECORD:%x\n",apic_record->base.type);
@@ -76,16 +86,6 @@ int APIC_INIT(MADT* madt){
 		}
 		record+=apic_record->base.length;
 	}
-	printf(INFO"MEM\t%p\n",localAPICaddr);
-	MemoryRemap((uint64_t)memory,0xfee00000,1<<4);
-	localAPICaddr=memory;
-
-	*LAPIC_GET(APIC_LAPIC_SPURIOUS_INTERRUPTS)|=(1<<8);
-	*LAPIC_GET(APIC_LAPIC_SPURIOUS_INTERRUPTS)&=~(0xf);
-
-	printf(INFO"LAPIC ID\t%x\n" ,*LAPIC_GET(APIC_LAPIC_ID));
-	printf(INFO"LAPIC VERSION\t%x\n",*LAPIC_GET(APIC_LAPIC_VERSION));
-	printf(INFO"LAPIC SPURIOUS\t%x\n",*LAPIC_GET(APIC_LAPIC_SPURIOUS_INTERRUPTS));
 
 	void* lapic_memory=mallocA(0x200000,0x200000);
 	MemoryRemap((uint64_t)lapic_memory,ioapic->ioapic_addr,1<<4);
@@ -95,7 +95,11 @@ int APIC_INIT(MADT* madt){
 	printf(INFO"IRQ 0:\t%p\n",IOAPIC_READIRQ(0));
 	printf(INFO"IRQ 1:\t%p\n",IOAPIC_READIRQ(1));
 	
-	IOAPIC_WRITEIRQ(1,0x21);
+	IOAPIC_WRITEIRQ(0x1,0x21);
+	IOAPIC_WRITEIRQ(0x9,0x29);
+	IOAPIC_WRITEIRQ(0xA,0x2A);
+	IOAPIC_WRITEIRQ(0xB,0x2B);
+	//IOAPIC_WRITEIRQ(2,0x24);
 	//printf(INFO"LAPIC\t%p\n",(1<<11)|0x21||(0xf<56));
 	//printf(INFO"IRQ 1:\t%p\n",IOAPIC_READIRQ(2));
 	return 1;

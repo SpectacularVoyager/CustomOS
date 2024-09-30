@@ -2,6 +2,7 @@
 #include "isr.h"
 #include "idt.h"
 #include "../drivers/pic.h"
+#include "../drivers/apic/apic.h"
 #include "../utils/ports.h"
 #include "../stdlib/stdio.h"
 
@@ -19,7 +20,8 @@ void IRQ_Handler(registers* r){
 			printf(TRACE"UNHANDLED IRQ %d\n",irq);
 		}
 	}
-	PIC_sendEOI(irq);
+	//PIC_sendEOI(irq);
+	APIC_SEND_EOI();
 }
 
 void IRQ_Initialize(){
