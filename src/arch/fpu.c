@@ -1,4 +1,4 @@
-#include "../stdlib/stdio.h"
+#include <stdlib/stdio.h>
 #include "../utils/bit.h"
 #include "fpu.h"
 

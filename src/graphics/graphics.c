@@ -13,7 +13,7 @@ uint32_t color=0xffffffff;
 
 
 #define GET_PIXEL(x,y) (y)*width+(x)
-//#define DOUBLE_BUFFERING 
+#define DOUBLE_BUFFERING 
 int GraphicsInit(long addr,int w,int h,int _bpp){
 	if(_bpp!=32){
 		kprintf_("CANNOT INIT WITH BPP %d\n",_bpp);
@@ -88,6 +88,5 @@ void FillRect(int x,int y,int w,int h){
 void ClearScreen(){
 	for(int i=0;i<width*height;i++){
 		video[i]=0;
-		buffer[i]=0;
 	}
 }

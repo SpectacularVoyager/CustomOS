@@ -4,6 +4,7 @@
 #include "../../utils/ports.h"
 #include "../../utils/bit.h"
 #include "../../paging/paging.h"
+#include <stdlib/stdio.h>
 #include <stdint.h>
 
 

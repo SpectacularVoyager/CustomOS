@@ -1,2 +1,2 @@
 CompileFlags:
-  Add: [-Wall, -Wextra, -std=gnu99, -ffreestanding, -mfpmath=sse, -Iinclude]
+  Add: [-Wall, -Wextra, -std=gnu99, -ffreestanding, -mfpmath=sse, -I/home/ankush/Ankush/CustomOS/src/include]

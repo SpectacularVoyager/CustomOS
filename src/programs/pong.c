@@ -7,7 +7,7 @@ int w,h;
 int y1=0,y2=0;
 int pw=20,ph=100;
 int dx=100;
-int speed=10;
+int speed=5;
 
 double sqrt (double x)
 {
@@ -64,7 +64,7 @@ void reset(){
 	
 	bx=w/2.0f;
 	by=h/2.0f;
-	vx=-10;
+	vx=-speed;
 	vy=0;
 	lastcol=-1;
 }

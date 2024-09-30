@@ -2,7 +2,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include "SerialPrintf/printf.h"
-#include "stdlib/stdio.h"
+#include <stdlib/stdio.h>
 #include "grub/multiboot2.h"
 
 #include "interrupts/idt.h"
@@ -21,7 +21,8 @@
 #include "disk/iso/iso.h"
 #include "task/task.h"
 #include "stdlib/string.h"
-#include "stdlib/stdlib.h"
+#include <stdlib/stdlib.h>
+#include <stdlib/stdlib.h>
 #include "programs/pong.h"
 #include "grub/multibootutils.h"
 #include "utils/bit.h"
@@ -114,11 +115,11 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 	APIC_INIT(h.apic);
 
 	//EHCI_INIT(PCI_GetFromID(0x8086, 0x24CD));
-	//PONG_MAIN();
 
 	AHCI_INIT(PCI_GetFromType(0x1,0x6));
 
 	GPT_READ();
+	//PONG_MAIN();
 	//APIC_TIMER_INIT(0x2000000);
 	Debug();
 	while(1);
