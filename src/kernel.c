@@ -37,6 +37,10 @@
 #include "arch/nmi.h"
 #include "drivers/xhci/xhci.h"
 #include "devices/apic/timer.h"
+
+#include "drivers/networking/rtl8139/rtl8139.h"
+#include "drivers/networking/rtl8168/rtl8168.h"
+#include "drivers/networking/rtl8169/rtl8169.h"
 void Debug();
 extern char* cpuid_flags[62];
 //#define PRINT_CPUID
@@ -130,8 +134,18 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 		}
 		PCI_Device_Print(usb);
 	}
-	PONG_MAIN();
+	//PONG_MAIN();
 	//APIC_TIMER_INIT(0x2000000);
+	//
+
+	PCI_device* nic=PCI_GetFromID(0x10EC, 0x8168);
+	if(nic){
+		RTL8168_INIT(nic);
+	}
+	if((nic=PCI_GetFromID(0x10EC,0x8139))){
+		RTL8139_INIT(nic,pcibase);
+	}
 	Debug();
+
 	while(1);
 }

@@ -27,3 +27,5 @@
 #define BAR_ADDR(a) ((a)&(~0xf))
 
 #define U32(addr) (*(uint32_t*)(addr))
+#define U16(addr) (*(uint16_t*)(addr))
+#define U8(addr) (*(uint8_t*)(addr))
