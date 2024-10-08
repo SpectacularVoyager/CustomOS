@@ -35,7 +35,7 @@ typedef struct{
   uint8_t latencyTimer;
   uint8_t headerType;
   uint8_t bist;
-} PCI_device;
+}  __attribute__((packed)) PCI_device;
 
 typedef struct{
 	PCI_device base;
@@ -44,12 +44,15 @@ typedef struct{
 	uint16_t subsystem_id;
 	uint16_t subsystem_vendor_id;
 	uint32_t expansion_rom_address;
+	uint8_t resv1[3];
 	uint8_t capabilities_pointer;
+	uint8_t resv2[3];
+	uint32_t resv3;
 	uint8_t max_latency;
 	uint8_t min_grant;
 	uint8_t interript_pin;
 	uint8_t interrupt_line;
-}PCIGeneralDevice;
+} __attribute__((packed)) PCIGeneralDevice;
 
 void PCI_ReadDevice(PCI_device* device,uint16_t bus,uint8_t slot,uint8_t function);
 
@@ -69,6 +72,10 @@ void PCI_Refresh(PCI_device* device);
 void PCI_ConfigWriteWord(uint8_t bus, uint8_t slot, uint8_t func, uint8_t offset,uint32_t val);
 
 void PCI_DeviceConfigWriteWord(PCI_device* d, uint8_t offset,uint32_t val);
+
+uint16_t PCI_ConfigReadWord(uint8_t bus, uint8_t slot, uint8_t func, uint8_t offset);
+
+uint32_t PCI_DeviceConfigReadWord(PCI_device* d, uint8_t offset);
 
 
 void* PCI_GetMMIO(PCI_device* device,void* base);

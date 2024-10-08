@@ -45,7 +45,7 @@ inline void outw(unsigned short int port, unsigned char value)
 {
         asm volatile ("outw %%ax,%%dx": :"d" (port), "a"(value));
 }
-inline unsigned long inportl(unsigned short port)
+inline unsigned int inportl(unsigned short port)
 {
 	unsigned long result;
 	__asm__ __volatile__("inl %%dx, %%eax" : "=a" (result) : "dN" (port));

@@ -15,10 +15,10 @@ void GPT_READ(){
 	GPT_PART_ENTRY* entry=malloc(num+0x200);
 	AHCI_READ(buffer->partition_entry_lba,2,(void*)entry);
 	for(int i=0;i<5;i++){
-		kprintf(INFO"PART[%d]\t",i);
+		printf(INFO"GPT PART[%d]\t",i);
 		for(int j=0;j<36;j++){
-			kprintf("%c",(uint8_t)entry[i].name[j]);
+			printf("%c",(uint8_t)entry[i].name[j]);
 		}
-		kprintf("\n");
+		printf("\n");
 	}
 }

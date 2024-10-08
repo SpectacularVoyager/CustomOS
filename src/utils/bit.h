@@ -21,3 +21,5 @@
 
 #define DIV_CEIL(a,b) (a+b-1)/b
 
+// EXTRACT BIT MASK FOR RANGE:		2-6 -> 0xffff00
+#define BIT_RANGE_MASK(b,a) ((unsigned long)(1<<((b)-(a)))-0x1)<<(a)

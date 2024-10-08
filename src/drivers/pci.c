@@ -61,6 +61,18 @@ void PCI_DeviceConfigWriteWord(PCI_device* d, uint8_t offset,uint32_t val) {
     // (offset & 2) * 8) = 0 will choose the first word of the 32-bit register
 	outportl(0xCFC,val);
 }
+
+uint32_t PCI_DeviceConfigReadWord(PCI_device* d, uint8_t offset) {
+    uint32_t address;
+    uint32_t lbus  = (uint32_t)d->bus;
+    uint32_t lslot = (uint32_t)d->slot;
+    uint32_t lfunc = (uint32_t)d->function;
+    address = (uint32_t)((lbus << 16) | (lslot << 11) |
+              (lfunc << 8) | (offset & 0xFC) | ((uint32_t)0x80000000));
+  
+    outportl(0xCF8, address);
+	return inportl(0xCFC);
+}
 void PCI_ConfigWriteWord(uint8_t bus, uint8_t slot, uint8_t func, uint8_t offset,uint32_t val) {
     uint32_t address;
     uint32_t lbus  = (uint32_t)bus;

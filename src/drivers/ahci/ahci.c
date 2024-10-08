@@ -166,8 +166,8 @@ bool AHCI_READ(uint64_t start,uint64_t sectors, uint16_t *buf){
 }
 void AHCI_INIT(PCI_device* device){
 
-	printf(INFO"[%04X %04X]{%02X %02X %02X}\n",device->vendor_id,device->device_id,device->class_id,device->subclass_id,device->progIF);	
 	SetColor(0xff00ff);	
+	printf(INFO"[%04X %04X]{%02X %02X %02X}\n",device->vendor_id,device->device_id,device->class_id,device->subclass_id,device->progIF);	
 	commandlist=mallocA(sizeof(AHCI_HBA_CMD_HEADER)*32,4096);
 	recv=mallocA(sizeof(AHCI_RECIEVED_FIS),4096);
 	commandTable=mallocA((1<<13)*32,4096);

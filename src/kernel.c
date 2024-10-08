@@ -35,6 +35,7 @@
 #include "utils/ports.h"
 #include "utils/utils.h"
 #include "arch/nmi.h"
+#include "drivers/xhci/xhci.h"
 #include "devices/apic/timer.h"
 void Debug();
 extern char* cpuid_flags[62];
@@ -112,7 +113,7 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 	RSDP_t* l=(RSDP_t*)acpi->rsdp;
 
 	ACPIHeaders h=ACPI_INIT(l);
-	void* base=(void*)h.mcfg->allocations[0].base;
+	void* pcibase=(void*)h.mcfg->allocations[0].base;
 	APIC_INIT(h.apic);
 
 	//EHCI_INIT(PCI_GetFromID(0x8086, 0x24CD));
@@ -120,6 +121,9 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 	AHCI_INIT(PCI_GetFromType(0x1,0x6));
 
 	GPT_READ();
+	PCI_device* usb=PCI_GetFromType(0xC,0x3);
+	//PCI_Device_Print(usb);
+	XHCI_INIT(usb,pcibase);
 	//PONG_MAIN();
 	//APIC_TIMER_INIT(0x2000000);
 	Debug();

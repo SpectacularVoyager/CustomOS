@@ -83,7 +83,7 @@ int APIC_INIT(MADT* madt){
 			localAPICaddr=(void*)apic_record->address_override.phy_addr;
 		}
 		if(apic_record->base.type==APIC_IO_INT_SOURCE_OVERRIDE){
-			printf(INFO"INT %x[%x]\t%x\n",apic_record->ioapic_int.bus,apic_record->ioapic_int.irq,apic_record->ioapic_int.global_int_base);
+			//printf(INFO"INT %x[%x]\t%x\n",apic_record->ioapic_int.bus,apic_record->ioapic_int.irq,apic_record->ioapic_int.global_int_base);
 		}
 		record+=apic_record->base.length;
 	}

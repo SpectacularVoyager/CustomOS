@@ -13,9 +13,11 @@ CC32=686-elf-gcc
 
 QEMU_FLAGS= -cpu qemu64,+ssse3,+fpu 
 QEMU_FLAGS:= -M q35
-QEMU_FLAGS:=$(QEMU_FLAGS) -usb -device usb-ehci,id=ehci		\
-        -device usb-host,bus=usb-bus.0,hostbus=3,hostport=1 \
-        -device usb-host,bus=ehci.0,hostbus=1,hostport=1
+QEMU_FLAGS:=$(QEMU_FLAGS) \
+	-device qemu-xhci
+	#	-usb -device usb-ehci,id=ehci		\
+    #    -device usb-host,bus=usb-bus.0,hostbus=3,hostport=1 \
+    #    -device usb-host,bus=ehci.0,hostbus=1,hostport=1
 QEMU_FLAGS:=$(QEMU_FLAGS) -serial file:logs/serial.log -net nic,model=rtl8139 -m 4G -vga std -hda
 
 objects = $(shell find -name "*.c")
@@ -30,7 +32,7 @@ boot:
 
 $(objects): %.o: %.c
 	@mkdir -p $(shell dirname $(patsubst src/%,out/%,$@))
-	$(CC) -c $^ -o $(patsubst src/%,out/%,$@) -std=gnu99 \
+	@$(CC) -c $^ -o $(patsubst src/%,out/%,$@) -std=gnu99 \
 		-ffreestanding -Isrc/include -Isrc $(CFLAGS)
 
 link:
