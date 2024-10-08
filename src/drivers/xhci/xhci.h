@@ -20,7 +20,8 @@ typedef struct{
 	uint64_t ERDP;
 } __attribute__((packed)) XHCI_RUNTIME_REG;
 
-void XHCI_INIT(PCI_device* device,void* pcibase);
+
+int XHCI_INIT(PCI_device* device,void* pcibase);
 
 typedef struct {
 	uint8_t CAPLENGTH;
@@ -34,3 +35,13 @@ typedef struct {
 	uint32_t RTSOFF;
 	uint32_t HCCParams2;
 } __attribute__((packed)) XHCI_CAP_REG;
+
+#define XHCI_USBSTS_CNR 11
+
+typedef struct {
+	uint32_t lo;
+	uint32_t hi;
+	uint32_t transfer_len:16;
+	uint32_t td_size:5;
+	uint32_t int_target:11;
+} __attribute__((packed)) XHCINormalTRB;

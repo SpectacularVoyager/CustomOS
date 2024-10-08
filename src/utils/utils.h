@@ -5,3 +5,5 @@
 #define ABS(a)	(((a)>0)?(a):-(a))
 
 #define LOGVAL(a) printf(TRACE "%16s\t0x%X\n",#a,a);
+
+#define FORI(x) for(int i=0;i<x;i++)

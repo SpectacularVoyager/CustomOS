@@ -54,3 +54,16 @@ void* mallocA(unsigned long size,unsigned long align){
 	malloc_start+=size;
 	return start;
 }
+void* mallocAB(unsigned long size,unsigned long align,unsigned long boundary){
+	if(boundary>size)return NULL;
+
+	malloc_start=(malloc_start-1)+align-((malloc_start-1)%align);
+	void* start=(void*)malloc_start;
+	if((malloc_start/boundary)!=((malloc_start+size)/boundary)){
+		malloc_start=((malloc_start+size)/boundary)*boundary;
+	}else{
+		malloc_start+=size;
+	}
+	kprintf(INFO"MALLOCA :\t%p\n",start);
+	return start;
+}

@@ -122,9 +122,15 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 
 	GPT_READ();
 	PCI_device* usb=PCI_GetFromType(0xC,0x3);
-	//PCI_Device_Print(usb);
-	XHCI_INIT(usb,pcibase);
-	//PONG_MAIN();
+	if(usb!=NULL){
+		if(usb->progIF==0x30){
+			XHCI_INIT(usb,pcibase);
+		}else if(usb->progIF==0x20){
+			EHCI_INIT(usb);
+		}
+		PCI_Device_Print(usb);
+	}
+	PONG_MAIN();
 	//APIC_TIMER_INIT(0x2000000);
 	Debug();
 	while(1);
