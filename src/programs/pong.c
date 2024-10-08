@@ -7,7 +7,7 @@ int w,h;
 int y1=0,y2=0;
 int pw=20,ph=100;
 int dx=100;
-int speed=5;
+int speed=2;
 
 double sqrt (double x)
 {
@@ -127,7 +127,7 @@ void PONG_MAIN(){
 				vx=1;
 				float d=sqrt(vx*vx+vy*vy);
 				vx*=speed/d;
-				vy*=-speed/d;
+				vy*=speed/d;
 				vx=-vx;
 				lastcol=2;
 			}
