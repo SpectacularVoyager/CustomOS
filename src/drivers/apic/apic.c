@@ -39,6 +39,10 @@ void IOAPIC_WRITEIRQ(uint8_t offset,uint64_t val) {
 	IOAPIC_WRITE(0x10+offset*2,low);
 	IOAPIC_WRITE(0x10+offset*2+1,high);
 }
+void IOAPIC_MASKIRQ(uint8_t offset) {
+	IOAPIC_WRITE(0x10+offset*2,1<<16);
+	IOAPIC_WRITE(0x10+offset*2+1,0);
+}
 
 int APIC_INIT(MADT* madt){
 	void* memory=mallocA(0x200000,0x200000);
@@ -97,10 +101,12 @@ int APIC_INIT(MADT* madt){
 	printf(INFO"IRQ 1:\t%p\n",IOAPIC_READIRQ(1));
 	
 	IOAPIC_WRITEIRQ(0x1,0x21);
+	//RTC
+	IOAPIC_WRITEIRQ(0x8,0x28);
 	IOAPIC_WRITEIRQ(0x9,0x29);
 	IOAPIC_WRITEIRQ(0xA,0x2A);
 	IOAPIC_WRITEIRQ(0xB,0x2B);
-	//IOAPIC_WRITEIRQ(2,0x24);
+	//IOAPIC_WRITEIRQ(2,0x20);
 	//printf(INFO"LAPIC\t%p\n",(1<<11)|0x21||(0xf<56));
 	//printf(INFO"IRQ 1:\t%p\n",IOAPIC_READIRQ(2));
 	return 1;

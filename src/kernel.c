@@ -37,6 +37,8 @@
 #include "arch/nmi.h"
 #include "drivers/xhci/xhci.h"
 #include "devices/apic/timer.h"
+#include "devices/pit/pit.h"
+#include "devices/rtc/rtc.h"
 
 #include "drivers/networking/rtl8139/rtl8139.h"
 #include "drivers/networking/rtl8168/rtl8168.h"
@@ -113,6 +115,8 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 	ExceptionInit();
 	KeyboardInstall();
 
+	SetColor(0xff0000);
+
 	struct multiboot_tag_new_acpi *acpi=(struct multiboot_tag_new_acpi*)headers.acpi;
 	RSDP_t* l=(RSDP_t*)acpi->rsdp;
 
@@ -120,11 +124,13 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 	void* pcibase=(void*)h.mcfg->allocations[0].base;
 	APIC_INIT(h.apic);
 
+	RTC_INIT(0xf);
+	RTC_INTERRUPT_ENABLE(0);
+
 	//EHCI_INIT(PCI_GetFromID(0x8086, 0x24CD));
 
 	AHCI_INIT(PCI_GetFromType(0x1,0x6));
 
-	SetColor(0xff0000);
 	GPT_READ();
 	PCI_device* usb=PCI_GetFromType(0xC,0x3);
 	if(usb!=NULL){
@@ -137,8 +143,6 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 	}
 	//PONG_MAIN();
 	APIC_TIMER_INIT(0x2000000);
-	//
-
 	PCI_device* nic=PCI_GetFromID(0x10EC, 0x8168);
 	if(nic){
 		RTL8168_INIT(nic);

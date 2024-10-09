@@ -34,3 +34,6 @@ void APIC_SEND_EOI();
 // Memory offsets
 #define IOAPIC_IOREGSEL 0x00
 #define IOAPIC_IOREGWIN 0x10
+
+void IOAPIC_MASKIRQ(uint8_t offset);
+void IOAPIC_WRITEIRQ(uint8_t offset,uint64_t val);

@@ -13,13 +13,14 @@ CC32=686-elf-gcc
 
 QEMU_FLAGS= -cpu qemu64,+ssse3,+fpu 
 QEMU_FLAGS:= $(QEMU_FLAGS)-M q35
-USB?=2
+USB?=3
 #QEMU_FLAGS:= $(QEMU_FLAGS) -device usb-storage,drive=fat32
 ifeq ($(USB),3)
 	QEMU_FLAGS:=$(QEMU_FLAGS) \
 		-device nec-usb-xhci,id=xhci	\
 		-device usb-uas,id=uas,bus=xhci.0	\
-		-device scsi-cd,bus=uas.0,scsi-id=0,lun=5,drive=uas-cdrom
+		-device usb-kbd \
+		-device usb-mouse
 else
 	QEMU_FLAGS:=$(QEMU_FLAGS) \
 		-usb -device usb-ehci,id=ehci		\
@@ -28,7 +29,7 @@ else
 		-device usb-kbd \
 		-device usb-mouse
 endif
-QEMU_FLAGS:=$(QEMU_FLAGS) -serial file:logs/serial.log -net nic,model=rtl8139 -m 4G -vga std 
+QEMU_FLAGS:=$(QEMU_FLAGS) -serial file:logs/serial.log -net nic,model=rtl8139 -m 1G -vga std 
 QEMU_FLAGS:=$(QEMU_FLAGS) 
 
 objects = $(shell find -name "*.c")

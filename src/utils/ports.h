@@ -63,6 +63,11 @@ inline void io_wait()
 }
 inline void enableInterrupts()
 {
-    __asm__ volatile ("sti"); // Completely hangs the computer
+    __asm__ volatile ("sti");
+						   
+}
+inline void disableInterrupts()
+{
+    __asm__ volatile ("cli");
 						   
 }
