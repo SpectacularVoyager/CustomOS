@@ -166,7 +166,7 @@ bool AHCI_READ(uint64_t start,uint64_t sectors, uint16_t *buf){
 }
 void AHCI_INIT(PCI_device* device){
 
-	SetColor(0xff00ff);	
+	SetColor(0xff6666);	
 	printf(INFO"[%04X %04X]{%02X %02X %02X}\n",device->vendor_id,device->device_id,device->class_id,device->subclass_id,device->progIF);	
 	commandlist=mallocA(sizeof(AHCI_HBA_CMD_HEADER)*32,4096);
 	recv=mallocA(sizeof(AHCI_RECIEVED_FIS),4096);
@@ -193,14 +193,14 @@ void AHCI_INIT(PCI_device* device){
 	for(int i=0;i<32;i++){
 		if(BIT(hba->pi,i)){
 			uint32_t ssts = hba->ports[i].ssts;
-			//printf(INFO"SSTS[%x]\t->\t%02X\n",i,ssts);
+			printf("\tSSTS[%x]\t->\t%02X\n",i,ssts);
 
 			uint8_t ipm = (ssts >> 8) & 0x0F;
 			uint8_t det = ssts & 0x0F;
 			
 			if(det==0x3&&ipm==0x1){
 				AHCI_REBASE(&hba->ports[i],i);
-				printf(INFO"DEVICE FOUND PORT[%d]\t%X\n",i,hba->ports[i].sig);
+				printf("\t\tDEVICE FOUND PORT[%d]\t%X\n",i,hba->ports[i].sig);
 				if(hba->ports[i].sig==SATA_SIG_ATA) portSATA=&hba->ports[i];
 			}
 		}

@@ -2,4 +2,5 @@ out/*
 iso.iso
 ISO/boot/*.bin
 logs/*
+disks/*
 disk.img

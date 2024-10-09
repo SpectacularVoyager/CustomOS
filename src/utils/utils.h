@@ -6,4 +6,4 @@
 
 #define LOGVAL(a) printf(TRACE "%16s\t0x%X\n",#a,a);
 
-#define FORI(x) for(int i=0;i<x;i++)
+#define FORI(x) for(unsigned int i=0;i<(x);i++)

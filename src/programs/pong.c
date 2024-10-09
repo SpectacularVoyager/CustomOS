@@ -7,7 +7,7 @@ int w,h;
 int y1=0,y2=0;
 int pw=20,ph=100;
 int dx=100;
-int speed=2;
+int speed=4;
 
 double sqrt (double x)
 {
@@ -61,7 +61,7 @@ void PongKeyboardHandler(KeyCode code){
 float bx,by,vx,vy;
 int lastcol=-1;
 void reset(){
-	
+
 	bx=w/2.0f;
 	by=h/2.0f;
 	vx=-speed;
@@ -85,7 +85,6 @@ void PONG_MAIN(){
 	KeyboardSetProcess(PongKeyboardHandler);
 	SetColor(WHITE);
 	ClearScreen();
-	SwapBuffers();
 	w=GetWidth();
 	h=GetHeight();
 	SwapBuffers();
@@ -119,7 +118,7 @@ void PONG_MAIN(){
 				vx=-vx;
 				lastcol=1;
 			}
-		}	
+		}
 		if(lastcol!=2){
 			if(collide(p2,b)){
 				float hf=-((p2.y+p2.h/2-b.y))/(p2.h/2.0f);
@@ -131,7 +130,7 @@ void PONG_MAIN(){
 				vx=-vx;
 				lastcol=2;
 			}
-		}	
+		}
 		ClearScreen();
 		normalize(&p1);
 		normalize(&p2);
@@ -142,4 +141,3 @@ void PONG_MAIN(){
 	}
 	while(1);
 }
-

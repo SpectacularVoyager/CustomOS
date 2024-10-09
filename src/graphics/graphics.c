@@ -13,7 +13,7 @@ uint32_t color=0xffffffff;
 
 
 #define GET_PIXEL(x,y) (y)*width+(x)
-#define DOUBLE_BUFFERING 
+#define DOUBLE_BUFFERING
 int GraphicsInit(long addr,int w,int h,int _bpp){
 	if(_bpp!=32){
 		kprintf_("CANNOT INIT WITH BPP %d\n",_bpp);
@@ -56,7 +56,7 @@ void Flush(int x,int y,int w,int h){
 }
 void SwapBuffers(){
 #ifdef DOUBLE_BUFFERING
-	for(int i=0;i<width*height;i++){
+	for(unsigned int i=0;i<width*height;i++){
 		buffer[i]=video[i];
 	}
 #endif
@@ -68,7 +68,7 @@ void WriteString(int x,int y,char* s){
 		i++;
 	}
 }
-void WriteChar(int x,int y,char c){
+void WriteChar(int x,int y,unsigned char c){
 	char *chars=font8x8_basic[c];
 	for(int i=0;i<8;i++){
 		for(int j=0;j<8;j++){
@@ -86,7 +86,7 @@ void FillRect(int x,int y,int w,int h){
 	}
 }
 void ClearScreen(){
-	for(int i=0;i<width*height;i++){
+	for(unsigned int i=0;i<width*height;i++){
 		video[i]=0;
 	}
 }

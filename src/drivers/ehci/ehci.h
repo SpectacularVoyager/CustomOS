@@ -19,15 +19,15 @@ typedef struct{
 	unsigned int ASYNCLISTADDR;
 	char align[0x40-0x18];
 	unsigned int CONFIGFLAG;
-	unsigned int PORTSC;
+	unsigned int PORTSC[1];
 }__attribute__((packed)) USB_REGS;
 
 typedef struct{
 	uint8_t CAPLENGTH;
-	uint8_t _;
+	uint8_t resv;
 	uint16_t HCIVERSION;
-	uint32_t HCISPARAMS;
-	uint32_t HCICPARAMS;
+	uint32_t HCSPARAMS;
+	uint32_t HCCPARAMS;
 	uint64_t HCSP_PORTROUTE;
 }__attribute__((packed)) USB_CAPABILITIES;
 
@@ -46,3 +46,8 @@ typedef struct {
 	uint32_t host_controller_reset : 1;
 	uint32_t run             : 1;
 } __attribute__((packed)) USB_CMD_REG;
+
+#define USB_TYPE_ITD	0x0;
+#define USB_TYPE_QH		0x1;
+#define USB_TYPE_siTD	0x2;
+#define USB_TYPE_FSTN	0x3;

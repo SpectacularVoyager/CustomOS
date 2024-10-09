@@ -6,19 +6,30 @@ ISO=$(BUILD)/os.bin
 # Default CFLAGS:
 CFLAGS?=-O2 -g -DDEBUG_PRINTF
 # Add mandatory options to CFLAGS:
-CFLAGS:=$(CFLAGS) -Wall -Wextra -mfpmath=sse
+CFLAGS:=$(CFLAGS) -Wall -Wextra -mfpmath=sse -Wno-unused-variable -Wno-unused-parameter 
 QEMU=qemu-system-x86_64
 CC=x86_64-elf-gcc
 CC32=686-elf-gcc
 
 QEMU_FLAGS= -cpu qemu64,+ssse3,+fpu 
-QEMU_FLAGS:= -M q35
-QEMU_FLAGS:=$(QEMU_FLAGS) \
-	-device qemu-xhci
-	#	-usb -device usb-ehci,id=ehci		\
-    #    -device usb-host,bus=usb-bus.0,hostbus=3,hostport=1 \
-    #    -device usb-host,bus=ehci.0,hostbus=1,hostport=1
-QEMU_FLAGS:=$(QEMU_FLAGS) -serial file:logs/serial.log -net nic,model=rtl8139 -m 4G -vga std -hda
+QEMU_FLAGS:= $(QEMU_FLAGS)-M q35
+USB?=2
+#QEMU_FLAGS:= $(QEMU_FLAGS) -device usb-storage,drive=fat32
+ifeq ($(USB),3)
+	QEMU_FLAGS:=$(QEMU_FLAGS) \
+		-device nec-usb-xhci,id=xhci	\
+		-device usb-uas,id=uas,bus=xhci.0	\
+		-device scsi-cd,bus=uas.0,scsi-id=0,lun=5,drive=uas-cdrom
+else
+	QEMU_FLAGS:=$(QEMU_FLAGS) \
+		-usb -device usb-ehci,id=ehci		\
+        -device usb-host,bus=usb-bus.0,hostbus=3,hostport=1 \
+        -device usb-host,bus=ehci.0,hostbus=1,hostport=1	\
+		-device usb-kbd \
+		-device usb-mouse
+endif
+QEMU_FLAGS:=$(QEMU_FLAGS) -serial file:logs/serial.log -net nic,model=rtl8139 -m 4G -vga std 
+QEMU_FLAGS:=$(QEMU_FLAGS) 
 
 objects = $(shell find -name "*.c")
 objects := ${objects:.c=.o}
@@ -44,11 +55,14 @@ build:
 isMultiBoot:
 	@./isMultiBoot.sh $(ISO)
 run: all
-	@$(QEMU) $(QEMU_FLAGS) iso.iso
+	@$(QEMU) $(QEMU_FLAGS) -hda iso.iso
+
+part:
+	@$(QEMU) $(QEMU_FLAGS) -bios /usr/share/ovmf/OVMF.fd /dev/sdc
 
 # INSPECT MEM x/128b 0xfee00000
 debug: all
-	@$(QEMU) $(QEMU_FLAGS) iso.iso -monitor stdio
+	@$(QEMU) $(QEMU_FLAGS) -hda iso.iso -monitor stdio
 gdb: all
 	@$(QEMU) -s -S -net nic,model=e1000 -hda iso.iso
 	# TO RUN

@@ -16,9 +16,9 @@ void IRQ_Handler(registers* r){
 		g_IRQHandlers[irq](r);
 	}else{
 		printf("UNHANDLED IRQ %d\n",irq);
-		if(irq!=0){
+		//if(irq!=0){
 			printf(TRACE"UNHANDLED IRQ %d\n",irq);
-		}
+		//}
 	}
 	//PIC_sendEOI(irq);
 	APIC_SEND_EOI();

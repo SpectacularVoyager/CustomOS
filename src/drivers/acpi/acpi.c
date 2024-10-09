@@ -7,7 +7,7 @@ int ACPISDT_Checksum(ACPISDTHeader *tableHeader)
 {
     unsigned char sum = 0;
 
-    for (int i = 0; i < tableHeader->Length; i++)
+    for (unsigned int i = 0; i < tableHeader->Length; i++)
     {
         sum += ((char *) tableHeader)[i];
     }
@@ -22,7 +22,7 @@ ACPIHeaders ACPI_INIT(RSDP_t* rsdp){
 	//kprintf(INFO "REVISION\t%p\n",rsdp->Revision);
 	//kprintf(INFO "ADDRESS \t%p\n",rsdp->RsdtAddress);
 	
-	RSDT* rsdt;
+	RSDT* rsdt=NULL;
 	if(rsdp->Revision==0){
 		//printf("USING ACPI 1.0\n");
 		rsdt=(void*)rsdp->RsdtAddress;

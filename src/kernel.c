@@ -124,6 +124,7 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 
 	AHCI_INIT(PCI_GetFromType(0x1,0x6));
 
+	SetColor(0xff0000);
 	GPT_READ();
 	PCI_device* usb=PCI_GetFromType(0xC,0x3);
 	if(usb!=NULL){
@@ -135,7 +136,7 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 		PCI_Device_Print(usb);
 	}
 	//PONG_MAIN();
-	//APIC_TIMER_INIT(0x2000000);
+	APIC_TIMER_INIT(0x2000000);
 	//
 
 	PCI_device* nic=PCI_GetFromID(0x10EC, 0x8168);
@@ -143,7 +144,7 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 		RTL8168_INIT(nic);
 	}
 	if((nic=PCI_GetFromID(0x10EC,0x8139))){
-		RTL8139_INIT(nic,pcibase);
+		//RTL8139_INIT(nic,pcibase);
 	}
 	Debug();
 

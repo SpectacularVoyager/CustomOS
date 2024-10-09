@@ -18,9 +18,9 @@ void MultibootCheck(unsigned long addr,int magic){
 }
 MULTIBOOT_HEADERS MultibootProcessHeaders(unsigned long addr){
 
-	struct multiboot_tag* fb;
-	struct multiboot_tag* mmap;
-	struct multiboot_tag* acpi;
+	struct multiboot_tag* fb=NULL;
+	struct multiboot_tag* mmap=NULL;
+	struct multiboot_tag* acpi=NULL;
 
 	struct multiboot_tag *tag;
 	for (tag = (struct multiboot_tag *) (addr + 8);

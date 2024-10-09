@@ -27,7 +27,7 @@ void SwapBuffers();
 
 void Flush(int x,int y,int w,int h);
 
-void WriteChar(int x,int y,char c);
+void WriteChar(int x,int y,unsigned char c);
 void WriteString(int x,int y,char* s);
 
  

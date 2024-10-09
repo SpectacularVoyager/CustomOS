@@ -98,5 +98,6 @@ void Debug(){
 	printf("\n");
 	//ISO_Init();	
 	//SwapBuffers();
+	printf("DONE\n");
 	while(1);
 }

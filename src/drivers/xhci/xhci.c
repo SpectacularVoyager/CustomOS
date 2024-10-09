@@ -26,13 +26,14 @@ XHCI_CAP_REG XHCI_READ_CAP(void* address){
 int XHCI_INIT(PCI_device* device,void* pcibase){
 	PCIGeneralDevice usb;
 	PCI_GetGeneralDevice(device,&usb);
-	printf("STATUS ->%x\n",usb.capabilities_pointer);
 
 	void* address=(void*)(
 			(((uint64_t)BAR_ADDR(usb.BAR[1]))<<32)|BAR_ADDR(usb.BAR[0])
 			);
 	XHCI_CAP_REG config=XHCI_READ_CAP(address);
 	SetColor(0xff0068);
+	printf(INFO"XHCI DETECTED\n");
+	printf("STATUS ->%x\n",usb.capabilities_pointer);
 	printf("CAPLENGTH:\t%x\n",config.CAPLENGTH);
 	printf("VERSION:\t%x\n",config.HCIVersion);
 	printf("HCSPARAMS1:\t%x\n",config.HCSParams1);
