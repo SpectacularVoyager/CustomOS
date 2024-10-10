@@ -89,11 +89,6 @@ void Debug(){
 	//	//PCI_Device_Print(&devices[i]);
 	//}
 	KeyboardSetProcess(DebugKeyboardHandler);
-	for(int i=0;i<PCI_GetDeviceCount();i++){
-		if(i%4==0)printf("\n");
-		printf("[%04X %04X]{%02X %02X %02X}\t",devices[i].vendor_id,devices[i].device_id,devices[i].class_id,devices[i].subclass_id,devices[i].progIF);	
-		//PCI_Device_Print(&devices[i]);
-	}
 	
 	printf("\n");
 	//ISO_Init();	

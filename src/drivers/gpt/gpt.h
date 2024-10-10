@@ -1,7 +1,12 @@
 #include "stdint.h"
-
+#include "../ahci/ahci.h"
+/**
+ *	REFER TO UEFI.org
+ *	https://uefi.org/specs/UEFI/2.10/05_GUID_Partition_Table_Format.html
+ */
 #define GPT_SECTOR_SIZE 0x200
-void GPT_READ();
+#define GPT_PROTECTIVE	0xEE
+int GPT_READ(AHCI_HBA_PORT* port);
 
 typedef struct {
 	uint8_t boot;

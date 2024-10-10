@@ -1,8 +1,8 @@
 #include "ahci.h"
-#include "../../stdlib/string.h"
-#include "../../stdlib/stdio.h"
-#include "../../stdlib/stdlib.h"
-#include "../../utils/bit.h"
+#include "stdlib/string.h"
+#include "stdlib/stdio.h"
+#include "stdlib/stdlib.h"
+#include "utils/bit.h"
 
 AHCI_HBA_CMD_HEADER* commandlist;
 AHCI_RECIEVED_FIS* recv;
@@ -10,6 +10,53 @@ AHCI_HBA_CMD_TBL* commandTable;
 AHCI_HBA_PORT* portSATA;
 
 #define AHCI_REGD2H(lba,count)
+
+int AHCI_INIT(PCI_device* device){
+	AHCI_DATA data={};
+
+	SetColor(0xff6666);	
+	printf("AHCI\n");
+	printf(INFO"[%04X %04X]{%02X %02X %02X}\n",device->vendor_id,device->device_id,device->class_id,device->subclass_id,device->progIF);	
+	commandlist=mallocA(sizeof(AHCI_HBA_CMD_HEADER)*32,4096);
+	recv=mallocA(sizeof(AHCI_RECIEVED_FIS),4096);
+	commandTable=mallocA((1<<13)*32,4096);
+	//PCI_Device_Print(device);
+	PCIGeneralDevice ahci;
+	PCI_GetGeneralDevice(device,&ahci);
+	AHCI_FIS_REG_H2D fis;
+	memset(&fis, 0, sizeof(AHCI_FIS_REG_H2D));
+	fis.fis_type = AHCI_FIS_TYPE_REG_H2D;
+	fis.command = ATA_CMD_IDENTIFY;	// 0xEC
+	fis.device = 0;			// Master device
+	fis.c = 1;				// Write command register
+	
+	//BAR[5] IS ABAR
+	void* baseAddr=(void*)(ahci.BAR[5] & 0xFFFFF000);	
+	printf(INFO "ABAR\t%p\n",baseAddr);
+	printf(INFO "ABAR\t%p\n",ahci.BAR[5]);
+	AHCI_HBA_MEM* hba=baseAddr;
+	printf(INFO"PI:\t%x\n",hba->pi);
+	printf(INFO"CAP:\t%x\n",hba->cap);
+	printf(INFO"GHC:\t%x\n",hba->ghc);
+	printf(INFO"CAP2:\t%x\n",hba->cap2);
+	printf(INFO"VERSION:\t%x\n",hba->vs);
+	printf(INFO"BOHC:\t%x\n",hba->bohc);
+	for(int i=0;i<32;i++){
+		if(BIT(hba->pi,i)){
+			uint32_t ssts = hba->ports[i].ssts;
+			printf("\tSSTS[%x]\t->\t%02X\n",i,ssts);
+
+			uint8_t ipm = (ssts >> 8) & 0x0F;
+			uint8_t det = ssts & 0x0F;
+			
+			if(det==0x3&&ipm==0x1){
+				AHCI_REBASE(&hba->ports[i],i);
+				printf("\t\tDEVICE FOUND PORT[%d]\t%X\n",i,hba->ports[i].sig);
+				if(hba->ports[i].sig==SATA_SIG_ATA) portSATA=&hba->ports[i];
+			}
+		}
+	}
+}
 
 void AHCI_START_PORT(AHCI_HBA_PORT *port)
 {
@@ -161,48 +208,6 @@ bool _AHCI_READ(AHCI_HBA_PORT *port, uint64_t start, uint32_t count, uint16_t *b
 
 	return true;
 }
-bool AHCI_READ(uint64_t start,uint64_t sectors, uint16_t *buf){
+bool AHCI_READ(uint64_t start,uint32_t sectors, uint16_t *buf){
 	return _AHCI_READ(portSATA,start, sectors,buf);
-}
-void AHCI_INIT(PCI_device* device){
-
-	SetColor(0xff6666);	
-	printf(INFO"[%04X %04X]{%02X %02X %02X}\n",device->vendor_id,device->device_id,device->class_id,device->subclass_id,device->progIF);	
-	commandlist=mallocA(sizeof(AHCI_HBA_CMD_HEADER)*32,4096);
-	recv=mallocA(sizeof(AHCI_RECIEVED_FIS),4096);
-	commandTable=mallocA((1<<13)*32,4096);
-	//PCI_Device_Print(device);
-	PCIGeneralDevice ahci;
-	PCI_GetGeneralDevice(device,&ahci);
-	AHCI_FIS_REG_H2D fis;
-	memset(&fis, 0, sizeof(AHCI_FIS_REG_H2D));
-	fis.fis_type = AHCI_FIS_TYPE_REG_H2D;
-	fis.command = ATA_CMD_IDENTIFY;	// 0xEC
-	fis.device = 0;			// Master device
-	fis.c = 1;				// Write command register
-	
-	void* baseAddr=(void*)(ahci.BAR[5] & 0xFFFFE000);	
-	printf(INFO "ABAR\t%p\n",baseAddr);
-	AHCI_HBA_MEM* hba=baseAddr;
-	printf(INFO"PI:\t%x\n",hba->pi);
-	printf(INFO"CAP:\t%x\n",hba->cap);
-	printf(INFO"GHC:\t%x\n",hba->ghc);
-	printf(INFO"CAP2:\t%x\n",hba->cap2);
-	printf(INFO"VERSION:\t%x\n",hba->vs);
-	printf(INFO"BOHC:\t%x\n",hba->bohc);
-	for(int i=0;i<32;i++){
-		if(BIT(hba->pi,i)){
-			uint32_t ssts = hba->ports[i].ssts;
-			printf("\tSSTS[%x]\t->\t%02X\n",i,ssts);
-
-			uint8_t ipm = (ssts >> 8) & 0x0F;
-			uint8_t det = ssts & 0x0F;
-			
-			if(det==0x3&&ipm==0x1){
-				AHCI_REBASE(&hba->ports[i],i);
-				printf("\t\tDEVICE FOUND PORT[%d]\t%X\n",i,hba->ports[i].sig);
-				if(hba->ports[i].sig==SATA_SIG_ATA) portSATA=&hba->ports[i];
-			}
-		}
-	}
 }

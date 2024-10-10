@@ -14,6 +14,9 @@ CC32=686-elf-gcc
 QEMU_FLAGS= -cpu qemu64,+ssse3,+fpu 
 QEMU_FLAGS:= $(QEMU_FLAGS)-M q35
 USB?=3
+
+USB_MEDIA=/media/ankush/USBBoot
+
 #QEMU_FLAGS:= $(QEMU_FLAGS) -device usb-storage,drive=fat32
 ifeq ($(USB),3)
 	QEMU_FLAGS:=$(QEMU_FLAGS) \
@@ -59,7 +62,7 @@ run: all
 	@$(QEMU) $(QEMU_FLAGS) -hda iso.iso
 
 run_cfg: build isMultiBoot
-	@$(QEMU) $(QEMU_FLAGS) -hda iso.iso
+	@sudo $(QEMU) $(QEMU_FLAGS) -hda iso.iso -hdb /dev/sda
 
 part:
 	@$(QEMU) $(QEMU_FLAGS) -bios /usr/share/ovmf/OVMF.fd /dev/sdc
@@ -84,7 +87,11 @@ install:
 	sudo grub-install --root-directory=/mnt --no-floppy --modules="normal part_msdos ext2 multiboot " /dev/loop40
 
 usb:
-	@cp ISO/boot/os.bin /media/ankush/EFI\ SYSTEM/boot/os.bin
+	@cp ISO/boot/grub/grub.cfg $(USB_MEDIA)/boot/grub/grub.cfg
+	@cp ISO/boot/os.bin $(USB_MEDIA)/boot/os.bin
 
 
 ##### TO MAKE USB BOOTABLE #####
+##		sudo mkfs.vfat -F 32 -n USBBoot -I /dev/sda
+##		sudo grub-install --root-directory=/media/ankush/USBBoot/ --no-floppy --recheck --force /dev/sda
+################################

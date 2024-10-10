@@ -78,6 +78,10 @@ void MTRStuff(){
 	//}
 	SetColor(0xffffff);
 }
+
+#define NOUSB
+
+
 void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long cpuid)
 {
 	FPUEnable();
@@ -124,14 +128,27 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 	void* pcibase=(void*)h.mcfg->allocations[0].base;
 	APIC_INIT(h.apic);
 
-	RTC_INIT(0xf);
-	RTC_INTERRUPT_ENABLE(0);
+	SetColor(0x00ff00);
+	PCI_device* devices=PCI_GetDevices();
+	FORI(PCI_GetDeviceCount()){
+		if(i%4==0)printf("\n");
+		printf("[%04X %04X]{%02X %02X %02X}\t",devices[i].vendor_id,devices[i].device_id,devices[i].class_id,devices[i].subclass_id,devices[i].progIF);	
+	}
+	printf("\n");
+	SetColor(0xffffff);
 
 	//EHCI_INIT(PCI_GetFromID(0x8086, 0x24CD));
 
+	SetColor(0xff0000);
 	AHCI_INIT(PCI_GetFromType(0x1,0x6));
 
-	GPT_READ();
+	SetColor(0xff0000);
+	//printf("NUM:\t%x\n",data.n_ata);
+//	FORI(data.n_ata){
+//		GPT_READ(&data.ata[i]);
+//	}
+	SetColor(0xffffff);
+#ifndef NOUSB
 	PCI_device* usb=PCI_GetFromType(0xC,0x3);
 	if(usb!=NULL){
 		if(usb->progIF==0x30){
@@ -141,15 +158,18 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 		}
 		PCI_Device_Print(usb);
 	}
+#endif
 	//PONG_MAIN();
-	APIC_TIMER_INIT(0x2000000);
-	PCI_device* nic=PCI_GetFromID(0x10EC, 0x8168);
-	if(nic){
-		RTL8168_INIT(nic);
-	}
-	if((nic=PCI_GetFromID(0x10EC,0x8139))){
-		//RTL8139_INIT(nic,pcibase);
-	}
+	//RTC_INIT(0xf);
+	//RTC_INTERRUPT_ENABLE(0);
+	//APIC_TIMER_INIT(0x2000000);
+	//PCI_device* nic=PCI_GetFromID(0x10EC, 0x8168);
+	//if(nic){
+	//	RTL8168_INIT(nic);
+	//}
+	//if((nic=PCI_GetFromID(0x10EC,0x8139))){
+	//	//RTL8139_INIT(nic,pcibase);
+	//}
 	Debug();
 
 	while(1);

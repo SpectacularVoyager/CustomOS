@@ -1,5 +1,6 @@
 #pragma once
 #include "stdint.h"
+#include "stddef.h"
 #include "../pci.h"
 
 //READ https://www.intel.com/content/www/us/en/io/serial-ata/serial-ata-ahci-spec-rev1-3-1.html
@@ -38,10 +39,16 @@ enum {
 	AHCI_FIS_TYPE_DEV_BITS	= 0xA1,	// Set device bits FIS - device to host
 } ;
 
-void AHCI_INIT(PCI_device* device);
+typedef struct AHCI_DATA_t AHCI_DATA;
+typedef struct AHCI_HBA_PORT_t AHCI_HBA_PORT;
+int AHCI_INIT(PCI_device* device);
 
-bool AHCI_READ(uint64_t start,uint64_t sectors, uint16_t *buf);
+bool AHCI_READ(uint64_t start, uint32_t count, uint16_t *buf);
 
+struct AHCI_DATA_t{
+	AHCI_HBA_PORT* ata;
+	size_t n_ata;
+};
 #define	SATA_SIG_ATA	0x00000101	// SATA drive
 #define	SATA_SIG_ATAPI	0xEB140101	// SATAPI drive
 #define	SATA_SIG_SEMB	0xC33C0101	// Enclosure management bridge
@@ -240,7 +247,7 @@ typedef volatile struct
 
 
 
-typedef volatile struct
+volatile struct AHCI_HBA_PORT_t
 {
 	uint32_t clb;		// 0x00, command list base address, 1K-byte aligned
 	uint32_t clbu;		// 0x04, command list base address upper 32 bits
@@ -261,7 +268,7 @@ typedef volatile struct
 	uint32_t fbs;		// 0x40, FIS-based switch control
 	uint32_t rsv1[11];	// 0x44 ~ 0x6F, Reserved
 	uint32_t vendor[4];	// 0x70 ~ 0x7F, vendor specific
-} __attribute__((packed)) AHCI_HBA_PORT;
+} __attribute__((packed));
 
 typedef volatile struct
 {
@@ -341,4 +348,7 @@ typedef struct
 	// 0x80
 	AHCI_HBA_PRDT_ENTRY	prdt_entry[1];	// Physical region descriptor table entries, 0 ~ 65535
 } __attribute__((packed)) AHCI_HBA_CMD_TBL;
+
+
+void AHCI_REBASE(AHCI_HBA_PORT* port,int portNumber);
 

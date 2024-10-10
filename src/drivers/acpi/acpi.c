@@ -46,11 +46,11 @@ ACPIHeaders ACPI_INIT(RSDP_t* rsdp){
     for (int i = 0; i < entries; i++)
     {
         ACPISDTHeader *h = (ACPISDTHeader*)ptr[i];
-        if (strncmp(h->Signature, "FACP", 4))
+        if (strncmp(h->Signature, "FACP", 4)==0)
             facp= h;
-        if (strncmp(h->Signature, "MCFG", 4))
+        if (strncmp(h->Signature, "MCFG", 4)==0)
             mcfg= h;
-        if (strncmp(h->Signature, "APIC", 4))
+        if (strncmp(h->Signature, "APIC", 4)==0)
             apic= h;
     }
 	return (ACPIHeaders){.mcfg=(MCFGHeader*)mcfg,.fadt=(FADT*)facp,.apic=(MADT*)apic,.rsdt=rsdt};
