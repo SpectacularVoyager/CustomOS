@@ -11,8 +11,10 @@ AHCI_HBA_PORT* portSATA;
 
 #define AHCI_REGD2H(lba,count)
 
-int AHCI_INIT(PCI_device* device){
+AHCI_DATA AHCI_INIT(PCI_device* device){
 	AHCI_DATA data={};
+	int nata=0;
+	data.ata;
 
 	SetColor(0xff6666);	
 	printf("AHCI\n");
@@ -52,10 +54,16 @@ int AHCI_INIT(PCI_device* device){
 			if(det==0x3&&ipm==0x1){
 				AHCI_REBASE(&hba->ports[i],i);
 				printf("\t\tDEVICE FOUND PORT[%d]\t%X\n",i,hba->ports[i].sig);
-				if(hba->ports[i].sig==SATA_SIG_ATA) portSATA=&hba->ports[i];
+				if(hba->ports[i].sig==SATA_SIG_ATA) {
+					portSATA=&hba->ports[i];
+					data.ata[nata]=&hba->ports[i];
+					nata++;
+				}
 			}
 		}
 	}
+	data.n_ata=nata;
+	return data;
 }
 
 void AHCI_START_PORT(AHCI_HBA_PORT *port)
@@ -129,8 +137,9 @@ int AHCI_FIND_CMD_SLOT(AHCI_HBA_PORT *port)
 	return -1;
 }
 
-bool _AHCI_READ(AHCI_HBA_PORT *port, uint64_t start, uint32_t count, uint16_t *buf)
+bool AHCI_READ(AHCI_HBA_PORT *port, uint64_t start, uint32_t count, uint16_t *buf)
 {
+	//port=portSATA;
 	port->is = (uint32_t) -1;		// Clear pending interrupt bits
 	int spin = 0; // Spin lock timeout counter
 	int slot = AHCI_FIND_CMD_SLOT(port);
@@ -207,7 +216,4 @@ bool _AHCI_READ(AHCI_HBA_PORT *port, uint64_t start, uint32_t count, uint16_t *b
 	}
 
 	return true;
-}
-bool AHCI_READ(uint64_t start,uint32_t sectors, uint16_t *buf){
-	return _AHCI_READ(portSATA,start, sectors,buf);
 }

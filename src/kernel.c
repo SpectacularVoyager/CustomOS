@@ -140,13 +140,12 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 	//EHCI_INIT(PCI_GetFromID(0x8086, 0x24CD));
 
 	SetColor(0xff0000);
-	AHCI_INIT(PCI_GetFromType(0x1,0x6));
+	AHCI_DATA data=AHCI_INIT(PCI_GetFromType(0x1,0x6));
 
 	SetColor(0xff0000);
-	//printf("NUM:\t%x\n",data.n_ata);
-//	FORI(data.n_ata){
-//		GPT_READ(&data.ata[i]);
-//	}
+	FORI(data.n_ata){
+		GPT_READ(data.ata[i]);
+	}
 	SetColor(0xffffff);
 #ifndef NOUSB
 	PCI_device* usb=PCI_GetFromType(0xC,0x3);
