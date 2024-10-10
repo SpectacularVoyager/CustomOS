@@ -86,3 +86,5 @@ install:
 usb:
 	@cp ISO/boot/os.bin /media/ankush/EFI\ SYSTEM/boot/os.bin
 
+
+##### TO MAKE USB BOOTABLE #####
