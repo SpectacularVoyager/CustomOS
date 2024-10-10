@@ -58,6 +58,9 @@ isMultiBoot:
 run: all
 	@$(QEMU) $(QEMU_FLAGS) -hda iso.iso
 
+run_cfg: build isMultiBoot
+	@$(QEMU) $(QEMU_FLAGS) -hda iso.iso
+
 part:
 	@$(QEMU) $(QEMU_FLAGS) -bios /usr/share/ovmf/OVMF.fd /dev/sdc
 
