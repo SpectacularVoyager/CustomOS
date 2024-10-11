@@ -40,10 +40,12 @@
 #include "devices/apic/timer.h"
 #include "devices/pit/pit.h"
 #include "devices/rtc/rtc.h"
+#include "stdlib/file.h"
 
 #include "drivers/networking/rtl8139/rtl8139.h"
 #include "drivers/networking/rtl8168/rtl8168.h"
 #include "drivers/networking/rtl8169/rtl8169.h"
+#include "utils/list/list.h"
 void Debug();
 extern char* cpuid_flags[62];
 //#define PRINT_CPUID
@@ -144,13 +146,29 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 	AHCI_DATA data=AHCI_INIT(PCI_GetFromType(0x1,0x6));
 
 	SetColor(0xff0000);
-	FORI(data.n_ata){
-		GPT_DATA gpt;
-		GPT_READ(data.ata[i],&gpt);
-		FORJ(gpt.nEntries){
-			//GPT_PrintPartName(gpt.entries[j].name);
-			FAT_READPART(data.ata[i],&gpt.entries[j]);
-		}
+	//FORI(data.n_ata){
+	//	GPT_DATA gpt;
+	//	GPT_READ(data.ata[i],&gpt);
+	//	FORJ(gpt.nEntries){
+	//		//GPT_PrintPartName(gpt.entries[j].name);
+	//		FAT_READPART(data.ata[i],&gpt.entries[j]);
+	//	}
+	//}
+	GPT_DATA gpt;
+	GPT_READ(data.ata[1],&gpt);
+	FAT32_FILESYSTEM fs;
+	int val=FAT_READPART(&fs,data.ata[1],&gpt.entries[0]);
+	if(val){
+		//ListNode* node=dir(&fs,NULL);
+
+		//while(node!=NULL){
+		//	DIRECTORY* dir=((DIRECTORY*)node->val);
+		//	printf("%s %d\n",dir->name,isDir(dir));
+		//	node=node->next;
+		//}
+		printTree(&fs,NULL,1);
+
+
 	}
 	SetColor(0xffffff);
 #ifndef NOUSB

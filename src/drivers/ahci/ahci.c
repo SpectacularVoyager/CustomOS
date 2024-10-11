@@ -34,26 +34,26 @@ AHCI_DATA AHCI_INIT(PCI_device* device){
 	
 	//BAR[5] IS ABAR
 	void* baseAddr=(void*)(ahci.BAR[5] & 0xFFFFF000);	
-	printf(INFO "ABAR\t%p\n",baseAddr);
-	printf(INFO "ABAR\t%p\n",ahci.BAR[5]);
+	//printf(INFO "ABAR\t%p\n",baseAddr);
+	//printf(INFO "ABAR\t%p\n",ahci.BAR[5]);
 	AHCI_HBA_MEM* hba=baseAddr;
-	printf(INFO"PI:\t%x\n",hba->pi);
-	printf(INFO"CAP:\t%x\n",hba->cap);
-	printf(INFO"GHC:\t%x\n",hba->ghc);
-	printf(INFO"CAP2:\t%x\n",hba->cap2);
-	printf(INFO"VERSION:\t%x\n",hba->vs);
-	printf(INFO"BOHC:\t%x\n",hba->bohc);
+	//printf(INFO"PI:\t%x\n",hba->pi);
+	//printf(INFO"CAP:\t%x\n",hba->cap);
+	//printf(INFO"GHC:\t%x\n",hba->ghc);
+	//printf(INFO"CAP2:\t%x\n",hba->cap2);
+	//printf(INFO"VERSION:\t%x\n",hba->vs);
+	//printf(INFO"BOHC:\t%x\n",hba->bohc);
 	for(int i=0;i<32;i++){
 		if(BIT(hba->pi,i)){
 			uint32_t ssts = hba->ports[i].ssts;
-			printf("\tSSTS[%x]\t->\t%02X\n",i,ssts);
+			//printf("\tSSTS[%x]\t->\t%02X\n",i,ssts);
 
 			uint8_t ipm = (ssts >> 8) & 0x0F;
 			uint8_t det = ssts & 0x0F;
 			
 			if(det==0x3&&ipm==0x1){
 				AHCI_REBASE(&hba->ports[i],i);
-				printf("\t\tDEVICE FOUND PORT[%d]\t%X\n",i,hba->ports[i].sig);
+				//printf("\t\tDEVICE FOUND PORT[%d]\t%X\n",i,hba->ports[i].sig);
 				if(hba->ports[i].sig==SATA_SIG_ATA) {
 					portSATA=&hba->ports[i];
 					data.ata[nata]=&hba->ports[i];

@@ -12,11 +12,18 @@
 #define FAT_ATTR_VOLUME_ID		0x8
 #define FAT_ATTR_DIRECTORY		0x10
 #define FAT_ATTR_ARCHIVE		0x20
-#define FAT_ATTR_LONG_NAME		ATTR_READ_ONLY | ATTR_HIDDEN |ATTR_SYSTEM | ATTR_VOLUME_ID
 
-int FAT_READPART(AHCI_HBA_PORT* port,GPT_PART_ENTRY* entry);
+#define FAT_ATTR_LONG_NAME		(FAT_ATTR_READ_ONLY | FAT_ATTR_HIDDEN |FAT_ATTR_SYSTEM | FAT_ATTR_VOLUME_ID)
 
-typedef struct{
+typedef struct FAT32_FILESYSTEM_t FAT32_FILESYSTEM;
+typedef struct FAT_DIR_t FAT_DIR;
+typedef struct  FAT_LONG_NAME_t FAT_LONG_NAME;
+int FAT_READPART(FAT32_FILESYSTEM* fs,AHCI_HBA_PORT* port,GPT_PART_ENTRY* entry);
+
+void FAT_READ_LONG_NAME(FAT_LONG_NAME* name,char ptr[13]);
+unsigned long FAT_DIR_SECTOR(FAT32_FILESYSTEM *fs,FAT_DIR* dir);
+
+struct FAT_DIR_t{
 	char name[11];
 	uint8_t attr;
 	uint8_t ntres;
@@ -29,9 +36,9 @@ typedef struct{
 	uint16_t write_date;
 	uint16_t FirstClusterLow;
 	uint32_t filesize;
-} __attribute__((packed)) FAT_DIR;
+} __attribute__((packed));
 
-typedef struct{
+struct FAT_LONG_NAME_t{
 	uint8_t ord;
 	uint16_t name1[5];
 	uint8_t attr;
@@ -40,9 +47,10 @@ typedef struct{
 	uint16_t name2[6];
 	uint16_t FirstClusterLow;
 	uint16_t name3[2];
-} __attribute__((packed)) FAT_LONG_NAME;
+} __attribute__((packed));
 typedef struct{
-	uint8_t resv1[11];
+	uint8_t byte1;
+	uint8_t resv1[10];
 	uint8_t attr;
 	uint8_t resv2[32-11-1];
 } __attribute__((packed))FAT_STRUCT_TYPE_INFO;
@@ -93,3 +101,9 @@ typedef union{
 	FAT_32 fat32;
 }__attribute__((packed)) FAT;
 
+struct FAT32_FILESYSTEM_t{
+	FAT_32* config;
+	AHCI_HBA_PORT* port;
+	unsigned long lba_fat;
+	unsigned long lba_data;
+};

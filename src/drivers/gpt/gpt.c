@@ -2,6 +2,8 @@
 #include "stdlib/stdlib.h"
 #include "stdlib/stdio.h"
 #include "stdlib/string.h"
+
+
 int check128(unsigned char* data){
 	int v=0;
 	for(int j=0;j<16;j++){
@@ -10,7 +12,7 @@ int check128(unsigned char* data){
 	return v==0;
 }
 void GPT_PrintPartName(uint16_t* name){
-		printf(INFO"GPT PART\t");
+		printf("GPT PART\t");
 		for(int j=0;j<36;j++){
 			printf("%c",name[j]);
 		}

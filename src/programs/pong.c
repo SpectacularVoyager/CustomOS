@@ -28,7 +28,7 @@ void normalize(Rect* r){
 	r->y=MAX(r->y,-r->h/2);
 	r->y=MIN(r->y,h-2*r->h/2);
 }
-int dir=0;
+int direction=0;
 int wp=0,sp=0,upp=0,downp=0;
 void PongKeyboardHandler(KeyCode code){
 	if(code.type==KEY_TYPE_ASCII && code.pressed&& (code.val|32)=='w'){
