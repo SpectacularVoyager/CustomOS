@@ -70,8 +70,8 @@ ListNode* dirLBA(FAT32_FILESYSTEM* data,unsigned long lba){
 	return res;
 }
 int isDir(DIRECTORY* dir){
-	if(strncmp("..",dir->name,3)==0)return false;
-	if(strncmp(".",dir->name,2)==0)return false;
+	if(strncmp("..",dir->name,2)==0)return false;
+	if(strncmp(".",dir->name,1)==0)return false;
 	return dir->dir->attr&FAT_ATTR_DIRECTORY;
 }
 void printTree(FAT32_FILESYSTEM* data,FAT_DIR* directory,int depth){
