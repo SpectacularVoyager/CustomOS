@@ -57,9 +57,9 @@ build:
 	@grub-mkrescue -o iso.iso ISO
 
 isMultiBoot:
-	@./isMultiBoot.sh $(ISO)
+	@./scripts/isMultiBoot.sh $(ISO)
 run: all
-	@$(QEMU) $(QEMU_FLAGS) -hda iso.iso
+	@$(QEMU) $(QEMU_FLAGS) -hda iso.iso -hdb disks/fat.img
 
 run_cfg: build isMultiBoot
 	@sudo $(QEMU) $(QEMU_FLAGS) -hda iso.iso -hdb /dev/sda
@@ -90,6 +90,8 @@ usb:
 	@cp ISO/boot/grub/grub.cfg $(USB_MEDIA)/boot/grub/grub.cfg
 	@cp ISO/boot/os.bin $(USB_MEDIA)/boot/os.bin
 
+losetup:
+	@sudo losetup -Pf disks/fat.img
 
 ##### TO MAKE USB BOOTABLE #####
 ##		sudo mkfs.vfat -F 32 -n USBBoot -I /dev/sda
