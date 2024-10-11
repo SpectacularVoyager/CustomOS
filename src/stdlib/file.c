@@ -5,6 +5,7 @@
 #include "stdlib/stdlib.h"
 #include "stdlib/stdio.h"
 #include "stdlib/string.h"
+#include "utils/list/list.h"
 #include <utils/utils.h>
 #include <utils/bit.h>
 
@@ -55,6 +56,14 @@ ListNode* dirLBA(FAT32_FILESYSTEM* data,unsigned long lba){
 			res=ListAdd(res,directory);
 			file+=ord+1;
 		}else{
+			DIRECTORY* directory=malloc(sizeof(DIRECTORY));
+			char* _name=malloc(12);
+			memcpy(_name,files[file].dir.name,11);
+			_name[12]=0;
+			directory->name=_name;
+			directory->longname=NULL;
+			directory->dir=&files[file].dir;
+			res=ListAdd(res,directory);
 			file++;
 		}
 	}
