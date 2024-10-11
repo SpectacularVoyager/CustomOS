@@ -65,7 +65,7 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 		dcbaa[0]=0;
 	}
 	U32(op_reg+XHCI_REG_DCBAAP)=(uint64_t)dcbaa;
-	U32(op_reg+XHCI_REG_USBCMD)|=1;
+	U32(op_reg+XHCI_REG_USBCMD)=U32(op_reg+XHCI_REG_USBCMD)|1;
 
 
 	SetColor(0xffffff);

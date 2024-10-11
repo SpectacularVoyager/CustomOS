@@ -82,7 +82,7 @@ void MTRStuff(){
 	SetColor(0xffffff);
 }
 
-#define NOUSB
+//#define NOUSB
 
 
 void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long cpuid)
@@ -159,14 +159,14 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 	FAT32_FILESYSTEM fs;
 	int val=FAT_READPART(&fs,data.ata[1],&gpt.entries[0]);
 	if(val){
-		//ListNode* node=dir(&fs,NULL);
+		ListNode* node=dir(&fs,NULL);
 
-		//while(node!=NULL){
-		//	DIRECTORY* dir=((DIRECTORY*)node->val);
-		//	printf("%s %d\n",dir->name,isDir(dir));
-		//	node=node->next;
-		//}
-		printTree(&fs,NULL,1);
+		while(node!=NULL){
+			DIRECTORY* dir=((DIRECTORY*)node->val);
+			printf("%s %d\n",dir->name,isDir(dir));
+			node=node->next;
+		}
+		//printTree(&fs,NULL,1);
 		//fromPath(&fs,"/home/ankush/file.txt");
 		
 
