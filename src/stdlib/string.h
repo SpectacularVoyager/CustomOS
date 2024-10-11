@@ -8,3 +8,6 @@ void memcpy(void* dest,const void* src,int size);
 void memset(void* dest,uint8_t val,int size);
 
 int strncmp(const char *s1, const char *s2, size_t n);
+
+char* strchr(char *s, int c);
+char* strchrnul(char *s, int c);

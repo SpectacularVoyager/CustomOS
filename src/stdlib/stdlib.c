@@ -43,7 +43,7 @@ void MallocSetStart(unsigned long ptr){
 }
 void* malloc(unsigned long size){
 	void* start=(void*)malloc_start;
-	kprintf(INFO"MALLOC :\t%p\n",start);
+	//kprintf(INFO"MALLOC :\t%p\n",start);
 	malloc_start+=size;
 	return start;
 }

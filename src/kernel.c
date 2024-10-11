@@ -167,7 +167,8 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 		//	node=node->next;
 		//}
 		printTree(&fs,NULL,1);
-
+		//fromPath(&fs,"/home/ankush/file.txt");
+		
 
 	}
 	SetColor(0xffffff);

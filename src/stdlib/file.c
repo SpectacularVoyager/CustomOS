@@ -74,6 +74,15 @@ int isDir(DIRECTORY* dir){
 	if(strncmp(".",dir->name,1)==0)return false;
 	return dir->dir->attr&FAT_ATTR_DIRECTORY;
 }
+void fromPath(FAT32_FILESYSTEM* data,char* path){
+	while(1){
+		char* slash=strchr(path,'/');
+		if(!slash)break;
+		path=slash+1;
+		printf("%s\n",path);
+	}
+	
+}
 void printTree(FAT32_FILESYSTEM* data,FAT_DIR* directory,int depth){
 	ListNode* node=dir(data,directory);
 	while(node!=NULL){

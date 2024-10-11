@@ -22,6 +22,8 @@ int isDir(DIRECTORY* dir);
 
 void printTree(FAT32_FILESYSTEM* data,FAT_DIR* directory,int depth);
 
+void fromPath(FAT32_FILESYSTEM* data,char* path);
+
 struct DIRECTORY_t{
 	FAT_LONG_NAME* longname;
 	FAT_DIR* dir;
