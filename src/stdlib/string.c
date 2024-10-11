@@ -14,3 +14,17 @@ void memset(void* dest,uint8_t val,int size){
 	}
 	return 0;
 }
+char* strchr(char *s, int c){
+	while(1){
+		if(*s=='\0')return NULL;
+		if(*s==c)return s;
+		s++;
+	}
+}
+char* strchrnul(char *s, int c){
+	while(1){
+		if(*s=='\0')return s;
+		if(*s==c)return s;
+		s++;
+	}
+}
