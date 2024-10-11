@@ -1,3 +1,5 @@
+#pragma once
+
 #include "stdint.h"
 #include "../ahci/ahci.h"
 /**
@@ -6,7 +8,8 @@
  */
 #define GPT_SECTOR_SIZE 0x200
 #define GPT_PROTECTIVE	0xEE
-int GPT_READ(AHCI_HBA_PORT* port);
+
+void GPT_PrintPartName(uint16_t* name);
 
 typedef struct {
 	uint8_t boot;
@@ -45,8 +48,9 @@ typedef struct {
 } __attribute__((packed))GPT_PART_ENTRY;
 
 typedef struct{
-	GPT_BOOT_RECORD* boot;
 	GPT_PART_HEADER* header;
 	GPT_PART_ENTRY* entries;
 	int nEntries;
 } GPT_DATA;
+
+int GPT_READ(AHCI_HBA_PORT* port,GPT_DATA* data);

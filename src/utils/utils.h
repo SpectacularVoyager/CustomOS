@@ -7,3 +7,8 @@
 #define LOGVAL(a) printf(TRACE "%16s\t0x%X\n",#a,a);
 
 #define FORI(x) for(unsigned int i=0;i<(x);i++)
+#define FORJ(x) for(unsigned int j=0;j<(x);j++)
+
+#define CEILDIV(a,b) ((a)+(b)-1)/(b)
+
+#define GETOR(a,b)	((a)!=0)?(a):(b)

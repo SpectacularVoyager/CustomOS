@@ -31,6 +31,7 @@
 #include "drivers/acpi/acpi.h"
 #include "drivers/ahci/ahci.h"
 #include "drivers/gpt/gpt.h"
+#include "drivers/fat/fat.h"
 #include "drivers/apic/apic.h"
 #include "utils/ports.h"
 #include "utils/utils.h"
@@ -144,7 +145,12 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 
 	SetColor(0xff0000);
 	FORI(data.n_ata){
-		GPT_READ(data.ata[i]);
+		GPT_DATA gpt;
+		GPT_READ(data.ata[i],&gpt);
+		FORJ(gpt.nEntries){
+			//GPT_PrintPartName(gpt.entries[j].name);
+			FAT_READPART(data.ata[i],&gpt.entries[j]);
+		}
 	}
 	SetColor(0xffffff);
 #ifndef NOUSB
