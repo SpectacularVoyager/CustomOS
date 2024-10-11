@@ -47,9 +47,8 @@ ListNode* dirLBA(FAT32_FILESYSTEM* data,unsigned long lba){
 			DIRECTORY* directory=malloc(sizeof(DIRECTORY));
 			char* fullname=malloc(ord*13);
 			for(int i=0;i<ord;i++){
-				FAT_READ_LONG_NAME(&longname[i],fullname+(13*(ord-1)));
+				FAT_READ_LONG_NAME(&longname[i],fullname+(13*(ord-i-1)));
 			}
-			unsigned long dircluster=FAT_DIR_SECTOR(data,&files[file+ord].dir);
 			directory->dir=&files[file+ord].dir;
 			directory->longname=&files[file].longname;
 			directory->name=fullname;
@@ -83,7 +82,6 @@ ListNode* dir(FAT32_FILESYSTEM* data,FAT_DIR* dir){
 	if(dir==NULL){
 		return dirLBA(data,0);
 	}else{
-		//printf("SECTOR:%s\t%x\n",dir->name,FAT_DIR_SECTOR(data,dir)-data->lba_data);
-		return dirLBA(data,FAT_DIR_SECTOR(data,dir));
+		return dirLBA(data,FAT_DIR_SECTOR(data,dir)-data->lba_data);
 	}
 }
