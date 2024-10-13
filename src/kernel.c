@@ -12,7 +12,6 @@
 #include "drivers/ehci/ehci.h"
 
 #include "devices/keyboard.h"
-#include "processes/processes.h"
 #include "exceptions/exceptions.h"
 
 #include "paging/paging.h"
@@ -20,13 +19,10 @@
 #include "disk/atapio/atapio.h"
 #include "disk/iso/iso.h"
 #include "task/task.h"
-#include "stdlib/string.h"
 #include <stdlib/stdlib.h>
 #include <stdlib/stdlib.h>
 #include "programs/pong.h"
 #include "grub/multibootutils.h"
-#include "utils/bit.h"
-#include "longmode/longmode.h"
 #include "arch/fpu.h"
 #include "drivers/acpi/acpi.h"
 #include "drivers/ahci/ahci.h"
@@ -37,8 +33,6 @@
 #include "utils/utils.h"
 #include "arch/nmi.h"
 #include "drivers/xhci/xhci.h"
-#include "devices/apic/timer.h"
-#include "devices/pit/pit.h"
 #include "devices/rtc/rtc.h"
 #include "stdlib/file.h"
 
