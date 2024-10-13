@@ -18,6 +18,13 @@ void* VECTOR_GET(Vector* v,unsigned int n);
 
 void VECTOR_RESIZE(Vector* v,unsigned int n);
 
-void VECTOR_INSERT(Vector* v,int n,void* val);
+//void VECTOR_INSERT(Vector* v,int n,void* val);
 
 void VECTOR_APPEND(Vector* v,void* val);
+
+int VECTOR_PUT(Vector* v,unsigned int n,void* val);
+
+Vector VECTOR_INIT(int n,int stride);
+
+#define VEC(type) VECTOR_INIT(10,sizeof(type))
+
