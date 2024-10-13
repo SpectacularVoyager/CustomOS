@@ -5,8 +5,9 @@
 #define ADDR_FROM_BIR(BAR,a) (void*)(BAR_ADDR(BAR[a&0x7])+(a&(~0x7)))
 
 void handleMSIX(void* data,PCIGeneralDevice* device){
-	uint32_t d=U32(data);
+	volatile uint32_t d=U32(data);
 	*(uint32_t*)data|=1<<31;
+	d=U32(data);
 	uint16_t msgctrl=WORD(d,1);
 	unsigned int tableNum=(msgctrl&0x3ff)+1;
 	printf("\tMSGCTRL:\t%x\n",msgctrl);

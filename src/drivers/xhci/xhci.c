@@ -7,6 +7,8 @@
 #include "utils/utils.h"
 #include "drivers/msix/msix.h"
 
+void* xhci_operation_registers;
+#define XHCI_OP(of)	U32(xhci_operation_registers+of)
 
 XHCI_CAP_REG XHCI_READ_CAP(void* address){
 	XHCI_CAP_REG cap={};
@@ -40,18 +42,21 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	printf("HCSPARAMS2:\t%x\n",config.HCSParams2);
 	printf("HCSPARAMS3:\t%x\n",config.HCSParams3);
 
-	void* op_reg=address+config.CAPLENGTH;
+	xhci_operation_registers=address+config.CAPLENGTH;
 	int total=500;
-	while((U32(op_reg+XHCI_REG_USBSTS)&(1<<XHCI_USBSTS_CNR))!=0){
+	//while((U32(op_reg+XHCI_REG_USBSTS)&(1<<XHCI_USBSTS_CNR))!=0){
+	//	if(total<=0)return -1;	
+	//}
+	//NOTE WAIT FOR CNR IN XHCI_USBSTS
+	while(BIT(XHCI_OP(XHCI_REG_USBSTS),XHCI_USBSTS_CNR)!=0){
 		if(total<=0)return -1;	
 	}
-	printf("CONFIG:\t%x\n", U32(op_reg+XHCI_REG_CONFIG));
-
-
+	printf("CONFIG:\t%x\n", XHCI_OP(XHCI_REG_CONFIG));
 
 	void* mmio=PCI_GetMMIO(device,pcibase)+usb.capabilities_pointer;
 	MSI_INIT(mmio,&usb);
-	unsigned int pagesize=U32(op_reg+XHCI_REG_PAGESIZE);
+	unsigned int pagesize=XHCI_OP(XHCI_REG_PAGESIZE);
+	printf("PAGESIZE:\t%x\n",pagesize);
 
 	uint64_t* dcbaa=mallocAB(256*8,64,pagesize);
 	void* device_context=mallocAB(2048,64,pagesize);
@@ -64,8 +69,8 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	}else{
 		dcbaa[0]=0;
 	}
-	U32(op_reg+XHCI_REG_DCBAAP)=(uint64_t)dcbaa;
-	U32(op_reg+XHCI_REG_USBCMD)=U32(op_reg+XHCI_REG_USBCMD)|1;
+	XHCI_OP(XHCI_REG_DCBAAP)=(uint64_t)dcbaa;
+	XHCI_OP(XHCI_REG_USBCMD)=XHCI_OP(XHCI_REG_USBCMD)|1;
 
 
 	SetColor(0xffffff);

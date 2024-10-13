@@ -12,6 +12,9 @@
 #define XHCI_PORT_PORTPMSC 	0x4
 #define XHCI_PORT_PORTLI 	0x8
 
+#define XHCI_USBSTS_CNR 11
+
+
 typedef struct{
 	uint32_t IMAN;
 	uint32_t IMOD;
@@ -36,7 +39,6 @@ typedef struct {
 	uint32_t HCCParams2;
 } __attribute__((packed)) XHCI_CAP_REG;
 
-#define XHCI_USBSTS_CNR 11
 
 typedef struct {
 	uint32_t lo;
