@@ -38,6 +38,7 @@
 #define XHCI_PORT_SPEED(PORTSC)		(PORTSC>>10)&0xF
 
 #define XHCI_PORT_CCS				1<<0
+#define XHCI_PORT_PR				1<<4
 #define XHCI_PORT_CSC				1<<17
 #define XHCI_PORT_PEC				1<<18
 #define XHCI_PORT_WRC				1<<19

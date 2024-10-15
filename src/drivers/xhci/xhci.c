@@ -75,8 +75,8 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	SetColor(0xff0068);
 
 	xhci_operation_registers=address+config.CAPLENGTH;
-	XHCI_INT_RUNTIME_REG* reg_int=address+XHCI_RTSOFF(config)+0x20;
-	XHCI_PORT_REG*	ports=xhci_operation_registers+XHCI_PORT_OFF;
+	volatile XHCI_INT_RUNTIME_REG* reg_int=address+XHCI_RTSOFF(config)+0x20;
+	volatile XHCI_PORT_REG*	ports=xhci_operation_registers+XHCI_PORT_OFF;
 	XHCI_RESET(XHCI_OP(XHCI_REG_USBCMD));
 	
 	config=XHCI_READ_CAP(address);
@@ -101,6 +101,7 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	unsigned int pagesize=*XHCI_OP(XHCI_REG_PAGESIZE)<<(12);
 	unsigned int maxslots=XHCI_MAX_SLOTS(config);
 	unsigned int maxintrs=XHCI_MAX_INTRS(config);
+	unsigned int maxports=XHCI_MAX_PORTS(config);
 	*XHCI_OP(XHCI_REG_CONFIG)|=maxslots;
 	unsigned int CONFIG=*XHCI_OP(XHCI_REG_CONFIG);
 	printf("MAX SLOTS:\t%x\n", maxslots);
@@ -144,17 +145,6 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 		reg_int[i].ERDP_low=DWORD((uint64_t)event_ring_addr,0)&(~0x3F);
 		reg_int[i].ERDP_high=DWORD((uint64_t)event_ring_addr,1);
 	}
-	//for(unsigned int i=0;i<XHCI_MAX_PORTS(config);i++){
-	//	int en=XHCI_PORT_CONNECTED(ports[i].PORTSC);
-	//	if(en){
-	//		printf("\tPORT[%d]\t%8x\t%[EN:%x CON:%x STATE:%x,SPEED:%x]\n",i,ports[i].PORTSC,
-	//				en,
-	//				XHCI_PORT_ENABLED(ports[i].PORTSC),
-	//				XHCI_PORT_STATE(ports[i].PORTSC),
-	//				XHCI_PORT_SPEED(ports[i].PORTSC)
-	//			  );
-	//	}
-	//}
 	void* mmio=PCI_GetMMIO(device,pcibase)+usb.capabilities_pointer;
 	MSI_INIT(mmio,&usb,maxintrs);
 
@@ -169,6 +159,20 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 
 	printf("USB RUNNING?\t%x\n",*XHCI_OP(XHCI_REG_USBCMD)&XHCI_USBCMD_RS);
 
+	for(int i=1;i<maxports;i++){
+		int en=XHCI_PORT_CONNECTED(ports[i].PORTSC);
+		if(en){
+			//printf("\tPORT[%d]\t%8x\t%[EN:%x CON:%x STATE:%x,SPEED:%x]\n",i,ports[i].PORTSC,
+			//		en,
+			//		XHCI_PORT_ENABLED(ports[i].PORTSC),
+			//		XHCI_PORT_STATE(ports[i].PORTSC),
+			//		XHCI_PORT_SPEED(ports[i].PORTSC)
+			//	  );
+			ports[i].PORTSC|=XHCI_PORT_PR;
+		}
+	}
+
 	SetColor(0xffffff);
+
 	return 1;
 }
