@@ -16,6 +16,7 @@
 #define XHCI_USBCMD_RS		1<<0x0
 #define XHCI_USBCMD_HCRST	1<<0x1
 #define XHCI_USBCMD_INTE	1<<0x2
+#define XHCI_USBCMD_MF_WRAP	1<<0xA
 
 #define XHCI_USBSTS_CNR		11
 
@@ -44,7 +45,6 @@
 #define XHCI_PORT_PRC				1<<21
 #define XHCI_PORT_PLC				1<<22
 #define XHCI_PORT_CEC				1<<23
-
 typedef struct{
 	uint32_t IMAN;
 	uint32_t IMOD;
@@ -94,3 +94,11 @@ typedef struct{
 	uint32_t int3;
 	uint32_t def;
 }__attribute__((aligned)) XHCI_TRB;
+
+typedef struct{
+	PCIGeneralDevice* device;
+	XHCI_CAP_REG* config;
+	XHCI_PORT_REG* ports;
+	XHCI_INT_RUNTIME_REG* ints;
+	void* dcbaa;
+}XHCI_HUB;
