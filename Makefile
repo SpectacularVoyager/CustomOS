@@ -35,12 +35,12 @@ endif
 QEMU_FLAGS:=$(QEMU_FLAGS) -serial file:logs/serial.log -net nic,model=rtl8139 -m 1G -vga std 
 QEMU_FLAGS:=$(QEMU_FLAGS) 
 
-objects = $(shell find -name "*.c")
+objects = $(shell find -wholename "./src/*.c")
 objects := ${objects:.c=.o}
 all: clean boot $(objects) link build isMultiBoot
 
 clean:
-	@rm -r $(OUT)
+	@rm -rf $(OUT)
 	mkdir -p $(OUT)
 boot:
 	@nasm -g -felf64 $(SOURCE)/boot.asm -o $(OUT)/boot.o
