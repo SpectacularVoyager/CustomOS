@@ -12,3 +12,4 @@
 #define CEILDIV(a,b) ((a)+(b)-1)/(b)
 
 #define GETOR(a,b)	((a)!=0)?(a):(b)
+

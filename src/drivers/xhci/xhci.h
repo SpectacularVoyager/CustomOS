@@ -1,5 +1,6 @@
 #include "stdint.h"
 #include "drivers/pci.h"
+#include "utils/bit.h"
 #define XHCI_REG_USBCMD		0x0
 #define XHCI_REG_USBSTS		0x4
 #define XHCI_REG_PAGESIZE	0x8
@@ -12,8 +13,23 @@
 #define XHCI_PORT_PORTPMSC 	0x4
 #define XHCI_PORT_PORTLI 	0x8
 
-#define XHCI_USBSTS_CNR 11
+#define XHCI_USBCMD_RS		1<<0x0
+#define XHCI_USBCMD_INTE	1<<0x2
 
+#define XHCI_USBSTS_CNR		11
+
+#define XHCI_PORT_OFF		0x400
+
+#define XHCI_MAX_PORTS(config)		BYTE(config.HCSParams1,3)
+#define XHCI_MAX_SLOTS(config)		BYTE(config.HCSParams1,0)
+#define XHCI_MAX_INTRS(config)		((config.HCSParams1>>8)&0x3FF)
+#define XHCI_SCRATCHPAD_ENT(config)	((((config.HCSParams2>>27)&0xF))|(((config.HCSParams2>>21)&0xF)<<4))
+#define XHCI_ERST_MAX(config)		((config.HCSParams2>>4)&0xF)
+#define XHCI_RTSOFF(config)		(config.RTSOFF&(~0xF))
+
+#define XHCI_PORT_CONNECTED(PORTSC)	BIT(PORTSC,0)
+#define XHCI_PORT_ENABLED(PORTSC)	BIT(PORTSC,1)
+#define XHCI_PORT_STATE(PORTSC)		BYTE(PORTSC,0)>>5
 
 typedef struct{
 	uint32_t IMAN;
@@ -47,3 +63,10 @@ typedef struct {
 	uint32_t td_size:5;
 	uint32_t int_target:11;
 } __attribute__((packed)) XHCINormalTRB;
+
+typedef struct {
+	uint32_t PORTSC;
+	uint32_t PORTPMSC;
+	uint32_t PORTLI;
+	uint32_t PORTHLPMC;
+} __attribute__((packed)) XHCI_PORT_REG;

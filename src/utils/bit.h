@@ -30,4 +30,4 @@
 #define U16(addr) (*(uint16_t*)(addr))
 #define U8(addr) (*(uint8_t*)(addr))
 
-#define BIT_RANGE(a,l,h)	(a&BIT_RANGE_MASK(h,l))>>l
+#define BIT_RANGE(a,l,h)	(a&BIT_RANGE_MASK(h+1,l))>>l

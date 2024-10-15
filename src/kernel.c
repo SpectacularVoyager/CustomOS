@@ -29,6 +29,7 @@
 #include "drivers/gpt/gpt.h"
 #include "drivers/fat/fat.h"
 #include "drivers/apic/apic.h"
+#include "utils/bit.h"
 #include "utils/ports.h"
 #include "utils/utils.h"
 #include "arch/nmi.h"
@@ -109,6 +110,7 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 
 
 	printf("HELLO WORLD\n");
+	printf("%x\n",BIT_RANGE(0xFFFFFFAF,0,3));
 	IDT_Initialize(cs);
 	IRQ_Initialize();
 	IRQ_RegisterHandler(14, ATAPIO_HANDLE_IRQ);

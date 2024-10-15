@@ -17,8 +17,8 @@ AHCI_DATA AHCI_INIT(PCI_device* device){
 	data.ata;
 
 	SetColor(0xff6666);	
-	printf("AHCI\n");
-	printf(INFO"[%04X %04X]{%02X %02X %02X}\n",device->vendor_id,device->device_id,device->class_id,device->subclass_id,device->progIF);	
+	//printf("AHCI\n");
+	//printf(INFO"[%04X %04X]{%02X %02X %02X}\n",device->vendor_id,device->device_id,device->class_id,device->subclass_id,device->progIF);	
 	commandlist=mallocA(sizeof(AHCI_HBA_CMD_HEADER)*32,4096);
 	recv=mallocA(sizeof(AHCI_RECIEVED_FIS),4096);
 	commandTable=mallocA((1<<13)*32,4096);

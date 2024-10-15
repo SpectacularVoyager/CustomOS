@@ -3,12 +3,12 @@
 #include "stdlib/stdio.h"
 #include "stdlib/stdlib.h"
 #include <stddef.h>
-#include "utils/bit.h"
 #include "utils/utils.h"
 #include "drivers/msix/msix.h"
 
 void* xhci_operation_registers;
-#define XHCI_OP(of)	U32(xhci_operation_registers+of)
+#define XHCI_OP(of)	(U32((xhci_operation_registers+of)))
+#define XHCI_RT(of)	(U32((config.RTSOFF+of)))
 
 XHCI_CAP_REG XHCI_READ_CAP(void* address){
 	XHCI_CAP_REG cap={};
@@ -35,31 +35,41 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	XHCI_CAP_REG config=XHCI_READ_CAP(address);
 	SetColor(0xff0068);
 	printf(INFO"XHCI DETECTED\n");
+	printf("ADDRESS ->%x\n",address);
 	printf("STATUS ->%x\n",usb.capabilities_pointer);
 	printf("CAPLENGTH:\t%x\n",config.CAPLENGTH);
 	printf("VERSION:\t%x\n",config.HCIVersion);
 	printf("HCSPARAMS1:\t%x\n",config.HCSParams1);
 	printf("HCSPARAMS2:\t%x\n",config.HCSParams2);
 	printf("HCSPARAMS3:\t%x\n",config.HCSParams3);
+	printf("RTSOFF:\t%x\n",config.RTSOFF);
 
 	xhci_operation_registers=address+config.CAPLENGTH;
+	XHCI_INT_RUNTIME_REG* rtreg=address+XHCI_RTSOFF(config)+0x20;
+	XHCI_PORT_REG*	ports=xhci_operation_registers+XHCI_PORT_OFF;
 	int total=500;
 	//while((U32(op_reg+XHCI_REG_USBSTS)&(1<<XHCI_USBSTS_CNR))!=0){
 	//	if(total<=0)return -1;	
 	//}
+	
+
+	printf("CONFIG:\t%x\n", XHCI_OP(XHCI_REG_CONFIG));
 	//NOTE WAIT FOR CNR IN XHCI_USBSTS
 	while(BIT(XHCI_OP(XHCI_REG_USBSTS),XHCI_USBSTS_CNR)!=0){
 		if(total<=0)return -1;	
 	}
-	printf("CONFIG:\t%x\n", XHCI_OP(XHCI_REG_CONFIG));
 
 	void* mmio=PCI_GetMMIO(device,pcibase)+usb.capabilities_pointer;
 	MSI_INIT(mmio,&usb);
-	unsigned int pagesize=XHCI_OP(XHCI_REG_PAGESIZE);
-	printf("PAGESIZE:\t%x\n",pagesize);
+	unsigned int pagesize=XHCI_OP(XHCI_REG_PAGESIZE)<<(12);
+	unsigned int maxslots=XHCI_MAX_SLOTS(config);
+	unsigned int CONFIG=XHCI_OP(XHCI_REG_CONFIG);
+	printf("MAX SLOTS:\t%x\n", maxslots);
+	printf("SLOTS ENABLED:\t%x\n", BYTE(CONFIG,0));
 
 	uint64_t* dcbaa=mallocAB(256*8,64,pagesize);
 	void* device_context=mallocAB(2048,64,pagesize);
+
 
 	int scratchpadEntN=(config.HCSParams2>>21)&(0x1f);
 	printf("SCRATCHPAD ENTRIES:\t%x\n",scratchpadEntN);
@@ -69,10 +79,24 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	}else{
 		dcbaa[0]=0;
 	}
+	rtreg[0].IMAN|=XHCI_RT_IMAN_IE;
+	printf("RTREG:\t%p\n",rtreg);
+	printf("[IMAN:%x\tIMOD:%x]\n",rtreg[0].IMAN,rtreg[0].IMOD);
 	XHCI_OP(XHCI_REG_DCBAAP)=(uint64_t)dcbaa;
-	XHCI_OP(XHCI_REG_USBCMD)=XHCI_OP(XHCI_REG_USBCMD)|1;
+	//XHCI_OP(XHCI_REG_USBCMD)=XHCI_OP(XHCI_REG_USBCMD)|XHCI_USBCMD_INTE;
+	XHCI_OP(XHCI_REG_USBCMD)=XHCI_OP(XHCI_REG_USBCMD)|XHCI_USBCMD_RS|XHCI_USBCMD_INTE;
 
 
+	for(unsigned int i=0;i<XHCI_MAX_PORTS(config);i++){
+		int en=XHCI_PORT_CONNECTED(ports[i].PORTSC);
+		if(en){
+			printf("\tPORT[%d]\t%8x\t%[EN:%x CON:%x STATE:%x]\n",i,ports[i].PORTSC,
+					en,
+					XHCI_PORT_ENABLED(ports[i].PORTSC),
+					XHCI_PORT_STATE(ports[i].PORTSC)
+				  );
+		}
+	}
 	SetColor(0xffffff);
 	return 1;
 }
