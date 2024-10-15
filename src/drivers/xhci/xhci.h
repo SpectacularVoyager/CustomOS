@@ -1,4 +1,6 @@
 #include "stdint.h"
+#include "interrupts/idt.h"
+#include "interrupts/irq.h"
 #include "drivers/pci.h"
 #include "utils/bit.h"
 #define XHCI_REG_USBCMD		0x0
@@ -48,6 +50,8 @@
 #define XHCI_PORT_PRC				1<<21
 #define XHCI_PORT_PLC				1<<22
 #define XHCI_PORT_CEC				1<<23
+
+#define XHCI_TRB_CODE_PORT_STATUS_CHANGE	0x22
 typedef struct{
 	uint32_t IMAN;
 	uint32_t IMOD;
@@ -61,6 +65,8 @@ typedef struct{
 
 
 int XHCI_INIT(PCI_device* device,void* pcibase);
+void XHCI_INT(registers* _r);
+
 
 typedef struct {
 	uint8_t CAPLENGTH;

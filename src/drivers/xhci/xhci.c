@@ -7,8 +7,6 @@
 #include "utils/utils.h"
 #include "drivers/msix/msix.h"
 #include "devices/apic/timer.h"
-#include "interrupts/idt.h"
-#include "interrupts/irq.h"
 
 void* xhci_operation_registers;
 #define XHCI_OP(of)	((uint32_t*)((xhci_operation_registers+of)))
@@ -55,12 +53,6 @@ void XHCI_RESET(uint32_t* usbcmd){
 	}
 }
 XHCI_HUB xhci_hub;
-void XHCI_INT(registers* _r){
-	XHCI_TRB* addr=*(void**)(COMBINE_DWORD(xhci_hub.ints[0].ERSTBA_high, xhci_hub.ints[0].ERSTBA_low)&(~0x3F));
-	int trb_code=XHCI_TRB_TYPE(addr->def);
-	printf("TRB:\t%x\n",trb_code);
-
-}
 
 int XHCI_INIT(PCI_device* device,void* pcibase){
 	PCIGeneralDevice usb;
@@ -160,13 +152,7 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	for(int i=1;i<maxports;i++){
 		int en=XHCI_PORT_CONNECTED(ports[i].PORTSC);
 		if(en){
-			//printf("\tPORT[%d]\t%8x\t%[EN:%x CON:%x STATE:%x,SPEED:%x]\n",i,ports[i].PORTSC,
-			//		en,
-			//		XHCI_PORT_ENABLED(ports[i].PORTSC),
-			//		XHCI_PORT_STATE(ports[i].PORTSC),
-			//		XHCI_PORT_SPEED(ports[i].PORTSC)
-			//	  );
-			//printf("RESETING PORT[%d]\n",i);
+			printf("RESETING PORT[%d]\n",i);
 			ports[i].PORTSC|=XHCI_PORT_PR;
 			break;
 		}
@@ -175,4 +161,13 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	SetColor(0xffffff);
 
 	return 1;
+}
+
+void XHCI_INT(registers* _r){
+	XHCI_TRB* addr=*(void**)(COMBINE_DWORD(xhci_hub.ints[0].ERSTBA_high, xhci_hub.ints[0].ERSTBA_low)&(~0x3F));
+	int trb_code=XHCI_TRB_TYPE(addr->def);
+	if(trb_code==XHCI_TRB_CODE_PORT_STATUS_CHANGE){
+		int portid=BYTE(addr->int1,3);
+		printf("PORT:\t%x\n",portid);
+	}
 }
