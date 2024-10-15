@@ -32,10 +32,12 @@
 #define XHCI_RTSOFF(config)				(config.RTSOFF&(~0xF))
 #define XHCI_EXTENDED_CAP_PTR(config)	WORD(config.HCCParams1,1)
 
+#define XHCI_TRB_TYPE(x)			(((x)>>10)&0x3F)
+
 #define XHCI_PORT_CONNECTED(PORTSC)	BIT(PORTSC,0)
 #define XHCI_PORT_ENABLED(PORTSC)	BIT(PORTSC,1)
-#define XHCI_PORT_STATE(PORTSC)		BYTE(PORTSC,0)>>5
-#define XHCI_PORT_SPEED(PORTSC)		(PORTSC>>10)&0xF
+#define XHCI_PORT_STATE(PORTSC)		(BYTE(PORTSC,0)>>5)
+#define XHCI_PORT_SPEED(PORTSC)		(((PORTSC)>>10)&0xF)
 
 #define XHCI_PORT_CCS				1<<0
 #define XHCI_PORT_PR				1<<4

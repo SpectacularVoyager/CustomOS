@@ -3,6 +3,7 @@
 #include "stdlib/stdio.h"
 #include "stdlib/stdlib.h"
 #include <stddef.h>
+#include "utils/bit.h"
 #include "utils/utils.h"
 #include "drivers/msix/msix.h"
 #include "devices/apic/timer.h"
@@ -55,13 +56,10 @@ void XHCI_RESET(uint32_t* usbcmd){
 }
 XHCI_HUB xhci_hub;
 void XHCI_INT(registers* _r){
-	printf("XHCI_INT %p\n",xhci_hub.ints);
-	
-	XHCI_INT_RUNTIME_REG* run=xhci_hub.ints;
-	XHCI_TRB* trb=(void*)(run->ERSTBA_low&(~0xFF)|((uint64_t)run->ERDP_high<<32));
+	XHCI_TRB* addr=*(void**)(COMBINE_DWORD(xhci_hub.ints[0].ERSTBA_high, xhci_hub.ints[0].ERSTBA_low)&(~0x3F));
+	int trb_code=XHCI_TRB_TYPE(addr->def);
+	printf("TRB:\t%x\n",trb_code);
 
-	
-	printf("EVENT CODE:\t%x\n",trb->def);
 }
 
 int XHCI_INIT(PCI_device* device,void* pcibase){
@@ -168,7 +166,9 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 			//		XHCI_PORT_STATE(ports[i].PORTSC),
 			//		XHCI_PORT_SPEED(ports[i].PORTSC)
 			//	  );
+			//printf("RESETING PORT[%d]\n",i);
 			ports[i].PORTSC|=XHCI_PORT_PR;
+			break;
 		}
 	}
 
