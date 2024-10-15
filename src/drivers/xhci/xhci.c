@@ -5,6 +5,7 @@
 #include <stddef.h>
 #include "utils/utils.h"
 #include "drivers/msix/msix.h"
+#include "devices/apic/timer.h"
 
 void* xhci_operation_registers;
 #define XHCI_OP(of)	((uint32_t*)((xhci_operation_registers+of)))
@@ -80,7 +81,6 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	printf("HCSPARAMS2:\t%x\n",config.HCSParams2);
 	printf("HCSPARAMS3:\t%x\n",config.HCSParams3);
 	printf("RTSOFF:\t%x\n",config.RTSOFF);
-	printf("USB RUNNING?\t%x\n",*XHCI_OP(XHCI_REG_USBCMD)&XHCI_USBCMD_RS);
 
 	printf("CONFIG:\t%x\n", XHCI_OP(XHCI_REG_CONFIG));
 	//NOTE WAIT FOR CNR IN XHCI_USBSTS
@@ -103,33 +103,47 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	/** CRCR STUFF */
 	XHCI_TRB* trb=mallocAB(64*1024,64*1024,64*1024);
 	//NO OP CR TRB
-	trb[0].int1=0;
-	trb[0].int2=0;
-	trb[0].int3=0;
-	trb[0].def=1|(23<<16);
+	//trb[0].int1=0;
+	//trb[0].int2=0;
+	//trb[0].int3=0;
+	//trb[0].def=1|(23<<16);
 
 	//LINK CR TRB
-	trb[1].int1=DWORD((uint64_t)&trb[0],0)&(~0xF);
-	trb[1].int2=DWORD((uint64_t)&trb[0],1);
-	trb[1].int3=0|(0<<22);//IGNORED FOR CMD TRB
-	trb[1].def=(6<<10)|(1<<5)|0;
+	trb[127].int1=DWORD((uint64_t)&trb[0],0)&(~0xF);
+	trb[127].int2=DWORD((uint64_t)&trb[0],1);
+	trb[127].int3=0|(0<<22);//IGNORED FOR CMD TRB
+	trb[127].def=(6<<10)|(1<<5);
 
-	*XHCI_OP(XHCI_REG_CRCR)=DWORD((uint64_t)&trb[0],0);
+	*XHCI_OP(XHCI_REG_CRCR)=DWORD((uint64_t)&trb[0]|1,0);
 	*XHCI_OP(XHCI_REG_CRCR+0x4)=DWORD((uint64_t)&trb[0],1);
 	//-------------//
-	FORI(maxintrs){
-		void* event_ring_addr=malloc(16*XHCI_EVENT_RING_SIZE);
-		reg_int[i].IMAN=1<<1;
-		reg_int[i].IMOD=(500<<16)|4000;
-		reg_int[i].ERSTSZ=XHCI_EVENT_RING_SIZE;
-		reg_int[i].ERSTBA_low=DWORD((uint64_t)event_ring_addr,0)&(~0x3F);
-		reg_int[i].ERSTBA_high=DWORD((uint64_t)event_ring_addr,1);
+	//FORI(maxintrs){
+	//	void* event_ring_addr=malloc(16*XHCI_EVENT_RING_SIZE);
+	//	reg_int[i].IMAN=1<<1|1<<0;
+	//	reg_int[i].IMOD=0;
+	//	reg_int[i].ERSTSZ=1;
+	//	reg_int[i].ERSTBA_low=(DWORD((uint64_t)event_ring_addr,0)&(~0x3F))|1<<3;
+	//	reg_int[i].ERSTBA_high=DWORD((uint64_t)event_ring_addr,1);
 
-		reg_int[i].ERDP_low=DWORD((uint64_t)event_ring_addr,0)&(~0x3F);
-		reg_int[i].ERDP_high=DWORD((uint64_t)event_ring_addr,1);
-	}
+	//	reg_int[i].ERDP_low=DWORD((uint64_t)event_ring_addr,0)&(~0x3F);
+	//	reg_int[i].ERDP_high=DWORD((uint64_t)event_ring_addr,1);
+	//}
 
 	//reg_int[0].IMAN|=XHCI_RT_IMAN_IE;
+	void* evtring_table=mallocAB(4096,4096,4096);
+	void* evtring_alloc=mallocAB(4096*80,4096,4096);
+	void* evtring=(void *)((uint32_t)(evtring_alloc + (16 * 4096)) & 0xFFFF0000);
+	U64(evtring_table)=(uint64_t)evtring;
+	U64(evtring_table+8)=4096;
+
+	reg_int[0].IMAN=1<<1|1<<0;
+	reg_int[0].IMOD=0;
+	reg_int[0].ERSTSZ=1;
+	reg_int[0].ERSTBA_low=(DWORD((uint64_t)evtring_table,0)&(~0x3F))|1<<3;
+	reg_int[0].ERSTBA_high=DWORD((uint64_t)evtring_table,1);
+
+	reg_int[0].ERDP_low=(DWORD((uint64_t)evtring,0)&(~0x3F))|1<<3;
+	reg_int[0].ERDP_high=DWORD((uint64_t)evtring,1);
 
 	for(unsigned int i=0;i<XHCI_MAX_PORTS(config);i++){
 		int en=XHCI_PORT_CONNECTED(ports[i].PORTSC);
@@ -144,9 +158,10 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	}
 	void* mmio=PCI_GetMMIO(device,pcibase)+usb.capabilities_pointer;
 	MSI_INIT(mmio,&usb,maxintrs);
-	//ports[5].PORTSC=ports[5].PORTSC|XHCI_PORT_CSC|XHCI_PORT_CCS;
 	
-	*XHCI_OP(XHCI_REG_USBCMD)|=XHCI_USBCMD_INTE;
+	*XHCI_OP(XHCI_REG_DNCTRL)=0xFFFF;
+	*XHCI_OP(XHCI_REG_USBSTS)|=1<<3;
+	*XHCI_OP(XHCI_REG_USBCMD)|=XHCI_USBCMD_INTE|1<<10;
 	*XHCI_OP(XHCI_REG_USBCMD)|=XHCI_USBCMD_RS;
 
 	printf("USB RUNNING?\t%x\n",*XHCI_OP(XHCI_REG_USBCMD)&XHCI_USBCMD_RS);

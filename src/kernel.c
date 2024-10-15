@@ -29,6 +29,7 @@
 #include "drivers/gpt/gpt.h"
 #include "drivers/fat/fat.h"
 #include "drivers/apic/apic.h"
+#include "devices/apic/timer.h"
 #include "utils/bit.h"
 #include "utils/ports.h"
 #include "utils/utils.h"
@@ -162,6 +163,9 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 
 	}
 	SetColor(0xFFFFFF);
+
+	APIC_INIT(h.apic);
+	APIC_TIMER_INIT(0x2000000);
 #ifndef NOUSB
 	PCI_device* usb=PCI_GetFromType(0xC,0x3);
 	if(usb!=NULL){
