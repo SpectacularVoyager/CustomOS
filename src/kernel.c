@@ -96,21 +96,15 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 	}
 #endif
 	MULTIBOOT_HEADERS headers=MultibootProcessHeaders(multiboot_address);
-	//ERROR FIX MALLOC STARTS WITHOUT INIT
-	//
-	//AssignMallocMemoryMap(headers.mmap,0x70000);
+
 	AssignMallocMemoryMap(headers.mmap,0x170000);
 	graphicsStuff(headers);
-	//MallocDebug();	
 	//MTRStuff();
 	//PageRemap(4,0,0xFD000000,1<<4);
 	//*(uint32_t*)(0x100000000)=0xff00dd;
-	//MemoryRemap(0xFEE00000,(uint64_t)memory,1<<4);
-	//kprintf(INFO"VAL\t%p\n",*(uint64_t*)(0xfee00010));
 
 
 	printf("HELLO WORLD\n");
-	printf("%x\n",BIT_RANGE(0xFFFFFFAF,0,3));
 	IDT_Initialize(cs);
 	IRQ_Initialize();
 	IRQ_RegisterHandler(14, ATAPIO_HANDLE_IRQ);
@@ -118,7 +112,7 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 	ExceptionInit();
 	KeyboardInstall();
 
-	SetColor(0xff0000);
+	SetColor(0xFF0000);
 
 	struct multiboot_tag_new_acpi *acpi=(struct multiboot_tag_new_acpi*)headers.acpi;
 	RSDP_t* l=(RSDP_t*)acpi->rsdp;
@@ -127,21 +121,21 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 	void* pcibase=(void*)h.mcfg->allocations[0].base;
 	APIC_INIT(h.apic);
 
-	SetColor(0x00ff00);
+	SetColor(0x00FF00);
 	PCI_device* devices=PCI_GetDevices();
 	FORI(PCI_GetDeviceCount()){
 		if(i%4==0)printf("\n");
 		printf("[%04X %04X]{%02X %02X %02X}\t",devices[i].vendor_id,devices[i].device_id,devices[i].class_id,devices[i].subclass_id,devices[i].progIF);	
 	}
 	printf("\n");
-	SetColor(0xffffff);
+	SetColor(0xFFFFFF);
 
 	//EHCI_INIT(PCI_GetFromID(0x8086, 0x24CD));
 
-	SetColor(0xff0000);
+	SetColor(0xFF0000);
 	AHCI_DATA data=AHCI_INIT(PCI_GetFromType(0x1,0x6));
 
-	SetColor(0xff0000);
+	SetColor(0xFF0000);
 	//FORI(data.n_ata){
 	//	GPT_DATA gpt;
 	//	GPT_READ(data.ata[i],&gpt);
@@ -167,7 +161,7 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 		
 
 	}
-	SetColor(0xffffff);
+	SetColor(0xFFFFFF);
 #ifndef NOUSB
 	PCI_device* usb=PCI_GetFromType(0xC,0x3);
 	if(usb!=NULL){

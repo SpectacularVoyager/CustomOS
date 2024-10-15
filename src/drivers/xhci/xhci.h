@@ -14,22 +14,34 @@
 #define XHCI_PORT_PORTLI 	0x8
 
 #define XHCI_USBCMD_RS		1<<0x0
+#define XHCI_USBCMD_HCRST	1<<0x1
 #define XHCI_USBCMD_INTE	1<<0x2
 
 #define XHCI_USBSTS_CNR		11
 
 #define XHCI_PORT_OFF		0x400
 
-#define XHCI_MAX_PORTS(config)		BYTE(config.HCSParams1,3)
-#define XHCI_MAX_SLOTS(config)		BYTE(config.HCSParams1,0)
-#define XHCI_MAX_INTRS(config)		((config.HCSParams1>>8)&0x3FF)
-#define XHCI_SCRATCHPAD_ENT(config)	((((config.HCSParams2>>27)&0xF))|(((config.HCSParams2>>21)&0xF)<<4))
-#define XHCI_ERST_MAX(config)		((config.HCSParams2>>4)&0xF)
-#define XHCI_RTSOFF(config)		(config.RTSOFF&(~0xF))
+#define XHCI_MAX_PORTS(config)			BYTE(config.HCSParams1,3)
+#define XHCI_MAX_SLOTS(config)			BYTE(config.HCSParams1,0)
+#define XHCI_MAX_INTRS(config)			((config.HCSParams1>>8)&0x3FF)
+#define XHCI_SCRATCHPAD_ENT(config)		((((config.HCSParams2>>27)&0xF))|(((config.HCSParams2>>21)&0xF)<<4))
+#define XHCI_ERST_MAX(config)			((config.HCSParams2>>4)&0xF)
+#define XHCI_RTSOFF(config)				(config.RTSOFF&(~0xF))
+#define XHCI_EXTENDED_CAP_PTR(config)	WORD(config.HCCParams1,1)
 
 #define XHCI_PORT_CONNECTED(PORTSC)	BIT(PORTSC,0)
 #define XHCI_PORT_ENABLED(PORTSC)	BIT(PORTSC,1)
 #define XHCI_PORT_STATE(PORTSC)		BYTE(PORTSC,0)>>5
+#define XHCI_PORT_SPEED(PORTSC)		(PORTSC>>10)&0xF
+
+#define XHCI_PORT_CCS				1<<0
+#define XHCI_PORT_CSC				1<<17
+#define XHCI_PORT_PEC				1<<18
+#define XHCI_PORT_WRC				1<<19
+#define XHCI_PORT_OCC				1<<20
+#define XHCI_PORT_PRC				1<<21
+#define XHCI_PORT_PLC				1<<22
+#define XHCI_PORT_CEC				1<<23
 
 typedef struct{
 	uint32_t IMAN;
