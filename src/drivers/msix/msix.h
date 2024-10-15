@@ -3,7 +3,7 @@
 
 #define MSIXCAPID(addr) ((*(uint32_t*)(addr))&0xff)
 
-void MSI_INIT(void* data,PCIGeneralDevice* device);
+void MSI_INIT(void* data,PCIGeneralDevice* device,unsigned int maxintrs);
 
 typedef struct{
 	uint32_t addrlow;
@@ -23,13 +23,3 @@ typedef struct{
 // |  0FEEH | Dest ID | Reserved | RH | DM | XX |
 // +--------+---------+----------+----+----+----+
 
-typedef struct{
-	uint32_t IMAN;
-	uint32_t IMOD;
-	uint32_t ERSTSZ;
-	uint32_t res1;
-	uint64_t ERSTBA;
-	uint64_t ERDP;
-}__attribute__((packed)) XHCI_INT_RUNTIME_REG;
-
-#define XHCI_RT_IMAN_IE	1<<0x1

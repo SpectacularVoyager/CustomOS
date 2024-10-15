@@ -7,8 +7,9 @@
 #include "drivers/msix/msix.h"
 
 void* xhci_operation_registers;
-#define XHCI_OP(of)	(U32((xhci_operation_registers+of)))
-#define XHCI_RT(of)	(U32((config.RTSOFF+of)))
+#define XHCI_OP(of)	((uint32_t*)((xhci_operation_registers+of)))
+#define XHCI_RT(of)	((uint32_t*)((config.RTSOFF+of)))
+#define XHCI_EVENT_RING_SIZE	4
 
 XHCI_CAP_REG XHCI_READ_CAP(void* address){
 	XHCI_CAP_REG cap={};
@@ -62,13 +63,13 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	SetColor(0xff0068);
 
 	xhci_operation_registers=address+config.CAPLENGTH;
-	XHCI_INT_RUNTIME_REG* rtreg=address+XHCI_RTSOFF(config)+0x20;
+	XHCI_INT_RUNTIME_REG* reg_int=address+XHCI_RTSOFF(config)+0x20;
 	XHCI_PORT_REG*	ports=xhci_operation_registers+XHCI_PORT_OFF;
-	XHCI_RESET(&XHCI_OP(XHCI_REG_USBCMD));
+	XHCI_RESET(XHCI_OP(XHCI_REG_USBCMD));
 	
 	config=XHCI_READ_CAP(address);
 	xhci_operation_registers=address+config.CAPLENGTH;
-	rtreg=address+XHCI_RTSOFF(config)+0x20;
+	reg_int=address+XHCI_RTSOFF(config)+0x20;
 	ports=xhci_operation_registers+XHCI_PORT_OFF;
 	printf(INFO"XHCI DETECTED\n");
 	printf("ADDRESS ->%x\n",address);
@@ -79,30 +80,56 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	printf("HCSPARAMS2:\t%x\n",config.HCSParams2);
 	printf("HCSPARAMS3:\t%x\n",config.HCSParams3);
 	printf("RTSOFF:\t%x\n",config.RTSOFF);
-	printf("USB RUNNING?\t%x\n",XHCI_OP(XHCI_REG_USBCMD)&XHCI_USBCMD_RS);
+	printf("USB RUNNING?\t%x\n",*XHCI_OP(XHCI_REG_USBCMD)&XHCI_USBCMD_RS);
 
 	printf("CONFIG:\t%x\n", XHCI_OP(XHCI_REG_CONFIG));
 	//NOTE WAIT FOR CNR IN XHCI_USBSTS
-	while(BIT(XHCI_OP(XHCI_REG_USBSTS),XHCI_USBSTS_CNR)!=0);
-	//while((U32(op_reg+XHCI_REG_USBSTS)&(1<<XHCI_USBSTS_CNR))!=0){
-	//	if(total<=0)return -1;	
-	//}
+	while(BIT(*XHCI_OP(XHCI_REG_USBSTS),XHCI_USBSTS_CNR)!=0);
+	SetColor(0xff0000);
 
-	void* mmio=PCI_GetMMIO(device,pcibase)+usb.capabilities_pointer;
-	MSI_INIT(mmio,&usb);
-	unsigned int pagesize=XHCI_OP(XHCI_REG_PAGESIZE)<<(12);
+	unsigned int pagesize=*XHCI_OP(XHCI_REG_PAGESIZE)<<(12);
 	unsigned int maxslots=XHCI_MAX_SLOTS(config);
-	unsigned int CONFIG=XHCI_OP(XHCI_REG_CONFIG);
+	unsigned int maxintrs=XHCI_MAX_INTRS(config);
+	*XHCI_OP(XHCI_REG_CONFIG)|=maxslots;
+	unsigned int CONFIG=*XHCI_OP(XHCI_REG_CONFIG);
 	printf("MAX SLOTS:\t%x\n", maxslots);
+	printf("MAX INTRS:\t%x\n", maxintrs);
 	printf("SLOTS ENABLED:\t%x\n", BYTE(CONFIG,0));
+	//printf("SLOTS ENABLED:\t%x\n", BYTE(*XHCI_OP(XHCI_REG_CONFIG),0));
 
 	void* dcbaa=XHCI_SetUpDCBAA(maxslots,pagesize,&config);
-	rtreg[0].IMAN|=XHCI_RT_IMAN_IE;
-	printf("RTREG:\t%p\n",rtreg);
-	printf("[IMAN:%x\tIMOD:%x]\n",rtreg[0].IMAN,rtreg[0].IMOD);
-	XHCI_OP(XHCI_REG_DCBAAP)=(uint64_t)dcbaa;
-	//XHCI_OP(XHCI_REG_USBCMD)=XHCI_OP(XHCI_REG_USBCMD)|XHCI_USBCMD_INTE;
-	//XHCI_OP(XHCI_REG_USBCMD)=XHCI_OP(XHCI_REG_USBCMD)|XHCI_USBCMD_RS|XHCI_USBCMD_INTE;
+	*XHCI_OP(XHCI_REG_DCBAAP)=(uint64_t)dcbaa;
+
+	/** CRCR STUFF */
+	XHCI_TRB* trb=mallocAB(64*1024,64*1024,64*1024);
+	//NO OP CR TRB
+	trb[0].int1=0;
+	trb[0].int2=0;
+	trb[0].int3=0;
+	trb[0].def=1|(23<<16);
+
+	//LINK CR TRB
+	trb[1].int1=DWORD((uint64_t)&trb[0],0)&(~0xF);
+	trb[1].int2=DWORD((uint64_t)&trb[0],1);
+	trb[1].int3=0|(0<<22);//IGNORED FOR CMD TRB
+	trb[1].def=(6<<10)|(1<<5)|0;
+
+	*XHCI_OP(XHCI_REG_CRCR)=DWORD((uint64_t)&trb[0],0);
+	*XHCI_OP(XHCI_REG_CRCR+0x4)=DWORD((uint64_t)&trb[0],1);
+	//-------------//
+	FORI(maxintrs){
+		void* event_ring_addr=malloc(16*XHCI_EVENT_RING_SIZE);
+		reg_int[i].IMAN=1<<1;
+		reg_int[i].IMOD=(500<<16)|4000;
+		reg_int[i].ERSTSZ=XHCI_EVENT_RING_SIZE;
+		reg_int[i].ERSTBA_low=DWORD((uint64_t)event_ring_addr,0)&(~0x3F);
+		reg_int[i].ERSTBA_high=DWORD((uint64_t)event_ring_addr,1);
+
+		reg_int[i].ERDP_low=DWORD((uint64_t)event_ring_addr,0)&(~0x3F);
+		reg_int[i].ERDP_high=DWORD((uint64_t)event_ring_addr,1);
+	}
+
+	//reg_int[0].IMAN|=XHCI_RT_IMAN_IE;
 
 	for(unsigned int i=0;i<XHCI_MAX_PORTS(config);i++){
 		int en=XHCI_PORT_CONNECTED(ports[i].PORTSC);
@@ -115,8 +142,15 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 				  );
 		}
 	}
+	void* mmio=PCI_GetMMIO(device,pcibase)+usb.capabilities_pointer;
+	MSI_INIT(mmio,&usb,maxintrs);
 	//ports[5].PORTSC=ports[5].PORTSC|XHCI_PORT_CSC|XHCI_PORT_CCS;
-	printf("USB RUNNING?\t%x\n",XHCI_OP(XHCI_REG_USBCMD)&XHCI_USBCMD_RS);
+	
+	*XHCI_OP(XHCI_REG_USBCMD)|=XHCI_USBCMD_INTE;
+	*XHCI_OP(XHCI_REG_USBCMD)|=XHCI_USBCMD_RS;
+
+	printf("USB RUNNING?\t%x\n",*XHCI_OP(XHCI_REG_USBCMD)&XHCI_USBCMD_RS);
+
 	SetColor(0xffffff);
 	return 1;
 }

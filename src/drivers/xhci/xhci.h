@@ -21,6 +21,8 @@
 
 #define XHCI_PORT_OFF		0x400
 
+#define XHCI_RT_IMAN_IE	1<<0x1
+
 #define XHCI_MAX_PORTS(config)			BYTE(config.HCSParams1,3)
 #define XHCI_MAX_SLOTS(config)			BYTE(config.HCSParams1,0)
 #define XHCI_MAX_INTRS(config)			((config.HCSParams1>>8)&0x3FF)
@@ -46,10 +48,13 @@
 typedef struct{
 	uint32_t IMAN;
 	uint32_t IMOD;
-	uint64_t ERSTSZ;
-	uint64_t ERSTBA;
-	uint64_t ERDP;
-} __attribute__((packed)) XHCI_RUNTIME_REG;
+	uint32_t ERSTSZ;
+	uint32_t res1;
+	uint32_t ERSTBA_low;
+	uint32_t ERSTBA_high;
+	uint32_t ERDP_low;
+	uint32_t ERDP_high;
+} __attribute__((packed)) XHCI_INT_RUNTIME_REG;
 
 
 int XHCI_INIT(PCI_device* device,void* pcibase);
@@ -82,3 +87,10 @@ typedef struct {
 	uint32_t PORTLI;
 	uint32_t PORTHLPMC;
 } __attribute__((packed)) XHCI_PORT_REG;
+
+typedef struct{
+	uint32_t int1;
+	uint32_t int2;
+	uint32_t int3;
+	uint32_t def;
+}__attribute__((aligned)) XHCI_TRB;
