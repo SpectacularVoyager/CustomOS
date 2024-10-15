@@ -1,5 +1,7 @@
 # CUSTOM OS
 
 ## TODO
-- FIX ahci on real hardware
 - Get Keyboard Input
+- Higher Half Kernel
+- Better Malloc
+- port doom lol(https://github.com/ozkl/doomgeneric)
