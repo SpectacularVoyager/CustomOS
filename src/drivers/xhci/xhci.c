@@ -30,7 +30,6 @@ XHCI_CAP_REG XHCI_READ_CAP(void* address){
 void* XHCI_SetUpDCBAA(unsigned int maxslots,unsigned int pagesize,XHCI_CAP_REG* config){
 	uint64_t* dcbaa=mallocAB((maxslots+1)*8,64,pagesize);
 	//void* device_context=mallocAB(2048,64,pagesize);
-	//TODO RESET? DOING WHILE DEVICE IS RUNNING
 	FORI(maxslots){
 		dcbaa=0;
 	}
@@ -46,6 +45,7 @@ void* XHCI_SetUpDCBAA(unsigned int maxslots,unsigned int pagesize,XHCI_CAP_REG* 
 	}
 	return dcbaa;
 }
+XHCI_TRB *XHCI_Event=NULL;
 void XHCI_RESET(uint32_t* usbcmd){
 	*usbcmd|=XHCI_USBCMD_HCRST;
 	while((*usbcmd)&XHCI_USBCMD_HCRST){
@@ -53,6 +53,12 @@ void XHCI_RESET(uint32_t* usbcmd){
 	}
 }
 XHCI_HUB xhci_hub;
+
+void XHCI_PORT_RESET(int port){
+	xhci_hub.ports[port].PORTSC|=XHCI_PORT_PR;
+	while(XHCI_Event!=0);
+	printf("RESET PORT[%d]\n",port);
+}
 
 int XHCI_INIT(PCI_device* device,void* pcibase){
 	PCIGeneralDevice usb;
@@ -73,6 +79,7 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	xhci_operation_registers=address+config.CAPLENGTH;
 	reg_int=address+XHCI_RTSOFF(config)+0x20;
 	ports=xhci_operation_registers+XHCI_PORT_OFF;
+	uint32_t* doorbell=address+config.DBOFF;
 	printf(INFO"XHCI DETECTED\n");
 	printf("ADDRESS ->%x\n",address);
 	printf("STATUS ->%x\n",usb.capabilities_pointer);
@@ -82,6 +89,7 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	printf("HCSPARAMS2:\t%x\n",config.HCSParams2);
 	printf("HCSPARAMS3:\t%x\n",config.HCSParams3);
 	printf("RTSOFF:\t%x\n",config.RTSOFF);
+	printf("DBOFF:\t%x\n",config.DBOFF);
 
 	printf("CONFIG:\t%x\n", XHCI_OP(XHCI_REG_CONFIG));
 	//NOTE WAIT FOR CNR IN XHCI_USBSTS
@@ -103,7 +111,7 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	*XHCI_OP(XHCI_REG_DCBAAP)=(uint64_t)dcbaa;
 
 	/** CRCR STUFF */
-	XHCI_TRB* trb=mallocAB(64*1024,64*1024,64*1024);
+	XHCI_TRB* command_ring=mallocAB(64*1024,64*1024,64*1024);
 	//NO OP CR TRB
 	//trb[0].int1=0;
 	//trb[0].int2=0;
@@ -111,13 +119,13 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	//trb[0].def=1|(23<<16);
 
 	//LINK CR TRB
-	trb[127].int1=DWORD((uint64_t)&trb[0],0)&(~0xF);
-	trb[127].int2=DWORD((uint64_t)&trb[0],1);
-	trb[127].int3=0|(0<<22);//IGNORED FOR CMD TRB
-	trb[127].def=(6<<10)|(1<<5);
+	command_ring[127].int1=DWORD((uint64_t)&command_ring[0],0)&(~0xF);
+	command_ring[127].int2=DWORD((uint64_t)&command_ring[0],1);
+	command_ring[127].int3=0|(0<<22);//IGNORED FOR CMD TRB
+	command_ring[127].def=(6<<10)|(1<<5);
 
-	*XHCI_OP(XHCI_REG_CRCR)=DWORD((uint64_t)&trb[0]|1,0);
-	*XHCI_OP(XHCI_REG_CRCR+0x4)=DWORD((uint64_t)&trb[0],1);
+	*XHCI_OP(XHCI_REG_CRCR)=DWORD((uint64_t)&command_ring[0]|1,0);
+	*XHCI_OP(XHCI_REG_CRCR+0x4)=DWORD((uint64_t)&command_ring[0],1);
 
 	//-------------//
 	FORI(1){
@@ -152,12 +160,15 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	for(int i=1;i<maxports;i++){
 		int en=XHCI_PORT_CONNECTED(ports[i].PORTSC);
 		if(en){
-			printf("RESETING PORT[%d]\n",i);
-			ports[i].PORTSC|=XHCI_PORT_PR;
+			//XHCI_PORT_RESET(i);
 			break;
 		}
 	}
-
+	command_ring[0].int1=0;
+	command_ring[0].int2=0;
+	command_ring[0].int3=0;
+	command_ring[0].def=23<<10|1;
+	doorbell[0]=0;
 	SetColor(0xffffff);
 
 	return 1;
@@ -169,5 +180,8 @@ void XHCI_INT(registers* _r){
 	if(trb_code==XHCI_TRB_CODE_PORT_STATUS_CHANGE){
 		int portid=BYTE(addr->int1,3);
 		printf("PORT:\t%x\n",portid);
+	}else{
+		printf("UNKNOWN EVENT[%x]\n",trb_code);
 	}
+	XHCI_Event=addr;
 }
