@@ -2,6 +2,7 @@
 #include "drivers/pci.h"
 #include "stdlib/stdio.h"
 #include "stdlib/stdlib.h"
+#include "stdlib/string.h"
 #include <stddef.h>
 #include "utils/bit.h"
 #include "utils/utils.h"
@@ -45,7 +46,6 @@ void* XHCI_SetUpDCBAA(unsigned int maxslots,unsigned int pagesize,XHCI_CAP_REG* 
 	}
 	return dcbaa;
 }
-XHCI_TRB *XHCI_Event=NULL;
 void XHCI_RESET(uint32_t* usbcmd){
 	*usbcmd|=XHCI_USBCMD_HCRST;
 	while((*usbcmd)&XHCI_USBCMD_HCRST){
@@ -53,13 +53,18 @@ void XHCI_RESET(uint32_t* usbcmd){
 	}
 }
 XHCI_HUB xhci_hub;
+volatile unsigned int flag=0;
 
 void XHCI_PORT_RESET(int port){
 	xhci_hub.ports[port].PORTSC|=XHCI_PORT_PR;
-	while(XHCI_Event!=0);
+	int flag=0;
+	while(flag!=0);
 	printf("RESET PORT[%d]\n",port);
 }
-
+void XHCI_WRITE_ERDP(XHCI_INT_RUNTIME_REG* erdp,uint64_t address){
+	erdp->ERDP_low=DWORD(address,0)&(~0xF);
+	erdp->ERDP_high=DWORD(address,1);
+}
 int XHCI_INIT(PCI_device* device,void* pcibase){
 	PCIGeneralDevice usb;
 	PCI_GetGeneralDevice(device,&usb);
@@ -139,9 +144,7 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 		reg_int[i].ERSTSZ=1;
 		reg_int[i].ERSTBA_low=(DWORD((uint64_t)event_ring_table,0)&(~0x3F))|1<<3;
 		reg_int[i].ERSTBA_high=DWORD((uint64_t)event_ring_table,1);
-
-		reg_int[i].ERDP_low=DWORD((uint64_t)event_ring_addr,0)&(~0x3F);
-		reg_int[i].ERDP_high=DWORD((uint64_t)event_ring_addr,1);
+		XHCI_WRITE_ERDP(&reg_int[i],(uint64_t)event_ring_addr|1<<3);
 	}
 	void* mmio=PCI_GetMMIO(device,pcibase)+usb.capabilities_pointer;
 	MSI_INIT(mmio,&usb,maxintrs);
@@ -152,12 +155,12 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	*XHCI_OP(XHCI_REG_DNCTRL)=0xFFFF;
 	*XHCI_OP(XHCI_REG_USBSTS)|=1<<3;
 	*XHCI_OP(XHCI_REG_USBCMD)|=XHCI_USBCMD_INTE;
-	//*XHCI_OP(XHCI_REG_USBCMD)|=XHCI_USBCMD_MF_WRAP;
+	*XHCI_OP(XHCI_REG_USBCMD)|=XHCI_USBCMD_MF_WRAP;
 	*XHCI_OP(XHCI_REG_USBCMD)|=XHCI_USBCMD_RS;
 
 	printf("USB RUNNING?\t%x\n",*XHCI_OP(XHCI_REG_USBCMD)&XHCI_USBCMD_RS);
 
-	for(int i=1;i<maxports;i++){
+	for(unsigned int i=1;i<maxports;i++){
 		int en=XHCI_PORT_CONNECTED(ports[i].PORTSC);
 		if(en){
 			//XHCI_PORT_RESET(i);
@@ -168,20 +171,38 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	command_ring[0].int2=0;
 	command_ring[0].int3=0;
 	command_ring[0].def=23<<10|1;
+	//doorbell[0]=0;
+	//flag=0;
+	//while(flag!=1);
+	printf("RINGING\n");
+	command_ring[1].int1=0;
+	command_ring[1].int2=0;
+	command_ring[1].int3=0;
+	command_ring[1].def=23<<10|1;
 	doorbell[0]=0;
 	SetColor(0xffffff);
 
 	return 1;
 }
+int CCS=1;
 
-void XHCI_INT(registers* _r){
-	XHCI_TRB* addr=*(void**)(COMBINE_DWORD(xhci_hub.ints[0].ERSTBA_high, xhci_hub.ints[0].ERSTBA_low)&(~0x3F));
-	int trb_code=XHCI_TRB_TYPE(addr->def);
+void XHCI_PROC_EVENT(XHCI_TRB* trb){
+	int trb_code=XHCI_TRB_TYPE(trb->def);
 	if(trb_code==XHCI_TRB_CODE_PORT_STATUS_CHANGE){
-		int portid=BYTE(addr->int1,3);
+		int portid=BYTE(trb->int1,3);
 		printf("PORT:\t%x\n",portid);
 	}else{
-		printf("UNKNOWN EVENT[%x]\n",trb_code);
+		//printf("UNKNOWN EVENT[%x]\n",trb_code);
 	}
-	XHCI_Event=addr;
+	printf("XHCI_TRB[0]\t%x\tCYCLE:%x\n",XHCI_TRB_TYPE(trb[0].def),XHCI_TRB_CYCLE(trb[0].def));
+	printf("XHCI TRB ADDR:\t%p\n",trb);
+}
+void XHCI_INT(registers* _r){
+	XHCI_TRB* trb=(void*)(COMBINE_DWORD(xhci_hub.ints[0].ERDP_high, xhci_hub.ints[0].ERDP_low)&(~0xF));
+	while(XHCI_TRB_TYPE(trb->def)!=0&&XHCI_TRB_CYCLE(trb->def)==CCS){
+		XHCI_PROC_EVENT(trb);
+		trb++;
+	}
+	XHCI_WRITE_ERDP(&xhci_hub.ints[0],(uint64_t)(trb));
+	flag=1;
 }

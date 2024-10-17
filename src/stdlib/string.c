@@ -28,3 +28,9 @@ char* strchrnul(char *s, int c){
 		s++;
 	}
 }
+
+void memcpy32(uint32_t* src,uint32_t* dest,int n){
+	for(volatile int i=0;i<n;i++){
+		dest[i]=src[i];
+	}
+}

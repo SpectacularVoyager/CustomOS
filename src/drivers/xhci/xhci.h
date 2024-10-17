@@ -35,6 +35,7 @@
 #define XHCI_EXTENDED_CAP_PTR(config)	WORD(config.HCCParams1,1)
 
 #define XHCI_TRB_TYPE(x)			(((x)>>10)&0x3F)
+#define XHCI_TRB_CYCLE(x)			((x)&0x1)
 
 #define XHCI_PORT_CONNECTED(PORTSC)	BIT(PORTSC,0)
 #define XHCI_PORT_ENABLED(PORTSC)	BIT(PORTSC,1)
@@ -102,7 +103,7 @@ typedef struct{
 	uint32_t int2;
 	uint32_t int3;
 	uint32_t def;
-}__attribute__((aligned)) XHCI_TRB;
+}__attribute__((packed)) XHCI_TRB;
 
 typedef struct{
 	PCIGeneralDevice* device;
@@ -111,3 +112,11 @@ typedef struct{
 	XHCI_INT_RUNTIME_REG* ints;
 	void* dcbaa;
 }XHCI_HUB;
+typedef union {
+	struct {
+		unsigned reg1 : 25;
+		unsigned reg2 : 5;
+		unsigned reg3 : 2;
+	} __attribute__((packed))bits;
+	uint32_t dword;
+} volatile XHCI_TRB_COMMAND_COMPLETED;
