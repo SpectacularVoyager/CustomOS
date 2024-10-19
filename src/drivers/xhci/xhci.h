@@ -94,7 +94,7 @@ typedef struct {
 	uint32_t DBOFF;
 	uint32_t RTSOFF;
 	uint32_t HCCParams2;
-} __attribute__((packed)) XHCI_CAP_REG;
+} XHCI_CAP_REG;
 
 
 typedef struct {

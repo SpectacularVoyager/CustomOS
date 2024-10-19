@@ -54,6 +54,10 @@ void graphicsStuff(MULTIBOOT_HEADERS headers){
 	AllocatePage(2,2L*PAGE_WIDTH,0x10);
 	AllocatePage(3,3L*PAGE_WIDTH,0x10);
 	AllocatePage(4,4L*PAGE_WIDTH,0x10);
+	AllocatePage(5,5L*PAGE_WIDTH,0x10);
+	AllocatePage(6,6L*PAGE_WIDTH,0x10);
+	AllocatePage(7,7L*PAGE_WIDTH,0x10);
+	AllocatePage(8,8L*PAGE_WIDTH,0x10);
 	GraphicsInit(
 			addr,
 			fb->common.framebuffer_width,
@@ -146,21 +150,24 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 	//	}
 	//}
 	GPT_DATA gpt;
-	GPT_READ(data.ata[1],&gpt);
-	FAT32_FILESYSTEM fs;
-	int val=FAT_READPART(&fs,data.ata[1],&gpt.entries[0]);
-	if(val){
-		ListNode* node=dir(&fs,NULL);
+	FORI(data.n_ata){
+		int val=GPT_READ(data.ata[i],&gpt);
+		if(val!=0){
+			printf("PART:[%d]\n",i);
+			FAT32_FILESYSTEM fs;
+			int val=FAT_READPART(&fs,data.ata[i],&gpt.entries[0]);
+			if(val==1){
+				ListNode* node=dir(&fs,NULL);
 
-		while(node!=NULL){
-			DIRECTORY* dir=((DIRECTORY*)node->val);
-			printf("%s %d\n",dir->name,isDir(dir));
-			node=node->next;
+				while(node!=NULL){
+					DIRECTORY* dir=((DIRECTORY*)node->val);
+					printf("\t%s %d\n",dir->name,isDir(dir));
+					node=node->next;
+				}
+				//printTree(&fs,NULL,1);
+				//fromPath(&fs,"/home/ankush/file.txt");
+			}
 		}
-		//printTree(&fs,NULL,1);
-		//fromPath(&fs,"/home/ankush/file.txt");
-		
-
 	}
 	SetColor(0xFFFFFF);
 
