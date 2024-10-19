@@ -82,6 +82,7 @@ int XHCI_INIT(PCI_device* device,void* pcibase);
 void XHCI_INT(registers* _r);
 
 
+
 typedef struct {
 	uint8_t CAPLENGTH;
 	uint8_t resv1;
@@ -153,4 +154,17 @@ typedef struct{
 	uint32_t int14;
 	uint32_t int15;
 	uint32_t int16;
+}__attribute__((packed)) XHCI_CONTEXT_GENERIC;
+
+typedef struct{
+	uint32_t int1;
+	uint32_t int2;
+	uint32_t int3;
+	uint32_t int4;
+}__attribute__((packed)) XHCI_CONTEXT_SLOT;
+
+typedef union{
+	XHCI_CONTEXT_GENERIC c;
 }__attribute__((packed)) XHCI_CONTEXT;
+
+void XHCI_PRINT_PORT(int i,XHCI_PORT_REG* reg);

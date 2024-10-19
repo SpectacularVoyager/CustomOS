@@ -73,8 +73,8 @@ inline void XHCI_COMMAND(volatile XHCI_TRB* command_ring,XHCI_TRB* ptr){
 	command_off++;
 }
 void XHCI_HANDLE_CAPABILITIES(void* data,PCIGeneralDevice* device,unsigned int maxintrs){
-	printf("CAP ADDRESS:\t%p\n",data);
 	SetColor(0x13fc03);
+	printf("CAP ADDRESS:\t%p\n",data);
 	while(1){
 		uint32_t d=U32(data);
 		if(BYTE(d,0)==MSI_X_CAP_SIG){
@@ -106,7 +106,7 @@ int XHCI_SLOT_ENABLE(){
 	printf("ALLOCATED SLOT %x\n",slot);
 	return slot;
 }
-void XHCI_SLOT_INITIALIZE(int slot){
+void XHCI_SLOT_INITIALIZE(int slot,int port){
 	int cz;
 	if(XHCI_CONTEXT_SIZE(xhci_hub.config)==0){
 		cz=32;
@@ -115,11 +115,18 @@ void XHCI_SLOT_INITIALIZE(int slot){
 	}
 	void* data=malloc(cz*33);
 	memset32(data,0,cz*33/4);
-	XHCI_CONTEXT* control_ctx=data;
+	XHCI_CONTEXT_GENERIC* control_ctx=data;
 	control_ctx->int2=0b11;
-	
+	XHCI_CONTEXT_SLOT* slot_context=data+cz;
+	slot_context->int1=1<<27;
+	slot_context->int2=port<<16;
+	XHCI_CONTEXT_SLOT* endpoint=malloc(cz);
+	//int maxpacksize=?;
+	//endpoint->int2=4<<3|maxpacksize<<16|0<<8|3<<1;
+	endpoint->int3=1;
 }
 int XHCI_INIT(PCI_device* device,void* pcibase){
+
 	PCIGeneralDevice usb;
 	PCI_GetGeneralDevice(device,&usb);
 
@@ -139,6 +146,7 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	reg_int=address+XHCI_RTSOFF(&config)+0x20;
 	ports=xhci_operation_registers+XHCI_PORT_OFF;
 	uint32_t* doorbell=address+config.DBOFF;
+
 	printf(INFO"XHCI DETECTED\n");
 	kprintf("ADDRESS ->%x\n",address);
 	kprintf("STATUS ->%x\n",usb.capabilities_pointer);
@@ -202,6 +210,7 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	}
 	void* mmio=PCI_GetMMIO(device,pcibase)+usb.capabilities_pointer;
 	XHCI_HANDLE_CAPABILITIES(mmio,&usb,maxintrs);
+	printf("MMIO:\t%p\n",PCI_GetMMIO(device,pcibase)+(XHCI_EXTENDED_CAP_PTR(&config)<<2));
 
 	xhci_hub=(XHCI_HUB){&usb,&config,ports,reg_int,dcbaa,doorbell};
 	IRQ_RegisterHandler(0xB,XHCI_INT);
@@ -216,11 +225,22 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	doorbell[0]=0;
 	XHCI_PORT_RESET(5);
 	int s=XHCI_SLOT_ENABLE();
-	XHCI_SLOT_INITIALIZE(s);
+	//XHCI_SLOT_INITIALIZE(s);
 	SetColor(0xffffff);
 	doorbell[0]=0;
 
+	for(int i=0;i<maxports;i++){
+		//printf("PORT[%x]\t%x\n",i,ports[i].PORTSC);
+		XHCI_PRINT_PORT(i,&ports[i]);
+	}
 	return 1;
+}
+void XHCI_PRINT_PORT(int i,XHCI_PORT_REG* reg){
+	printf("PORT[%d]  CON:%d  EN:%d  ST:%d\n",i,
+			XHCI_PORT_CONNECTED(reg->PORTSC),
+			XHCI_PORT_ENABLED(reg->PORTSC),
+			XHCI_PORT_STATE(reg->PORTSC)
+			);
 }
 int CCS=1;
 
