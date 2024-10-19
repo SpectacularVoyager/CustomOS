@@ -34,3 +34,8 @@ void memcpy32(uint32_t* src,uint32_t* dest,int n){
 		dest[i]=src[i];
 	}
 }
+void memset32(uint32_t* dest,uint32_t src,int n){
+	for(volatile int i=0;i<n;i++){
+		dest[i]=src;
+	}
+}

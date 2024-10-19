@@ -106,6 +106,19 @@ int XHCI_SLOT_ENABLE(){
 	printf("ALLOCATED SLOT %x\n",slot);
 	return slot;
 }
+void XHCI_SLOT_INITIALIZE(int slot){
+	int cz;
+	if(XHCI_CONTEXT_SIZE(xhci_hub.config)==0){
+		cz=32;
+	}else{
+		cz=64;
+	}
+	void* data=malloc(cz*33);
+	memset32(data,0,cz*33/4);
+	XHCI_CONTEXT* control_ctx=data;
+	control_ctx->int2=0b11;
+	
+}
 int XHCI_INIT(PCI_device* device,void* pcibase){
 	PCIGeneralDevice usb;
 	PCI_GetGeneralDevice(device,&usb);
@@ -117,13 +130,13 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	SetColor(0xff0068);
 
 	xhci_operation_registers=address+config.CAPLENGTH;
-	volatile XHCI_INT_RUNTIME_REG* reg_int=address+XHCI_RTSOFF(config)+0x20;
+	volatile XHCI_INT_RUNTIME_REG* reg_int=address+XHCI_RTSOFF(&config)+0x20;
 	volatile XHCI_PORT_REG*	ports=xhci_operation_registers+XHCI_PORT_OFF;
 	XHCI_RESET(XHCI_OP(XHCI_REG_USBCMD));
 	
 	config=XHCI_READ_CAP(address);
 	xhci_operation_registers=address+config.CAPLENGTH;
-	reg_int=address+XHCI_RTSOFF(config)+0x20;
+	reg_int=address+XHCI_RTSOFF(&config)+0x20;
 	ports=xhci_operation_registers+XHCI_PORT_OFF;
 	uint32_t* doorbell=address+config.DBOFF;
 	printf(INFO"XHCI DETECTED\n");
@@ -143,9 +156,9 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	SetColor(0xff0000);
 
 	unsigned int pagesize=*XHCI_OP(XHCI_REG_PAGESIZE)<<(12);
-	unsigned int maxslots=XHCI_MAX_SLOTS(config);
-	unsigned int maxintrs=XHCI_MAX_INTRS(config);
-	unsigned int maxports=XHCI_MAX_PORTS(config);
+	unsigned int maxslots=XHCI_MAX_SLOTS(&config);
+	unsigned int maxintrs=XHCI_MAX_INTRS(&config);
+	unsigned int maxports=XHCI_MAX_PORTS(&config);
 	*XHCI_OP(XHCI_REG_CONFIG)|=maxslots;
 	unsigned int CONFIG=*XHCI_OP(XHCI_REG_CONFIG);
 	kprintf("MAX SLOTS:\t%x\n", maxslots);
@@ -199,12 +212,11 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	//*XHCI_OP(XHCI_REG_USBCMD)|=XHCI_USBCMD_MF_WRAP;
 	*XHCI_OP(XHCI_REG_USBCMD)|=XHCI_USBCMD_RS;
 
-	printf("USB RUNNING?\t%x\n",*XHCI_OP(XHCI_REG_USBCMD)&XHCI_USBCMD_RS);
-
 	XHCI_TRB noop=XHCI_CMD_NOOP();
 	doorbell[0]=0;
 	XHCI_PORT_RESET(5);
 	int s=XHCI_SLOT_ENABLE();
+	XHCI_SLOT_INITIALIZE(s);
 	SetColor(0xffffff);
 	doorbell[0]=0;
 
@@ -216,7 +228,6 @@ void XHCI_ON_PORT_RESET(XHCI_TRB* trb){
 	int portid=BYTE(trb->int1,3);
 	//XHCI_TRB slot_en=XHCI_CMD_ENABLE_SLOT(0);
 	//XHCI_COMMAND(xhci_hub.command_ring,&slot_en);
-	printf("PORT:\t%x\n",portid);
 }
 void XHCI_ON_COMMAND_COMPLETE(XHCI_TRB* trb){
 	slot=BYTE(trb->def,3);
@@ -233,7 +244,7 @@ void XHCI_PROC_EVENT(XHCI_TRB* trb){
 		default:
 			break;
 	}
-	printf("XHCI_TRB[0]\t%x\tCYCLE:%x\n",XHCI_TRB_TYPE(trb[0].def),XHCI_TRB_CYCLE(trb[0].def));
+	printf("XHCI_TRB\t%x\n",XHCI_TRB_TYPE(trb[0].def));
 }
 
 // ERROR: FIX BUFFER OVERFLOW IN ERDP

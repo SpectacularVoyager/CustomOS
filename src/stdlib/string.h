@@ -13,3 +13,5 @@ char* strchr(char *s, int c);
 char* strchrnul(char *s, int c);
 
 void memcpy32(uint32_t* src,uint32_t* dest,int n);
+
+void memset32(uint32_t* dest,uint32_t src,int n);

@@ -26,14 +26,15 @@
 
 #define XHCI_RT_IMAN_IE	(1<<0x1)
 
-#define XHCI_MAX_PORTS(config)			BYTE(config.HCSParams1,3)
-#define XHCI_MAX_SLOTS(config)			BYTE(config.HCSParams1,0)
-#define XHCI_MAX_INTRS(config)			((config.HCSParams1>>8)&0x3FF)
-#define XHCI_EXTENDED_CONFIG(config)	DWORD(config.HCSParams1,1)
-#define XHCI_SCRATCHPAD_ENT(config)		((((config.HCSParams2>>27)&0xF))|(((config.HCSParams2>>21)&0xF)<<4))
-#define XHCI_ERST_MAX(config)			((config.HCSParams2>>4)&0xF)
-#define XHCI_RTSOFF(config)				(config.RTSOFF&(~0xF))
-#define XHCI_EXTENDED_CAP_PTR(config)	WORD(config.HCCParams1,1)
+#define XHCI_MAX_PORTS(config)			BYTE((config)->HCSParams1,3)
+#define XHCI_MAX_SLOTS(config)			BYTE((config)->HCSParams1,0)
+#define XHCI_MAX_INTRS(config)			(((config)->HCSParams1>>8)&0x3FF)
+#define XHCI_EXTENDED_CONFIG(config)	DWORD((config)->HCSParams1,1)
+#define XHCI_SCRATCHPAD_ENT(config)		(((((config)->HCSParams2>>27)&0xF))|((((config)->HCSParams2>>21)&0xF)<<4))
+#define XHCI_ERST_MAX(config)			(((config)->HCSParams2>>4)&0xF)
+#define XHCI_RTSOFF(config)				((config)->RTSOFF&(~0xF))
+#define XHCI_EXTENDED_CAP_PTR(config)	WORD((config)->HCCParams1,1)
+#define XHCI_CONTEXT_SIZE(config)		(((config)->HCCParams1>>2)&0x1)
 
 #define XHCI_TRB_TYPE(x)			(((x)>>10)&0x3F)
 #define XHCI_TRB_CYCLE(x)			((x)&0x1)
@@ -135,3 +136,21 @@ typedef union {
 	} __attribute__((packed))bits;
 	uint32_t dword;
 } volatile XHCI_TRB_COMMAND_COMPLETED;
+typedef struct{
+	uint32_t int1;
+	uint32_t int2;
+	uint32_t int3;
+	uint32_t int4;
+	uint32_t int5;
+	uint32_t int6;
+	uint32_t int7;
+	uint32_t int8;
+	uint32_t int9;
+	uint32_t int10;
+	uint32_t int11;
+	uint32_t int12;
+	uint32_t int13;
+	uint32_t int14;
+	uint32_t int15;
+	uint32_t int16;
+}__attribute__((packed)) XHCI_CONTEXT;
