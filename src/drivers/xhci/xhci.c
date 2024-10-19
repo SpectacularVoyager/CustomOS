@@ -56,9 +56,9 @@ XHCI_HUB xhci_hub;
 volatile unsigned int flag=0;
 
 void XHCI_PORT_RESET(int port){
-	xhci_hub.ports[port].PORTSC|=XHCI_PORT_PR;
-	int flag=0;
-	while(flag!=0);
+	xhci_hub.ports[port].PORTSC=(xhci_hub.ports[port].PORTSC&(~XHCI_PORT_PED))|XHCI_PORT_PR;
+	//flag=0;
+	//while(flag!=0);
 	printf("RESET PORT[%d]\n",port);
 }
 void XHCI_WRITE_ERDP(XHCI_INT_RUNTIME_REG* erdp,uint64_t address,int flags){
@@ -68,7 +68,6 @@ void XHCI_WRITE_ERDP(XHCI_INT_RUNTIME_REG* erdp,uint64_t address,int flags){
 int command_off=0;
 int command_cycle=1;
 void XHCI_COMMAND(volatile XHCI_TRB* command_ring,XHCI_TRB* ptr){
-
 	command_ring[command_off].int1=ptr->int1;
 	command_ring[command_off].int2=ptr->int2;
 	command_ring[command_off].int3=ptr->int3;
@@ -198,16 +197,19 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 
 	printf("USB RUNNING?\t%x\n",*XHCI_OP(XHCI_REG_USBCMD)&XHCI_USBCMD_RS);
 
-	for(unsigned int i=1;i<maxports;i++){
-		int en=XHCI_PORT_CONNECTED(ports[i].PORTSC);
-		if(en){
-			XHCI_PORT_RESET(i);
-			break;
-		}
-	}
-	
 	XHCI_TRB noop=XHCI_CMD_NOOP();
 	XHCI_COMMAND(command_ring,&noop);
+	XHCI_COMMAND(command_ring,&noop);
+	doorbell[0]=0;
+	//for(unsigned int i=1;i<maxports;i++){
+	//	int en=XHCI_PORT_CONNECTED(ports[i].PORTSC);
+	//	if(en){
+	//		XHCI_PORT_RESET(i);
+	//		break;
+	//	}
+	//}
+	XHCI_PORT_RESET(5);
+	
 	XHCI_COMMAND(command_ring,&noop);
 	doorbell[0]=0;
 	SetColor(0xffffff);
@@ -221,13 +223,13 @@ void XHCI_ON_PORT_RESET(XHCI_TRB* trb){
 	XHCI_TRB slot_en=XHCI_CMD_NOOP();
 	//XHCI_TRB slot_en=XHCI_CMD_ENABLE_SLOT(0);
 	XHCI_COMMAND(command_ring,&slot_en);
-	xhci_hub.doorbell[0]=0;
+	//xhci_hub.doorbell[0]=0;
 	printf("PORT:\t%x\n",portid);
 }
 void XHCI_PROC_EVENT(XHCI_TRB* trb){
 	int trb_code=XHCI_TRB_TYPE(trb->def);
 	if(trb_code==XHCI_TRB_CODE_PORT_STATUS_CHANGE){
-		XHCI_ON_PORT_RESET(trb);
+		//XHCI_ON_PORT_RESET(trb);
 	}else{
 		//printf("UNKNOWN EVENT[%x]\n",trb_code);
 	}
@@ -242,7 +244,5 @@ void XHCI_INT(registers* _r){
 		trb++;
 	}
 	XHCI_WRITE_ERDP(&xhci_hub.ints[0],(uint64_t)(trb),1<<3);
-	//xhci_hub.ints[0].ERDP_low=(DWORD((uint64_t)trb,0)&(~0xF))|1<<3;
-	//xhci_hub.ints[0].ERDP_high=DWORD((uint64_t)trb,1);
 	flag=1;
 }

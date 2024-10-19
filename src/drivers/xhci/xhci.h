@@ -3,28 +3,28 @@
 #include "interrupts/irq.h"
 #include "drivers/pci.h"
 #include "utils/bit.h"
-#define XHCI_REG_USBCMD		0x0
-#define XHCI_REG_USBSTS		0x4
-#define XHCI_REG_PAGESIZE	0x8
-#define XHCI_REG_DNCTRL		0x14
-#define XHCI_REG_CRCR		0x18
-#define XHCI_REG_DCBAAP		0x30
-#define XHCI_REG_CONFIG		0x38
+#define XHCI_REG_USBCMD		(0x0)
+#define XHCI_REG_USBSTS		(0x4)
+#define XHCI_REG_PAGESIZE	(0x8)
+#define XHCI_REG_DNCTRL		(0x14)
+#define XHCI_REG_CRCR		(0x18)
+#define XHCI_REG_DCBAAP		(0x30)
+#define XHCI_REG_CONFIG		(0x38)
 
-#define XHCI_PORT_PORTSC 	0x0
-#define XHCI_PORT_PORTPMSC 	0x4
-#define XHCI_PORT_PORTLI 	0x8
+#define XHCI_PORT_PORTSC 	(0x0)
+#define XHCI_PORT_PORTPMSC 	(0x4)
+#define XHCI_PORT_PORTLI 	(0x8)
 
-#define XHCI_USBCMD_RS		1<<0x0
-#define XHCI_USBCMD_HCRST	1<<0x1
-#define XHCI_USBCMD_INTE	1<<0x2
-#define XHCI_USBCMD_MF_WRAP	1<<0xA
+#define XHCI_USBCMD_RS		(1<<0x0)
+#define XHCI_USBCMD_HCRST	(1<<0x1)
+#define XHCI_USBCMD_INTE	(1<<0x2)
+#define XHCI_USBCMD_MF_WRAP	(1<<0xA)
 
-#define XHCI_USBSTS_CNR		11
+#define XHCI_USBSTS_CNR		(11)
 
-#define XHCI_PORT_OFF		0x400
+#define XHCI_PORT_OFF		(0x400)
 
-#define XHCI_RT_IMAN_IE	1<<0x1
+#define XHCI_RT_IMAN_IE	(1<<0x1)
 
 #define XHCI_MAX_PORTS(config)			BYTE(config.HCSParams1,3)
 #define XHCI_MAX_SLOTS(config)			BYTE(config.HCSParams1,0)
@@ -43,20 +43,21 @@
 #define XHCI_PORT_STATE(PORTSC)		(BYTE(PORTSC,0)>>5)
 #define XHCI_PORT_SPEED(PORTSC)		(((PORTSC)>>10)&0xF)
 
-#define XHCI_PORT_CCS				1<<0
-#define XHCI_PORT_PR				1<<4
-#define XHCI_PORT_CSC				1<<17
-#define XHCI_PORT_PEC				1<<18
-#define XHCI_PORT_WRC				1<<19
-#define XHCI_PORT_OCC				1<<20
-#define XHCI_PORT_PRC				1<<21
-#define XHCI_PORT_PLC				1<<22
-#define XHCI_PORT_CEC				1<<23
+#define XHCI_PORT_CCS				(1<<0)
+#define XHCI_PORT_PED				(1<<1)
+#define XHCI_PORT_PR				(1<<4)
+#define XHCI_PORT_CSC				(1<<17)
+#define XHCI_PORT_PEC				(1<<18)
+#define XHCI_PORT_WRC				(1<<19)
+#define XHCI_PORT_OCC				(1<<20)
+#define XHCI_PORT_PRC				(1<<21)
+#define XHCI_PORT_PLC				(1<<22)
+#define XHCI_PORT_CEC				(1<<23)
 
 #define XHCI_CMD_NOOP() ((XHCI_TRB){.int1=0,.int2=0,.int3=0,.def=23<<10})
 #define XHCI_CMD_ENABLE_SLOT(type) ((XHCI_TRB){.int1=0,.int2=0,.int3=0,.def=9<<10|type<<16})
 
-#define XHCI_TRB_CODE_PORT_STATUS_CHANGE	0x22
+#define XHCI_TRB_CODE_PORT_STATUS_CHANGE	(0x22)
 typedef struct{
 	uint32_t IMAN;
 	uint32_t IMOD;
