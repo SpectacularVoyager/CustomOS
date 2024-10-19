@@ -11,7 +11,7 @@ unsigned long arch_msi_address(uint64_t* data, size_t vector, uint32_t processor
 	return (0xFEE00000 | (processor << 12));
 }
 
-void handleMSIX(void* data,PCIGeneralDevice* device,unsigned int maxintrs){
+void MSIX_HANDLE_CAPABILITY(void* data,PCIGeneralDevice* device,unsigned int maxintrs){
 	volatile uint32_t d=U32(data);
 	*(uint32_t*)data|=1<<31;
 	d=U32(data);
@@ -39,27 +39,27 @@ void handleMSIX(void* data,PCIGeneralDevice* device,unsigned int maxintrs){
 	}
 
 }
-void MSI_INIT(void* data,PCIGeneralDevice* device,unsigned int maxintrs){
-	SetColor(0x13fc03);
-	while(1){
-		uint32_t d=U32(data);
-		if(BYTE(d,0)==MSI_X_CAP_SIG){
-			printf("MSI-X DETECTED\t ENABLED=%x\n",BIT(WORD(d,1),MSI_X_ENABLED));
-			handleMSIX(data,device,maxintrs);
-			int off=BYTE(d,1);
-			data=(void*)(((uint64_t)data&(~0xFF))|off);
-			if(off==0x0)break;
-		}else if(BYTE(d,0)==MSI_CAP_SIG){
-			printf("MSI DETECTED\t ENABLED=%x\n",BIT(WORD(d,1),MSI_ENABLED));
-			int off=BYTE(d,1);
-			data=(void*)(((uint64_t)data&(~0xFF))|off);
-			if(off==0x0)break;
-		}else{
-			int off=BYTE(d,1);
-			data=(void*)(((uint64_t)data&(~0xFF))|off);
-			printf("UNRECOGNIZED CAPABILITY [%x]\n",BYTE(d,0));
-			if(off==0x0)break;
-		}
-	}
-	SetColor(0xff0000);
-}
+//void MSI_INIT(void* data,PCIGeneralDevice* device,unsigned int maxintrs){
+//	SetColor(0x13fc03);
+//	while(1){
+//		uint32_t d=U32(data);
+//		if(BYTE(d,0)==MSI_X_CAP_SIG){
+//			printf("MSI-X DETECTED\t ENABLED=%x\n",BIT(WORD(d,1),MSI_X_ENABLED));
+//			MSIX_HANDLE_CAPABILITY(data,device,maxintrs);
+//			int off=BYTE(d,1);
+//			data=(void*)(((uint64_t)data&(~0xFF))|off);
+//			if(off==0x0)break;
+//		}else if(BYTE(d,0)==MSI_CAP_SIG){
+//			printf("MSI DETECTED\t ENABLED=%x\n",BIT(WORD(d,1),MSI_ENABLED));
+//			int off=BYTE(d,1);
+//			data=(void*)(((uint64_t)data&(~0xFF))|off);
+//			if(off==0x0)break;
+//		}else{
+//			int off=BYTE(d,1);
+//			data=(void*)(((uint64_t)data&(~0xFF))|off);
+//			printf("UNRECOGNIZED CAPABILITY [%x]\n",BYTE(d,0));
+//			if(off==0x0)break;
+//		}
+//	}
+//	SetColor(0xff0000);
+//}

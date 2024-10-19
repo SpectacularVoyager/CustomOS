@@ -61,10 +61,46 @@ void XHCI_PORT_RESET(int port){
 	while(flag!=0);
 	printf("RESET PORT[%d]\n",port);
 }
-void XHCI_WRITE_ERDP(XHCI_INT_RUNTIME_REG* erdp,uint64_t address){
-	erdp->ERDP_low=DWORD(address,0)&(~0xF);
+void XHCI_WRITE_ERDP(XHCI_INT_RUNTIME_REG* erdp,uint64_t address,int flags){
+	erdp->ERDP_low=(DWORD(address,0)&(~0xF))|flags;
 	erdp->ERDP_high=DWORD(address,1);
 }
+int command_off=0;
+int command_cycle=1;
+void XHCI_COMMAND(volatile XHCI_TRB* command_ring,XHCI_TRB* ptr){
+
+	command_ring[command_off].int1=ptr->int1;
+	command_ring[command_off].int2=ptr->int2;
+	command_ring[command_off].int3=ptr->int3;
+	command_ring[command_off].def =(ptr->def&(~0x1))|command_cycle;
+	command_off++;
+}
+void XHCI_HANDLE_CAPABILITIES(void* data,PCIGeneralDevice* device,unsigned int maxintrs){
+	printf("CAP ADDRESS:\t%p\n",data);
+	SetColor(0x13fc03);
+	while(1){
+		uint32_t d=U32(data);
+		if(BYTE(d,0)==MSI_X_CAP_SIG){
+			printf("MSI-X DETECTED\t ENABLED=%x\n",BIT(WORD(d,1),MSI_X_ENABLED));
+			MSIX_HANDLE_CAPABILITY(data,device,maxintrs);
+			int off=BYTE(d,1);
+			data=(void*)(((uint64_t)data&(~0xFF))|off);
+			if(off==0x0)break;
+		}else if(BYTE(d,0)==MSI_CAP_SIG){
+			printf("MSI DETECTED\t ENABLED=%x\n",BIT(WORD(d,1),MSI_ENABLED));
+			int off=BYTE(d,1);
+			data=(void*)(((uint64_t)data&(~0xFF))|off);
+			if(off==0x0)break;
+		}else{
+			int off=BYTE(d,1);
+			data=(void*)(((uint64_t)data&(~0xFF))|off);
+			printf("UNRECOGNIZED CAPABILITY [%x]\n",BYTE(d,0));
+			if(off==0x0)break;
+		}
+	}
+	SetColor(0xff0000);
+}
+volatile XHCI_TRB* command_ring;
 int XHCI_INIT(PCI_device* device,void* pcibase){
 	PCIGeneralDevice usb;
 	PCI_GetGeneralDevice(device,&usb);
@@ -144,18 +180,20 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 		reg_int[i].ERSTSZ=1;
 		reg_int[i].ERSTBA_low=(DWORD((uint64_t)event_ring_table,0)&(~0x3F))|1<<3;
 		reg_int[i].ERSTBA_high=DWORD((uint64_t)event_ring_table,1);
-		XHCI_WRITE_ERDP(&reg_int[i],(uint64_t)event_ring_addr|1<<3);
+		XHCI_WRITE_ERDP(&reg_int[i],(uint64_t)event_ring_addr,0);
 	}
 	void* mmio=PCI_GetMMIO(device,pcibase)+usb.capabilities_pointer;
-	MSI_INIT(mmio,&usb,maxintrs);
+	XHCI_HANDLE_CAPABILITIES(mmio,&usb,maxintrs);
+	void* extended_cap=PCI_GetMMIO(device,pcibase)+(XHCI_EXTENDED_CONFIG(config)<<2);
+	printf("EXTENDED CAP:\t%p\t%p\n",PCI_GetMMIO(device,pcibase),config.HCCParams1>>16);
 
-	xhci_hub=(XHCI_HUB){&usb,&config,ports,reg_int,dcbaa};
+	xhci_hub=(XHCI_HUB){&usb,&config,ports,reg_int,dcbaa,doorbell};
 	IRQ_RegisterHandler(0xB,XHCI_INT);
 	
 	*XHCI_OP(XHCI_REG_DNCTRL)=0xFFFF;
 	*XHCI_OP(XHCI_REG_USBSTS)|=1<<3;
 	*XHCI_OP(XHCI_REG_USBCMD)|=XHCI_USBCMD_INTE;
-	*XHCI_OP(XHCI_REG_USBCMD)|=XHCI_USBCMD_MF_WRAP;
+	//*XHCI_OP(XHCI_REG_USBCMD)|=XHCI_USBCMD_MF_WRAP;
 	*XHCI_OP(XHCI_REG_USBCMD)|=XHCI_USBCMD_RS;
 
 	printf("USB RUNNING?\t%x\n",*XHCI_OP(XHCI_REG_USBCMD)&XHCI_USBCMD_RS);
@@ -163,22 +201,14 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	for(unsigned int i=1;i<maxports;i++){
 		int en=XHCI_PORT_CONNECTED(ports[i].PORTSC);
 		if(en){
-			//XHCI_PORT_RESET(i);
+			XHCI_PORT_RESET(i);
 			break;
 		}
 	}
-	command_ring[0].int1=0;
-	command_ring[0].int2=0;
-	command_ring[0].int3=0;
-	command_ring[0].def=23<<10|1;
-	//doorbell[0]=0;
-	//flag=0;
-	//while(flag!=1);
-	printf("RINGING\n");
-	command_ring[1].int1=0;
-	command_ring[1].int2=0;
-	command_ring[1].int3=0;
-	command_ring[1].def=23<<10|1;
+	
+	XHCI_TRB noop=XHCI_CMD_NOOP();
+	XHCI_COMMAND(command_ring,&noop);
+	XHCI_COMMAND(command_ring,&noop);
 	doorbell[0]=0;
 	SetColor(0xffffff);
 
@@ -186,23 +216,33 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 }
 int CCS=1;
 
+void XHCI_ON_PORT_RESET(XHCI_TRB* trb){
+	int portid=BYTE(trb->int1,3);
+	XHCI_TRB slot_en=XHCI_CMD_NOOP();
+	//XHCI_TRB slot_en=XHCI_CMD_ENABLE_SLOT(0);
+	XHCI_COMMAND(command_ring,&slot_en);
+	xhci_hub.doorbell[0]=0;
+	printf("PORT:\t%x\n",portid);
+}
 void XHCI_PROC_EVENT(XHCI_TRB* trb){
 	int trb_code=XHCI_TRB_TYPE(trb->def);
 	if(trb_code==XHCI_TRB_CODE_PORT_STATUS_CHANGE){
-		int portid=BYTE(trb->int1,3);
-		printf("PORT:\t%x\n",portid);
+		XHCI_ON_PORT_RESET(trb);
 	}else{
 		//printf("UNKNOWN EVENT[%x]\n",trb_code);
 	}
 	printf("XHCI_TRB[0]\t%x\tCYCLE:%x\n",XHCI_TRB_TYPE(trb[0].def),XHCI_TRB_CYCLE(trb[0].def));
-	printf("XHCI TRB ADDR:\t%p\n",trb);
 }
+
+// ERROR: FIX BUFFER OVERFLOW IN ERDP
 void XHCI_INT(registers* _r){
 	XHCI_TRB* trb=(void*)(COMBINE_DWORD(xhci_hub.ints[0].ERDP_high, xhci_hub.ints[0].ERDP_low)&(~0xF));
 	while(XHCI_TRB_TYPE(trb->def)!=0&&XHCI_TRB_CYCLE(trb->def)==CCS){
 		XHCI_PROC_EVENT(trb);
 		trb++;
 	}
-	XHCI_WRITE_ERDP(&xhci_hub.ints[0],(uint64_t)(trb));
+	XHCI_WRITE_ERDP(&xhci_hub.ints[0],(uint64_t)(trb),1<<3);
+	//xhci_hub.ints[0].ERDP_low=(DWORD((uint64_t)trb,0)&(~0xF))|1<<3;
+	//xhci_hub.ints[0].ERDP_high=DWORD((uint64_t)trb,1);
 	flag=1;
 }

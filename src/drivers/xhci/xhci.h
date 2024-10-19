@@ -29,6 +29,7 @@
 #define XHCI_MAX_PORTS(config)			BYTE(config.HCSParams1,3)
 #define XHCI_MAX_SLOTS(config)			BYTE(config.HCSParams1,0)
 #define XHCI_MAX_INTRS(config)			((config.HCSParams1>>8)&0x3FF)
+#define XHCI_EXTENDED_CONFIG(config)	DWORD(config.HCSParams1,1)
 #define XHCI_SCRATCHPAD_ENT(config)		((((config.HCSParams2>>27)&0xF))|(((config.HCSParams2>>21)&0xF)<<4))
 #define XHCI_ERST_MAX(config)			((config.HCSParams2>>4)&0xF)
 #define XHCI_RTSOFF(config)				(config.RTSOFF&(~0xF))
@@ -51,6 +52,9 @@
 #define XHCI_PORT_PRC				1<<21
 #define XHCI_PORT_PLC				1<<22
 #define XHCI_PORT_CEC				1<<23
+
+#define XHCI_CMD_NOOP() ((XHCI_TRB){.int1=0,.int2=0,.int3=0,.def=23<<10})
+#define XHCI_CMD_ENABLE_SLOT(type) ((XHCI_TRB){.int1=0,.int2=0,.int3=0,.def=9<<10|type<<16})
 
 #define XHCI_TRB_CODE_PORT_STATUS_CHANGE	0x22
 typedef struct{
@@ -111,6 +115,7 @@ typedef struct{
 	XHCI_PORT_REG* ports;
 	XHCI_INT_RUNTIME_REG* ints;
 	void* dcbaa;
+	uint32_t* doorbell;
 }XHCI_HUB;
 typedef union {
 	struct {

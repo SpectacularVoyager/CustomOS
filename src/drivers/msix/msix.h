@@ -3,7 +3,8 @@
 
 #define MSIXCAPID(addr) ((*(uint32_t*)(addr))&0xff)
 
-void MSI_INIT(void* data,PCIGeneralDevice* device,unsigned int maxintrs);
+
+void MSIX_HANDLE_CAPABILITY(void* data,PCIGeneralDevice* device,unsigned int maxintrs);
 
 typedef struct{
 	uint32_t addrlow;
