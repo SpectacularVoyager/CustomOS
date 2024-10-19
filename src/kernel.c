@@ -164,7 +164,6 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 	}
 	SetColor(0xFFFFFF);
 
-	APIC_INIT(h.apic);
 	APIC_TIMER_INIT(0x2000000);
 #ifndef NOUSB
 	PCI_device* usb=PCI_GetFromType(0xC,0x3);

@@ -54,10 +54,17 @@
 #define XHCI_PORT_PLC				(1<<22)
 #define XHCI_PORT_CEC				(1<<23)
 
-#define XHCI_CMD_NOOP() ((XHCI_TRB){.int1=0,.int2=0,.int3=0,.def=23<<10})
-#define XHCI_CMD_ENABLE_SLOT(type) ((XHCI_TRB){.int1=0,.int2=0,.int3=0,.def=9<<10|type<<16})
+#define XHCI_CMD_NOOP_CODE			23
+#define XHCI_CMD_ENABLE_SLOT_CODE	9
+#define XHCI_CMD_NOOP() ((XHCI_TRB){.int1=0,.int2=0,.int3=0,.def=XHCI_CMD_NOOP_CODE<<10})
+#define XHCI_CMD_ENABLE_SLOT(type) ((XHCI_TRB){.int1=0,.int2=0,.int3=0,.def=XHCI_CMD_ENABLE_SLOT_CODE<<10|type<<16})
 
 #define XHCI_TRB_CODE_PORT_STATUS_CHANGE	(0x22)
+#define XHCI_TRB_CODE_COMMAND_COMPLETED		(0x21)
+
+#define XHCI_NO_INT 0x1000
+#define WAIT_FOR_INT(xhci_hub) xhci_hub.flag=XHCI_NO_INT;\
+							while(xhci_hub.flag!=XHCI_NO_INT);
 typedef struct{
 	uint32_t IMAN;
 	uint32_t IMOD;
@@ -117,6 +124,8 @@ typedef struct{
 	XHCI_INT_RUNTIME_REG* ints;
 	void* dcbaa;
 	uint32_t* doorbell;
+	uint32_t flag;
+	volatile XHCI_TRB* command_ring;
 }XHCI_HUB;
 typedef union {
 	struct {

@@ -17,14 +17,14 @@ void MSIX_HANDLE_CAPABILITY(void* data,PCIGeneralDevice* device,unsigned int max
 	d=U32(data);
 	uint16_t msgctrl=WORD(d,1);
 	unsigned int tableNum=(msgctrl&0x3ff)+1;
-	printf("\tMSGCTRL:\t%x\n",msgctrl);
-	printf("\tTABLE:\t%x\n",U32(data+0x4));
-	printf("\tSIZE:\t%x\n",tableNum);
+	kprintf("\tMSGCTRL:\t%x\n",msgctrl);
+	kprintf("\tTABLE:\t%x\n",U32(data+0x4));
+	kprintf("\tSIZE:\t%x\n",tableNum);
 	uint32_t addr=U32(data+0x4);
 	uint32_t pba=U32(data+0x8);
 	MSIX_Table* mem=ADDR_FROM_BIR(device->BAR,addr);
 	MSIX_Table* mempba=ADDR_FROM_BIR(device->BAR,pba);
-	printf("\tMEM:\t%p\t%p\n",mem,mempba);
+	kprintf("\tMEM:\t%p\t%p\n",mem,mempba);
 	//mem[0].vector=0;
 	//mem[0].addrlow=(0xFEE<<20);
 	//mem[0].addrhigh=0;
