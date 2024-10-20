@@ -14,7 +14,7 @@
 void* xhci_operation_registers;
 #define XHCI_OP(of)	((uint32_t*)((xhci_operation_registers+of)))
 #define XHCI_RT(of)	((uint32_t*)((config.RTSOFF+of)))
-#define XHCI_EVENT_RING_SIZE	4
+#define XHCI_EVENT_RING_SIZE	128
 
 void XHCI_READ_CAP(XHCI_CAP_REG* cap,void* address){
 	uint32_t* cf=address;
@@ -207,18 +207,19 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	*XHCI_OP(XHCI_REG_DCBAAP)=(uint64_t)dcbaa;
 
 
+	/** CRCR STUFF */
+	xhci_hub.command_ring=mallocAB(64*1024,64*1024,64*1024);
+
 	FORI(128){
 		xhci_hub.command_ring[i].int1=0;
 		xhci_hub.command_ring[i].int2=0;
 		xhci_hub.command_ring[i].int3=0;
 		xhci_hub.command_ring[i].def =0;
 	}
-	/** CRCR STUFF */
-	xhci_hub.command_ring=mallocAB(64*1024,64*1024,64*1024);
 	xhci_hub.command_ring[127].int1=DWORD((uint64_t)&xhci_hub.command_ring[0],0)&(~0xF);
 	xhci_hub.command_ring[127].int2=DWORD((uint64_t)&xhci_hub.command_ring[0],1);
 	xhci_hub.command_ring[127].int3=0|(0<<22);//IGNORED FOR CMD TRB
-	xhci_hub.command_ring[127].def=(6<<10)|(1<<5);
+	xhci_hub.command_ring[127].def=(6<<10)|(1<<5)|1;
 
 
 
@@ -247,6 +248,7 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	xhci_hub.dcbaa=dcbaa,
 	xhci_hub.doorbell=doorbell,
 	xhci_hub.flag=0,
+	xhci_hub.event_ring=event_ring_table;
 
 
 	IRQ_RegisterHandler(0xB,XHCI_INT);
@@ -258,12 +260,14 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	*XHCI_OP(XHCI_REG_USBCMD)|=XHCI_USBCMD_RS;
 
 	XHCI_TRB noop=XHCI_CMD_NOOP(1);
-	//XHCI_COMMAND(xhci_hub.command_ring,&noop);
-	//XHCI_COMMAND(xhci_hub.command_ring,&noop);
-	//doorbell[0]=0;
+	XHCI_COMMAND(xhci_hub.command_ring,&noop);
+	XHCI_COMMAND(xhci_hub.command_ring,&noop);
+	doorbell[0]=0;
 	//XHCI_COMMAND(xhci_hub.command_ring,&noop);
 	//XHCI_COMMAND(xhci_hub.command_ring,&noop);
 	
+	LOGVAL(xhci_hub.command_ring);
+	LOGVAL(event_ring_table);
 	//int s=XHCI_SLOT_ENABLE();
 	//XHCI_SLOT_INITIALIZE(s);
 	SetColor(0xffffff);
@@ -271,12 +275,14 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 
 	//FORI(maxports)
 	//	XHCI_PORT_RESET(i);
+#ifdef XHCI_DEBUG
 	for(int i=0;i<maxports;i++){
 		if(i%4==0)printf("\n");
 		XHCI_PRINT_PORT(i,&ports[i]);
 		printf("  ");
 	}
 	printf("\n");
+#endif
 	return 1;
 }
 void XHCI_PRINT_PORT(int i,XHCI_PORT_REG* reg){
@@ -296,6 +302,8 @@ void XHCI_ON_PORT_RESET(XHCI_TRB* trb){
 }
 void XHCI_ON_COMMAND_COMPLETE(XHCI_TRB* trb){
 	slot=BYTE(trb->def,3);
+	XHCI_TRB* ptr=(XHCI_TRB*)(COMBINE_DWORD((uint64_t)trb->int2, trb->int1)&(~0x3F));
+	printf("PTR:\t%p\t%x\n",ptr,ptr->def);
 }
 void XHCI_PROC_EVENT(XHCI_TRB* trb){
 	int trb_code=XHCI_TRB_TYPE(trb->def);

@@ -128,6 +128,7 @@ typedef struct{
 	uint32_t* doorbell;
 	uint32_t flag;
 	volatile XHCI_TRB* command_ring;
+	volatile uint64_t* event_ring;
 }XHCI_HUB;
 typedef union {
 	struct {

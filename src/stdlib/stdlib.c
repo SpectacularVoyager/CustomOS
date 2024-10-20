@@ -61,6 +61,7 @@ void* mallocAB(unsigned long size,unsigned long align,unsigned long boundary){
 	void* start=(void*)malloc_start;
 	if((malloc_start/boundary)!=((malloc_start+size)/boundary)){
 		malloc_start=((malloc_start+size)/boundary)*boundary;
+		//malloc_start+=size;
 	}else{
 		malloc_start+=size;
 	}
