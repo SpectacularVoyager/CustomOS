@@ -138,7 +138,7 @@ void XHCI_SLOT_INITIALIZE(int slot,int port){
 	//endpoint->int2=4<<3|maxpacksize<<16|0<<8|3<<1;
 	endpoint->int3=1;
 }
-void XHCI_LOAD_CRCR(volatile void* crcr){
+void __attribute__((optimize("O0")))XHCI_LOAD_CRCR(volatile void* crcr){
 	*XHCI_OP(XHCI_REG_CRCR)=DWORD((uint64_t)crcr|1,0);
 	*XHCI_OP(XHCI_REG_CRCR+0x4)=DWORD((uint64_t)crcr,1);
 }
@@ -205,34 +205,24 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	xhci_hub.command_ring[127].int3=0|(0<<22);//IGNORED FOR CMD TRB
 	xhci_hub.command_ring[127].def=(6<<10)|(1<<5);
 
-	volatile uint64_t* command_ring_table=mallocAB(64*1024,64*1024,64*1024);
 
-	FORI(128){
-		//command_ring_table[i]=(uint64_t)&xhci_hub.command_ring[i];
-		command_ring_table[i]=0;
-	}
 
 	XHCI_LOAD_CRCR(xhci_hub.command_ring);
-	//XHCI_LOAD_CRCR(0);
-	//XHCI_LOAD_CRCR(command_ring_table);
-	LOGVAL(xhci_hub.command_ring);
-	LOGVAL(command_ring_table);
 
 	//-------------//
-	FORI(1){
-		uint64_t* event_ring_table=mallocAB(4096,4096,4096);
-		void* event_ring_addr=malloc(16*XHCI_EVENT_RING_SIZE);
+	uint64_t* event_ring_table=mallocAB(4096,4096,4096);
+	void* event_ring_addr=malloc(16*XHCI_EVENT_RING_SIZE);
 
-		event_ring_table[0]=(uint64_t)event_ring_addr;
-		event_ring_table[1]=4096;
-		reg_int[i].IMAN=1<<1|1<<0;
-		reg_int[i].IMOD=0;
-		reg_int[i].ERSTSZ=1;
-		reg_int[i].ERSTBA_low=(DWORD((uint64_t)event_ring_table,0)&(~0x3F))|1<<3;
-		reg_int[i].ERSTBA_high=DWORD((uint64_t)event_ring_table,1);
-		XHCI_WRITE_ERDP(&reg_int[i],(uint64_t)event_ring_addr,0);
-		printf("EVENT RING:\t%p\n",event_ring_table);
-	}
+	event_ring_table[0]=(uint64_t)event_ring_addr;
+	event_ring_table[1]=4096;
+	reg_int[0].IMAN=1<<1|1<<0;
+	reg_int[0].IMOD=0;
+	reg_int[0].ERSTSZ=1;
+	reg_int[0].ERSTBA_low=(DWORD((uint64_t)event_ring_table,0)&(~0x3F))|1<<3;
+	reg_int[0].ERSTBA_high=DWORD((uint64_t)event_ring_table,1);
+	XHCI_WRITE_ERDP(&reg_int[0],(uint64_t)event_ring_addr,0);
+	printf("EVENT RING:\t%p\n",event_ring_table);
+	//-------------//
 	void* mmio=PCI_GetMMIO(device,pcibase)+usb.capabilities_pointer;
 	XHCI_HANDLE_CAPABILITIES(mmio,&usb,maxintrs);
 	printf("MMIO:\t%p\n",PCI_GetMMIO(device,pcibase)+(XHCI_EXTENDED_CAP_PTR(&config)<<2));
