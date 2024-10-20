@@ -5,6 +5,8 @@
 
 
 void MSIX_HANDLE_CAPABILITY(void* data,PCIGeneralDevice* device,unsigned int maxintrs);
+void MSI_HANDLE_CAPABILITY(void* data,PCIGeneralDevice* device,unsigned int maxintrs);
+
 
 typedef struct{
 	uint32_t addrlow;
@@ -18,6 +20,10 @@ typedef struct{
 
 #define MSI_X_CAP_SIG	0x11
 #define MSI_CAP_SIG		0x05
+
+#define MSI_CONTROL(MME,EN)				((((MME)&0x7)<<4)|((EN)&0x1))
+#define MSI_64_BIT(CTRL)				BIT(CTRL,7);
+#define MSI_PER_VECTOR_MASKING(CTRL)	BIT(CTRL,8);
 
 // 31      19		 11			 3	  2	   1	0
 // +--------+---------+----------+----+----+----+

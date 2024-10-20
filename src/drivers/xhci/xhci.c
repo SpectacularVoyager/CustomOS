@@ -75,16 +75,20 @@ inline void XHCI_COMMAND(volatile XHCI_TRB* command_ring,XHCI_TRB* ptr){
 void XHCI_HANDLE_CAPABILITIES(void* data,PCIGeneralDevice* device,unsigned int maxintrs){
 	SetColor(0x13fc03);
 	printf("CAP ADDRESS:\t%p\n",data);
+	void* msix=0;
+	void* msi=0;
 	while(1){
 		uint32_t d=U32(data);
 		if(BYTE(d,0)==MSI_X_CAP_SIG){
 			printf("MSI-X DETECTED\t ENABLED=%x\n",BIT(WORD(d,1),MSI_X_ENABLED));
-			MSIX_HANDLE_CAPABILITY(data,device,maxintrs);
+			//MSIX_HANDLE_CAPABILITY(data,device,maxintrs);
+			msix=data;
 			int off=BYTE(d,1);
 			data=(void*)(((uint64_t)data&(~0xFF))|off);
 			if(off==0x0)break;
 		}else if(BYTE(d,0)==MSI_CAP_SIG){
 			printf("MSI DETECTED\t ENABLED=%x\n",BIT(WORD(d,1),MSI_ENABLED));
+			msi=data;
 			int off=BYTE(d,1);
 			data=(void*)(((uint64_t)data&(~0xFF))|off);
 			if(off==0x0)break;
@@ -94,6 +98,15 @@ void XHCI_HANDLE_CAPABILITIES(void* data,PCIGeneralDevice* device,unsigned int m
 			printf("UNRECOGNIZED CAPABILITY [%x]\n",BYTE(d,0));
 			if(off==0x0)break;
 		}
+	}
+	if(msi){
+		printf("USING MSI\n");
+		MSI_HANDLE_CAPABILITY(msi,device,maxintrs);
+	}else if(msix){
+		printf("USING MSI-X\n");
+		MSIX_HANDLE_CAPABILITY(msix,device,maxintrs);
+	}else{
+		printf("NEITHER MSI NOR MSI-X FOUND\n");
 	}
 	SetColor(0xff0000);
 }
@@ -210,12 +223,21 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 		reg_int[i].ERSTBA_low=(DWORD((uint64_t)event_ring_table,0)&(~0x3F))|1<<3;
 		reg_int[i].ERSTBA_high=DWORD((uint64_t)event_ring_table,1);
 		XHCI_WRITE_ERDP(&reg_int[i],(uint64_t)event_ring_addr,0);
+		printf("EVENT RING:\t%p\n",event_ring_table);
 	}
 	void* mmio=PCI_GetMMIO(device,pcibase)+usb.capabilities_pointer;
 	XHCI_HANDLE_CAPABILITIES(mmio,&usb,maxintrs);
 	printf("MMIO:\t%p\n",PCI_GetMMIO(device,pcibase)+(XHCI_EXTENDED_CAP_PTR(&config)<<2));
 
-	xhci_hub=(XHCI_HUB){&usb,&config,ports,reg_int,dcbaa,doorbell};
+	xhci_hub=(XHCI_HUB){.device=&usb,
+		.config=&config,
+		.ports=ports,
+		.ints=reg_int,
+		.dcbaa=dcbaa,
+		.doorbell=doorbell,
+		.flag=0,
+		.command_ring=xhci_hub.command_ring
+	};
 	IRQ_RegisterHandler(0xB,XHCI_INT);
 	
 	*XHCI_OP(XHCI_REG_DNCTRL)=0xFFFF;
@@ -226,8 +248,13 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 
 	XHCI_TRB noop=XHCI_CMD_NOOP();
 	XHCI_COMMAND(xhci_hub.command_ring,&noop);
+	XHCI_COMMAND(xhci_hub.command_ring,&noop);
 	doorbell[0]=0;
-	XHCI_PORT_RESET(0);
+	XHCI_COMMAND(xhci_hub.command_ring,&noop);
+	XHCI_COMMAND(xhci_hub.command_ring,&noop);
+	printf("COMMAND RING:\t%p\n",xhci_hub.command_ring);
+	FORI(maxports)
+		XHCI_PORT_RESET(i);
 	//int s=XHCI_SLOT_ENABLE();
 	//XHCI_SLOT_INITIALIZE(s);
 	SetColor(0xffffff);
@@ -254,6 +281,7 @@ void XHCI_ON_PORT_RESET(XHCI_TRB* trb){
 	int portid=BYTE(trb->int1,3);
 	//XHCI_TRB slot_en=XHCI_CMD_ENABLE_SLOT(0);
 	//XHCI_COMMAND(xhci_hub.command_ring,&slot_en);
+	printf("RESET PORT[%x]\n",portid);
 }
 void XHCI_ON_COMMAND_COMPLETE(XHCI_TRB* trb){
 	slot=BYTE(trb->def,3);
@@ -284,5 +312,5 @@ void XHCI_INT(registers* _r){
 	XHCI_WRITE_ERDP(&xhci_hub.ints[0],(uint64_t)(trb),1<<3);
 	//xhci_hub.flag=1;
 	xhci_hub.flag=trb_code;
-	xhci_hub.doorbell[0]=0;
+	//xhci_hub.doorbell[0]=0;
 }
