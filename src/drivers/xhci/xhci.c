@@ -100,9 +100,7 @@ void XHCI_HANDLE_CAPABILITIES(void* data,PCIGeneralDevice* device,unsigned int m
 		}else{
 			int off=BYTE(d,1);
 			data=(void*)(((uint64_t)data&(~0xFF))|off);
-#ifdef XHCI_DEBUG
 			printf("UNRECOGNIZED CAPABILITY [%x]\n",BYTE(d,0));
-#endif
 			if(off==0x0)break;
 		}
 	}
@@ -196,11 +194,11 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	unsigned int CONFIG=*XHCI_OP(XHCI_REG_CONFIG);
 #ifdef XHCI_DEBUG
 	*XHCI_OP(XHCI_REG_CONFIG)|=maxslots;
-	printf("MAX SLOTS:\t%x\n", maxslots);
 	printf("MAX INTRS:\t%x\n", maxintrs);
-	printf("SLOTS ENABLED:\t%x\n", BYTE(CONFIG,0));
 	//printf("SLOTS ENABLED:\t%x\n", BYTE(*XHCI_OP(XHCI_REG_CONFIG),0));
 #endif
+	printf("MAX SLOTS:\t%x\n", maxslots);
+	printf("SLOTS ENABLED:\t%x\n", BYTE(CONFIG,0));
 
 	void* dcbaa=XHCI_SetUpDCBAA(maxslots,pagesize,&config);
 	*XHCI_OP(XHCI_REG_DCBAAP)=(uint64_t)dcbaa;
@@ -292,9 +290,6 @@ void XHCI_ON_PORT_RESET(XHCI_TRB* trb){
 	XHCI_PORT_REG* reg=&xhci_hub.ports[portid-1];
 	int con=XHCI_PORT_CONNECTED(reg->PORTSC);
 	int en =XHCI_PORT_ENABLED(reg->PORTSC);
-	if(con){
-		reg->PORTSC|=XHCI_PORT_PR;
-	}
 	con=XHCI_PORT_CONNECTED(reg->PORTSC);
 	en =XHCI_PORT_ENABLED(reg->PORTSC);
 	printf("\tPORTSC CHANGED[%x]\tCON:%d\tEN:%d\tST:%d\n",
@@ -303,8 +298,8 @@ void XHCI_ON_PORT_RESET(XHCI_TRB* trb){
 			en,
 			XHCI_PORT_STATE(reg->PORTSC)
 		  );
-	//XHCI_TRB slot_en=XHCI_CMD_ENABLE_SLOT(0,1);
-	//XHCI_COMMAND(xhci_hub.command_ring,&slot_en);
+	XHCI_TRB slot_en=XHCI_CMD_ENABLE_SLOT(0,1);
+	XHCI_COMMAND(xhci_hub.command_ring,&slot_en);
 }
 void XHCI_ON_COMMAND_COMPLETE(XHCI_TRB* trb){
 	XHCI_TRB* ptr=((XHCI_TRB*)(COMBINE_DWORD((uint64_t)trb->int2, trb->int1)&(~0xF)));
@@ -316,7 +311,7 @@ void XHCI_ON_COMMAND_COMPLETE(XHCI_TRB* trb){
 			printf("\tNOOP EXECUTED WITH STATUS:\t%x\n",status);
 			break;
 		case XHCI_CMD_ENABLE_SLOT_CODE:
-			printf("\tENABLED SLOT[%x]\t%s\n",slot,status);
+			printf("\tENABLED SLOT[%x]\tWITH STATUS:\t%x\n",slot,status);
 			break;
 		default:
 			printf("\tCOMMAND COMPLETE[%x]\t%x->%s\tSTATUS:\t%x\n",
