@@ -138,7 +138,7 @@ void XHCI_SLOT_INITIALIZE(int slot,int port){
 	//endpoint->int2=4<<3|maxpacksize<<16|0<<8|3<<1;
 	endpoint->int3=1;
 }
-void XHCI_LOAD_CRCR(void* crcr){
+void XHCI_LOAD_CRCR(volatile void* crcr){
 	*XHCI_OP(XHCI_REG_CRCR)=DWORD((uint64_t)crcr|1,0);
 	*XHCI_OP(XHCI_REG_CRCR+0x4)=DWORD((uint64_t)crcr,1);
 }
@@ -205,15 +205,18 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	xhci_hub.command_ring[127].int3=0|(0<<22);//IGNORED FOR CMD TRB
 	xhci_hub.command_ring[127].def=(6<<10)|(1<<5);
 
-	uint64_t* command_ring_table=mallocAB(64*1024,64*1024,64*1024);
+	volatile uint64_t* command_ring_table=mallocAB(64*1024,64*1024,64*1024);
 
 	FORI(128){
-		command_ring_table[i]=(uint64_t)&xhci_hub.command_ring[i];
-		//command_ring_table[i]=0;
+		//command_ring_table[i]=(uint64_t)&xhci_hub.command_ring[i];
+		command_ring_table[i]=0;
 	}
 
-	//XHCI_LOAD_CRCR(&xhci_hub.command_ring[0]);
-	XHCI_LOAD_CRCR(command_ring_table);
+	XHCI_LOAD_CRCR(xhci_hub.command_ring);
+	//XHCI_LOAD_CRCR(0);
+	//XHCI_LOAD_CRCR(command_ring_table);
+	LOGVAL(xhci_hub.command_ring);
+	LOGVAL(command_ring_table);
 
 	//-------------//
 	FORI(1){
@@ -240,7 +243,6 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	xhci_hub.dcbaa=dcbaa,
 	xhci_hub.doorbell=doorbell,
 	xhci_hub.flag=0,
-	xhci_hub.command_ring=0;
 
 
 	IRQ_RegisterHandler(0xB,XHCI_INT);
