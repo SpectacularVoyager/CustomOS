@@ -267,9 +267,6 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	XHCI_TRB slot_en=XHCI_CMD_ENABLE_SLOT(0,1);
 	FORI(maxports)
 		XHCI_PORT_RESET(i);
-	XHCI_COMMAND(xhci_hub.command_ring,&slot_en);
-	XHCI_COMMAND(xhci_hub.command_ring,&slot_en);
-	XHCI_COMMAND(xhci_hub.command_ring,&slot_en);
 	XHCI_DOORBELL(0,0);
 #ifdef XHCI_DEBUG
 	for(int i=0;i<maxports;i++){
@@ -292,15 +289,22 @@ int CCS=1;
 
 void XHCI_ON_PORT_RESET(XHCI_TRB* trb){
 	int portid=BYTE(trb->int1,3);
-	//XHCI_TRB slot_en=XHCI_CMD_ENABLE_SLOT(0);
-	//XHCI_COMMAND(xhci_hub.command_ring,&slot_en);
 	XHCI_PORT_REG* reg=&xhci_hub.ports[portid-1];
+	int con=XHCI_PORT_CONNECTED(reg->PORTSC);
+	int en =XHCI_PORT_ENABLED(reg->PORTSC);
+	if(con){
+		reg->PORTSC|=XHCI_PORT_PR;
+	}
+	con=XHCI_PORT_CONNECTED(reg->PORTSC);
+	en =XHCI_PORT_ENABLED(reg->PORTSC);
 	printf("\tPORTSC CHANGED[%x]\tCON:%d\tEN:%d\tST:%d\n",
 			portid,
-			XHCI_PORT_CONNECTED(reg->PORTSC),
-			XHCI_PORT_ENABLED(reg->PORTSC),
+			con,
+			en,
 			XHCI_PORT_STATE(reg->PORTSC)
 		  );
+	//XHCI_TRB slot_en=XHCI_CMD_ENABLE_SLOT(0,1);
+	//XHCI_COMMAND(xhci_hub.command_ring,&slot_en);
 }
 void XHCI_ON_COMMAND_COMPLETE(XHCI_TRB* trb){
 	XHCI_TRB* ptr=((XHCI_TRB*)(COMBINE_DWORD((uint64_t)trb->int2, trb->int1)&(~0xF)));
@@ -309,7 +313,7 @@ void XHCI_ON_COMMAND_COMPLETE(XHCI_TRB* trb){
 	int slot=XHCI_TRB_SLOT(trb->def);
 	switch(trb_code){
 		case XHCI_CMD_NOOP_CODE:
-			printf("\tNOOP EXECUTED WITH STATUS:\t%s\n",status);
+			printf("\tNOOP EXECUTED WITH STATUS:\t%x\n",status);
 			break;
 		case XHCI_CMD_ENABLE_SLOT_CODE:
 			printf("\tENABLED SLOT[%x]\t%s\n",slot,status);
