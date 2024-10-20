@@ -138,6 +138,10 @@ void XHCI_SLOT_INITIALIZE(int slot,int port){
 	//endpoint->int2=4<<3|maxpacksize<<16|0<<8|3<<1;
 	endpoint->int3=1;
 }
+void XHCI_LOAD_CRCR(void* crcr){
+	*XHCI_OP(XHCI_REG_CRCR)=DWORD((uint64_t)crcr|1,0);
+	*XHCI_OP(XHCI_REG_CRCR+0x4)=DWORD((uint64_t)crcr,1);
+}
 int XHCI_INIT(PCI_device* device,void* pcibase){
 
 	SetColor(0xff0068);
@@ -193,22 +197,23 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	void* dcbaa=XHCI_SetUpDCBAA(maxslots,pagesize,&config);
 	*XHCI_OP(XHCI_REG_DCBAAP)=(uint64_t)dcbaa;
 
+
 	/** CRCR STUFF */
 	xhci_hub.command_ring=mallocAB(64*1024,64*1024,64*1024);
-	//NO OP CR TRB
-	//trb[0].int1=0;
-	//trb[0].int2=0;
-	//trb[0].int3=0;
-	//trb[0].def=1|(23<<16);
-
-	//LINK CR TRB
 	xhci_hub.command_ring[127].int1=DWORD((uint64_t)&xhci_hub.command_ring[0],0)&(~0xF);
 	xhci_hub.command_ring[127].int2=DWORD((uint64_t)&xhci_hub.command_ring[0],1);
 	xhci_hub.command_ring[127].int3=0|(0<<22);//IGNORED FOR CMD TRB
 	xhci_hub.command_ring[127].def=(6<<10)|(1<<5);
 
-	*XHCI_OP(XHCI_REG_CRCR)=DWORD((uint64_t)&xhci_hub.command_ring[0]|1,0);
-	*XHCI_OP(XHCI_REG_CRCR+0x4)=DWORD((uint64_t)&xhci_hub.command_ring[0],1);
+	uint64_t* command_ring_table=mallocAB(64*1024,64*1024,64*1024);
+
+	FORI(128){
+		command_ring_table[i]=(uint64_t)&xhci_hub.command_ring[i];
+		//command_ring_table[i]=0;
+	}
+
+	//XHCI_LOAD_CRCR(&xhci_hub.command_ring[0]);
+	XHCI_LOAD_CRCR(command_ring_table);
 
 	//-------------//
 	FORI(1){
@@ -228,16 +233,16 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	void* mmio=PCI_GetMMIO(device,pcibase)+usb.capabilities_pointer;
 	XHCI_HANDLE_CAPABILITIES(mmio,&usb,maxintrs);
 	printf("MMIO:\t%p\n",PCI_GetMMIO(device,pcibase)+(XHCI_EXTENDED_CAP_PTR(&config)<<2));
+	xhci_hub.device=&usb;
+	xhci_hub.config=&config,
+	xhci_hub.ports=ports,
+	xhci_hub.ints=reg_int,
+	xhci_hub.dcbaa=dcbaa,
+	xhci_hub.doorbell=doorbell,
+	xhci_hub.flag=0,
+	xhci_hub.command_ring=0;
 
-	xhci_hub=(XHCI_HUB){.device=&usb,
-		.config=&config,
-		.ports=ports,
-		.ints=reg_int,
-		.dcbaa=dcbaa,
-		.doorbell=doorbell,
-		.flag=0,
-		.command_ring=xhci_hub.command_ring
-	};
+
 	IRQ_RegisterHandler(0xB,XHCI_INT);
 	
 	*XHCI_OP(XHCI_REG_DNCTRL)=0xFFFF;
@@ -252,14 +257,15 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	doorbell[0]=0;
 	XHCI_COMMAND(xhci_hub.command_ring,&noop);
 	XHCI_COMMAND(xhci_hub.command_ring,&noop);
-	printf("COMMAND RING:\t%p\n",xhci_hub.command_ring);
-	FORI(maxports)
-		XHCI_PORT_RESET(i);
+	printf("COMMAND RING?:\t%p\n",xhci_hub.command_ring);
+	
 	//int s=XHCI_SLOT_ENABLE();
 	//XHCI_SLOT_INITIALIZE(s);
 	SetColor(0xffffff);
 	doorbell[0]=0;
 
+	FORI(maxports)
+		XHCI_PORT_RESET(i);
 	for(int i=0;i<maxports;i++){
 		if(i%4==0)printf("\n");
 		XHCI_PRINT_PORT(i,&ports[i]);
