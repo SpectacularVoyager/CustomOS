@@ -1,3 +1,4 @@
+#pragma once
 #include "stdint.h"
 #include "interrupts/idt.h"
 #include "interrupts/irq.h"
@@ -25,7 +26,6 @@
 #define XHCI_PORT_OFF		(0x400)
 
 #define XHCI_RT_IMAN_IE	(1<<0x1)
-
 #define XHCI_MAX_PORTS(config)			BYTE((config)->HCSParams1,3)
 #define XHCI_MAX_SLOTS(config)			BYTE((config)->HCSParams1,0)
 #define XHCI_MAX_INTRS(config)			(((config)->HCSParams1>>8)&0x3FF)
@@ -66,6 +66,8 @@
 #define XHCI_NO_INT 0x1000
 #define WAIT_FOR_INT(xhci_hub) xhci_hub.flag=XHCI_NO_INT;\
 							while(xhci_hub.flag!=XHCI_NO_INT);
+
+extern char* XHCI_CMD_CODE[64];
 typedef struct{
 	uint32_t IMAN;
 	uint32_t IMOD;
@@ -169,3 +171,4 @@ typedef union{
 }__attribute__((packed)) XHCI_CONTEXT;
 
 void XHCI_PRINT_PORT(int i,XHCI_PORT_REG* reg);
+

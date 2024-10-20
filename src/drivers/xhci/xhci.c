@@ -58,7 +58,7 @@ XHCI_HUB xhci_hub;
 
 void XHCI_PORT_RESET(int port){
 	xhci_hub.ports[port].PORTSC=(xhci_hub.ports[port].PORTSC&(~XHCI_PORT_PED))|XHCI_PORT_PR;
-	WAIT_FOR_INT(xhci_hub);
+	//WAIT_FOR_INT(xhci_hub);
 }
 void __attribute__((optimize("O0"))) XHCI_WRITE_ERDP(XHCI_INT_RUNTIME_REG* erdp,uint64_t address,int flags){
 	erdp->ERDP_low=(DWORD(address,0)&(~0xF))|flags;
@@ -118,14 +118,14 @@ void XHCI_HANDLE_CAPABILITIES(void* data,PCIGeneralDevice* device,unsigned int m
 	SetColor(0xff0000);
 }
 int slot;
-//int XHCI_SLOT_ENABLE(){
-//	XHCI_TRB slot_en=XHCI_CMD_ENABLE_SLOT(0);
-//	XHCI_COMMAND(xhci_hub.command_ring,&slot_en);
-//	xhci_hub.doorbell[0]=0;
-//	WAIT_FOR_INT(xhci_hub);
-//	printf("ALLOCATED SLOT %x\n",slot);
-//	return slot;
-//}
+int XHCI_SLOT_ENABLE(){
+	XHCI_TRB slot_en=XHCI_CMD_ENABLE_SLOT(0,1);
+	XHCI_COMMAND(xhci_hub.command_ring,&slot_en);
+	xhci_hub.doorbell[0]=0;
+	WAIT_FOR_INT(xhci_hub);
+	printf("ALLOCATED SLOT %x\n",slot);
+	return slot;
+}
 void XHCI_SLOT_INITIALIZE(int slot,int port){
 	int cz;
 	if(XHCI_CONTEXT_SIZE(xhci_hub.config)==0){
@@ -266,15 +266,13 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	//XHCI_COMMAND(xhci_hub.command_ring,&noop);
 	//XHCI_COMMAND(xhci_hub.command_ring,&noop);
 	
-	LOGVAL(xhci_hub.command_ring);
-	LOGVAL(event_ring_table);
 	//int s=XHCI_SLOT_ENABLE();
 	//XHCI_SLOT_INITIALIZE(s);
 	SetColor(0xffffff);
 	//doorbell[0]=0;
 
-	//FORI(maxports)
-	//	XHCI_PORT_RESET(i);
+	FORI(maxports)
+		XHCI_PORT_RESET(i);
 #ifdef XHCI_DEBUG
 	for(int i=0;i<maxports;i++){
 		if(i%4==0)printf("\n");
@@ -298,12 +296,23 @@ void XHCI_ON_PORT_RESET(XHCI_TRB* trb){
 	int portid=BYTE(trb->int1,3);
 	//XHCI_TRB slot_en=XHCI_CMD_ENABLE_SLOT(0);
 	//XHCI_COMMAND(xhci_hub.command_ring,&slot_en);
-	printf("RESET PORT[%x]\n",portid);
+	XHCI_PORT_REG* reg=&xhci_hub.ports[portid-1];
+	printf("\tPORTSC CHANGED[%x]\tCON:%d\tEN:%d\tST:%d\n",
+			portid,
+			XHCI_PORT_CONNECTED(reg->PORTSC),
+			XHCI_PORT_ENABLED(reg->PORTSC),
+			XHCI_PORT_STATE(reg->PORTSC)
+		  );
 }
 void XHCI_ON_COMMAND_COMPLETE(XHCI_TRB* trb){
 	slot=BYTE(trb->def,3);
 	XHCI_TRB* ptr=(XHCI_TRB*)(COMBINE_DWORD((uint64_t)trb->int2, trb->int1)&(~0x3F));
-	printf("PTR:\t%p\t%x\n",ptr,ptr->def);
+	printf("\tCOMMAND COMPLETE[%x]\t%x->%s\tSTATUS:\t%x\n",
+			XHCI_TRB_TYPE(trb->def),
+			XHCI_TRB_TYPE(ptr->def),
+			XHCI_CMD_CODE[XHCI_TRB_TYPE(ptr->def)],
+			BYTE(trb->int3,3)
+			);
 }
 void XHCI_PROC_EVENT(XHCI_TRB* trb){
 	int trb_code=XHCI_TRB_TYPE(trb->def);
@@ -315,15 +324,14 @@ void XHCI_PROC_EVENT(XHCI_TRB* trb){
 			XHCI_ON_COMMAND_COMPLETE(trb);
 			break;
 		default:
+			printf("\tXHCI_TRB\t%x\n",XHCI_TRB_TYPE(trb[0].def));
 			break;
 	}
-	printf("\tXHCI_TRB\t%x\n",XHCI_TRB_TYPE(trb[0].def));
 }
 
 // ERROR: FIX BUFFER OVERFLOW IN ERDP
 void XHCI_INT(registers* _r){
 	XHCI_TRB* trb=(void*)(COMBINE_DWORD(xhci_hub.ints[0].ERDP_high, xhci_hub.ints[0].ERDP_low)&(~0xF));
-	printf("INT\t%p\n",trb);
 	int trb_code=XHCI_TRB_TYPE(trb->def);
 	while(XHCI_TRB_TYPE(trb->def)!=0&&XHCI_TRB_CYCLE(trb->def)==CCS){
 		XHCI_PROC_EVENT(trb);
@@ -331,5 +339,71 @@ void XHCI_INT(registers* _r){
 	}
 	XHCI_WRITE_ERDP(&xhci_hub.ints[0],(uint64_t)(trb),1<<3);
 	xhci_hub.flag=trb_code;
-	//xhci_hub.doorbell[0]=0;
+	xhci_hub.doorbell[0]=0;
 }
+char* XHCI_CMD_CODE[64]={
+	"Reserved",
+	"Normal",
+	"Setup Stage",
+	"Data Stage",
+	"Status Stage",
+	"Isoch",
+	"Link",
+	"Event Data",
+	"No-Op",
+	"Enable Slot Command",
+	"Allowed 10 Disable Slot Command",
+	"Address Device Command",
+	"Configure Endpoint Command",
+	"Evaluate Context Command",
+	"Reset Endpoint Command",
+	"Stop Endpoint Command",
+	"Set TR Dequeue Pointer Command",
+	"Reset Device Command",
+	"Force Event Command(Optional)",
+	"Negotiate Bandwidth Command (Optional)",
+	"Set Latency Tolerance Value Command (Optional)",
+	"Get Port Bandwidth Command (Optional)",
+	"Force Header Command",
+	"No Op Command",
+	"Get Extended Property Command (Optional)",
+	"Set Extended Property Command (Optional)",
+	"Reserved",
+	"Reserved",
+	"Reserved",
+	"Reserved",
+	"Reserved",
+	"Reserved",
+	"Transfer Event",
+	"Command Completion Event",
+	"Port Status Change Event",
+	"Bandwidth Request Event (Optional)",
+	"Doorbell Event (Optional)",
+	"Host Controller Event",
+	"Device Notification Event",
+	"MFINDEX Wrap Event",
+	"Reserved",
+	"Reserved",
+	"Reserved",
+	"Reserved",
+	"Reserved",
+	"Reserved",
+	"Reserved",
+	"Reserved",
+	"Vendor Defined",
+	"Vendor Defined",
+	"Vendor Defined",
+	"Vendor Defined",
+	"Vendor Defined",
+	"Vendor Defined",
+	"Vendor Defined",
+	"Vendor Defined",
+	"Vendor Defined",
+	"Vendor Defined",
+	"Vendor Defined",
+	"Vendor Defined",
+	"Vendor Defined",
+	"Vendor Defined",
+	"Vendor Defined",
+	"Vendor Defined",
+};
