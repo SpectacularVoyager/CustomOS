@@ -57,8 +57,8 @@
 
 #define XHCI_CMD_NOOP_CODE			23
 #define XHCI_CMD_ENABLE_SLOT_CODE	9
-#define XHCI_CMD_NOOP() ((XHCI_TRB){.int1=0,.int2=0,.int3=0,.def=XHCI_CMD_NOOP_CODE<<10})
-#define XHCI_CMD_ENABLE_SLOT(type) ((XHCI_TRB){.int1=0,.int2=0,.int3=0,.def=XHCI_CMD_ENABLE_SLOT_CODE<<10|type<<16})
+#define XHCI_CMD_NOOP(C) ((XHCI_TRB){.int1=0,.int2=0,.int3=0,.def=XHCI_CMD_NOOP_CODE<<10|((C)&0x1)})
+#define XHCI_CMD_ENABLE_SLOT(type,C) ((XHCI_TRB){.int1=0,.int2=0,.int3=0,.def=XHCI_CMD_ENABLE_SLOT_CODE<<10|type<<16|((C)&0x1)})
 
 #define XHCI_TRB_CODE_PORT_STATUS_CHANGE	(0x22)
 #define XHCI_TRB_CODE_COMMAND_COMPLETED		(0x21)

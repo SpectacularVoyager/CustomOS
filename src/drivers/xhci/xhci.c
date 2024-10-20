@@ -59,7 +59,7 @@ void XHCI_PORT_RESET(int port){
 	xhci_hub.ports[port].PORTSC=(xhci_hub.ports[port].PORTSC&(~XHCI_PORT_PED))|XHCI_PORT_PR;
 	WAIT_FOR_INT(xhci_hub);
 }
-void XHCI_WRITE_ERDP(XHCI_INT_RUNTIME_REG* erdp,uint64_t address,int flags){
+void __attribute__((optimize("O0"))) XHCI_WRITE_ERDP(XHCI_INT_RUNTIME_REG* erdp,uint64_t address,int flags){
 	erdp->ERDP_low=(DWORD(address,0)&(~0xF))|flags;
 	erdp->ERDP_high=DWORD(address,1);
 }
@@ -111,14 +111,14 @@ void XHCI_HANDLE_CAPABILITIES(void* data,PCIGeneralDevice* device,unsigned int m
 	SetColor(0xff0000);
 }
 int slot;
-int XHCI_SLOT_ENABLE(){
-	XHCI_TRB slot_en=XHCI_CMD_ENABLE_SLOT(0);
-	XHCI_COMMAND(xhci_hub.command_ring,&slot_en);
-	xhci_hub.doorbell[0]=0;
-	WAIT_FOR_INT(xhci_hub);
-	printf("ALLOCATED SLOT %x\n",slot);
-	return slot;
-}
+//int XHCI_SLOT_ENABLE(){
+//	XHCI_TRB slot_en=XHCI_CMD_ENABLE_SLOT(0);
+//	XHCI_COMMAND(xhci_hub.command_ring,&slot_en);
+//	xhci_hub.doorbell[0]=0;
+//	WAIT_FOR_INT(xhci_hub);
+//	printf("ALLOCATED SLOT %x\n",slot);
+//	return slot;
+//}
 void XHCI_SLOT_INITIALIZE(int slot,int port){
 	int cz;
 	if(XHCI_CONTEXT_SIZE(xhci_hub.config)==0){
@@ -138,8 +138,8 @@ void XHCI_SLOT_INITIALIZE(int slot,int port){
 	//endpoint->int2=4<<3|maxpacksize<<16|0<<8|3<<1;
 	endpoint->int3=1;
 }
-void __attribute__((optimize("O0")))XHCI_LOAD_CRCR(volatile void* crcr){
-	*XHCI_OP(XHCI_REG_CRCR)=DWORD((uint64_t)crcr|1,0);
+void __attribute__((optimize("O0"))) XHCI_LOAD_CRCR(volatile void* crcr,unsigned int flags){
+	*XHCI_OP(XHCI_REG_CRCR)=DWORD(((uint64_t)crcr&(~0x3F))|flags,0);
 	*XHCI_OP(XHCI_REG_CRCR+0x4)=DWORD((uint64_t)crcr,1);
 }
 int XHCI_INIT(PCI_device* device,void* pcibase){
@@ -198,6 +198,12 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	*XHCI_OP(XHCI_REG_DCBAAP)=(uint64_t)dcbaa;
 
 
+	FORI(128){
+		xhci_hub.command_ring[i].int1=0;
+		xhci_hub.command_ring[i].int2=0;
+		xhci_hub.command_ring[i].int3=0;
+		xhci_hub.command_ring[i].def =0;
+	}
 	/** CRCR STUFF */
 	xhci_hub.command_ring=mallocAB(64*1024,64*1024,64*1024);
 	xhci_hub.command_ring[127].int1=DWORD((uint64_t)&xhci_hub.command_ring[0],0)&(~0xF);
@@ -207,11 +213,12 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 
 
 
-	XHCI_LOAD_CRCR(xhci_hub.command_ring);
+	XHCI_LOAD_CRCR(xhci_hub.command_ring,1);
 
 	//-------------//
 	uint64_t* event_ring_table=mallocAB(4096,4096,4096);
 	void* event_ring_addr=malloc(16*XHCI_EVENT_RING_SIZE);
+	memset(event_ring_addr,0,16*XHCI_EVENT_RING_SIZE);
 
 	event_ring_table[0]=(uint64_t)event_ring_addr;
 	event_ring_table[1]=4096;
@@ -243,18 +250,17 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	*XHCI_OP(XHCI_REG_USBCMD)|=XHCI_USBCMD_MF_WRAP;
 	*XHCI_OP(XHCI_REG_USBCMD)|=XHCI_USBCMD_RS;
 
-	XHCI_TRB noop=XHCI_CMD_NOOP();
-	XHCI_COMMAND(xhci_hub.command_ring,&noop);
-	XHCI_COMMAND(xhci_hub.command_ring,&noop);
-	doorbell[0]=0;
-	XHCI_COMMAND(xhci_hub.command_ring,&noop);
-	XHCI_COMMAND(xhci_hub.command_ring,&noop);
-	printf("COMMAND RING?:\t%p\n",xhci_hub.command_ring);
+	XHCI_TRB noop=XHCI_CMD_NOOP(1);
+	//XHCI_COMMAND(xhci_hub.command_ring,&noop);
+	//XHCI_COMMAND(xhci_hub.command_ring,&noop);
+	//doorbell[0]=0;
+	//XHCI_COMMAND(xhci_hub.command_ring,&noop);
+	//XHCI_COMMAND(xhci_hub.command_ring,&noop);
 	
 	//int s=XHCI_SLOT_ENABLE();
 	//XHCI_SLOT_INITIALIZE(s);
 	SetColor(0xffffff);
-	doorbell[0]=0;
+	//doorbell[0]=0;
 
 	FORI(maxports)
 		XHCI_PORT_RESET(i);
@@ -296,19 +302,19 @@ void XHCI_PROC_EVENT(XHCI_TRB* trb){
 		default:
 			break;
 	}
-	printf("XHCI_TRB\t%x\n",XHCI_TRB_TYPE(trb[0].def));
+	printf("\tXHCI_TRB\t%x\n",XHCI_TRB_TYPE(trb[0].def));
 }
 
 // ERROR: FIX BUFFER OVERFLOW IN ERDP
 void XHCI_INT(registers* _r){
 	XHCI_TRB* trb=(void*)(COMBINE_DWORD(xhci_hub.ints[0].ERDP_high, xhci_hub.ints[0].ERDP_low)&(~0xF));
+	printf("INT\t%p\n",trb);
 	int trb_code=XHCI_TRB_TYPE(trb->def);
 	while(XHCI_TRB_TYPE(trb->def)!=0&&XHCI_TRB_CYCLE(trb->def)==CCS){
 		XHCI_PROC_EVENT(trb);
 		trb++;
 	}
 	XHCI_WRITE_ERDP(&xhci_hub.ints[0],(uint64_t)(trb),1<<3);
-	//xhci_hub.flag=1;
 	xhci_hub.flag=trb_code;
 	//xhci_hub.doorbell[0]=0;
 }
