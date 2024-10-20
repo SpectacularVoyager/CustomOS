@@ -117,14 +117,13 @@ void XHCI_HANDLE_CAPABILITIES(void* data,PCIGeneralDevice* device,unsigned int m
 	}
 	SetColor(0xff0000);
 }
-int slot;
-int XHCI_SLOT_ENABLE(){
-	XHCI_TRB slot_en=XHCI_CMD_ENABLE_SLOT(0,1);
+int XHCI_SLOT_ENABLE(int type,int cycle){
+	XHCI_TRB slot_en=XHCI_CMD_ENABLE_SLOT(type,cycle);
 	XHCI_COMMAND(xhci_hub.command_ring,&slot_en);
-	xhci_hub.doorbell[0]=0;
-	WAIT_FOR_INT(xhci_hub);
-	printf("ALLOCATED SLOT %x\n",slot);
-	return slot;
+	return 1;
+}
+void XHCI_DOORBELL(int slot,int val){
+	xhci_hub.doorbell[slot]=val;
 }
 void XHCI_SLOT_INITIALIZE(int slot,int port){
 	int cz;
@@ -262,17 +261,16 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	XHCI_TRB noop=XHCI_CMD_NOOP(1);
 	XHCI_COMMAND(xhci_hub.command_ring,&noop);
 	XHCI_COMMAND(xhci_hub.command_ring,&noop);
-	doorbell[0]=0;
-	//XHCI_COMMAND(xhci_hub.command_ring,&noop);
-	//XHCI_COMMAND(xhci_hub.command_ring,&noop);
-	
-	//int s=XHCI_SLOT_ENABLE();
-	//XHCI_SLOT_INITIALIZE(s);
+	XHCI_DOORBELL(0,0);
 	SetColor(0xffffff);
-	//doorbell[0]=0;
 
+	XHCI_TRB slot_en=XHCI_CMD_ENABLE_SLOT(0,1);
 	FORI(maxports)
 		XHCI_PORT_RESET(i);
+	XHCI_COMMAND(xhci_hub.command_ring,&slot_en);
+	XHCI_COMMAND(xhci_hub.command_ring,&slot_en);
+	XHCI_COMMAND(xhci_hub.command_ring,&slot_en);
+	XHCI_DOORBELL(0,0);
 #ifdef XHCI_DEBUG
 	for(int i=0;i<maxports;i++){
 		if(i%4==0)printf("\n");
@@ -305,14 +303,26 @@ void XHCI_ON_PORT_RESET(XHCI_TRB* trb){
 		  );
 }
 void XHCI_ON_COMMAND_COMPLETE(XHCI_TRB* trb){
-	slot=BYTE(trb->def,3);
-	XHCI_TRB* ptr=(XHCI_TRB*)(COMBINE_DWORD((uint64_t)trb->int2, trb->int1)&(~0x3F));
-	printf("\tCOMMAND COMPLETE[%x]\t%x->%s\tSTATUS:\t%x\n",
-			XHCI_TRB_TYPE(trb->def),
-			XHCI_TRB_TYPE(ptr->def),
-			XHCI_CMD_CODE[XHCI_TRB_TYPE(ptr->def)],
-			BYTE(trb->int3,3)
-			);
+	XHCI_TRB* ptr=((XHCI_TRB*)(COMBINE_DWORD((uint64_t)trb->int2, trb->int1)&(~0xF)));
+	int trb_code=XHCI_TRB_TYPE(ptr->def);
+	int status=BYTE(trb->int3,3);
+	int slot=XHCI_TRB_SLOT(trb->def);
+	switch(trb_code){
+		case XHCI_CMD_NOOP_CODE:
+			printf("\tNOOP EXECUTED WITH STATUS:\t%s\n",status);
+			break;
+		case XHCI_CMD_ENABLE_SLOT_CODE:
+			printf("\tENABLED SLOT[%x]\t%s\n",slot,status);
+			break;
+		default:
+			printf("\tCOMMAND COMPLETE[%x]\t%x->%s\tSTATUS:\t%x\n",
+					XHCI_TRB_TYPE(trb->def),
+					trb_code,
+					XHCI_CMD_CODE[XHCI_TRB_TYPE(ptr->def)],
+					status
+				  );
+			break;
+	}
 }
 void XHCI_PROC_EVENT(XHCI_TRB* trb){
 	int trb_code=XHCI_TRB_TYPE(trb->def);
@@ -339,7 +349,7 @@ void XHCI_INT(registers* _r){
 	}
 	XHCI_WRITE_ERDP(&xhci_hub.ints[0],(uint64_t)(trb),1<<3);
 	xhci_hub.flag=trb_code;
-	xhci_hub.doorbell[0]=0;
+	XHCI_DOORBELL(0,0);
 }
 char* XHCI_CMD_CODE[64]={
 	"Reserved",

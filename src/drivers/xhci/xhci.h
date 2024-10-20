@@ -37,6 +37,7 @@
 #define XHCI_CONTEXT_SIZE(config)		(((config)->HCCParams1>>2)&0x1)
 
 #define XHCI_TRB_TYPE(x)			(((x)>>10)&0x3F)
+#define XHCI_TRB_SLOT(x)			BYTE(x,3)
 #define XHCI_TRB_CYCLE(x)			((x)&0x1)
 
 #define XHCI_PORT_CONNECTED(PORTSC)	BIT(PORTSC,0)
