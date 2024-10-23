@@ -7,7 +7,7 @@
 #include <stdlib/stdio.h>
 #include <stdint.h>
 
-
+//#define APIC_DEBUG
 volatile uint8_t* localAPICaddr;
 volatile uint64_t ioapic_base=0xfec00000;
 #define LAPIC_GET(x) ((uint32_t*)(localAPICaddr+x))
@@ -59,23 +59,29 @@ int APIC_INIT(MADT* madt){
 	void* record=madt->records;
 
 	volatile uint64_t addr=RDMSR(IA32_APIC_BASE_MSR);
+#ifdef APIC_DEBUG
 	printf(INFO"RDMSR ADDR:\t%p\n",addr);
+#endif
 	if(!(BIT(addr,11))){
 		printf(ERROR"APIC NOT ENABLED\n",addr);
 	}
 
 	APIC_IO_RECORD* ioapic=0;
 
+#ifdef APIC_DEBUG
 	printf(INFO"MEM\t%p\n",localAPICaddr);
+#endif
 	MemoryRemap((uint64_t)memory,0xfee00000,1<<4);
 	localAPICaddr=memory;
 
 	*LAPIC_GET(APIC_LAPIC_SPURIOUS_INTERRUPTS)|=(1<<8);
 	*LAPIC_GET(APIC_LAPIC_SPURIOUS_INTERRUPTS)&=~(0xf);
 
+#ifdef APIC_DEBUG
 	printf(INFO"LAPIC ID\t%x\n" ,*LAPIC_GET(APIC_LAPIC_ID));
 	printf(INFO"LAPIC VERSION\t%x\n",*LAPIC_GET(APIC_LAPIC_VERSION));
 	printf(INFO"LAPIC SPURIOUS\t%x\n",*LAPIC_GET(APIC_LAPIC_SPURIOUS_INTERRUPTS));
+#endif
 	while(record<((void*)madt)+n){
 		APIC_RECORD_UNION* apic_record=((APIC_RECORD_UNION*)record);
 		//printf(INFO"APIC RECORD:%x\n",apic_record->base.type);
@@ -96,9 +102,11 @@ int APIC_INIT(MADT* madt){
 	MemoryRemap((uint64_t)lapic_memory,ioapic->ioapic_addr,1<<4);
 	ioapic_base=(uint64_t)lapic_memory;
 
+#ifdef APIC_DEBUG
 	printf(INFO"IOAPIC_VERSION:\t%x\n",IOAPIC_READ(0x1));
 	printf(INFO"IRQ 0:\t%p\n",IOAPIC_READIRQ(0));
 	printf(INFO"IRQ 1:\t%p\n",IOAPIC_READIRQ(1));
+#endif
 	
 	IOAPIC_WRITEIRQ(0x1,0x21);
 	//RTC

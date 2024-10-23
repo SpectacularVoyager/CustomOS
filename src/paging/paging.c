@@ -9,6 +9,9 @@ unsigned int pageCount=0;
 
 #define TABLE(x) ((uint64_t*)((uint64_t)x&(~0xff)))
 #define PAGE(x) ((uint64_t*)((uint64_t)x&(~0x1fffff)))
+inline void invlpg(uint64_t address){
+	asm volatile("invlpg (%0)" ::"r" (address) : "memory");
+}
 void PageSetup(uint64_t fbindex){
 	p3_table[0]=(uint64_t)p2_table|0b11;
 }
@@ -24,10 +27,17 @@ void AllocatePage(int p,unsigned long address,unsigned int flags){
 		ptr[i]=(PAGE_P2_SIZE*i+address)|0b10000011L|flags;
 	}
 }
+void UnmapPage(uint64_t page){
+	int p=page/PAGE_WIDTH;
+	int offset=(page%PAGE_WIDTH)/PAGE_P2_SIZE;
+	uint64_t* table=TABLE(p3_table[p]);
+	table[offset]=0x0;
+	invlpg(page);
+}
 void PageRemap(int p,uint64_t offset,uint64_t address,int flags){
 	uint64_t* table=TABLE(p3_table[p]);
 	table[offset]=address|0b10000011L|flags;
-	asm volatile("invlpg (%0)" ::"r" (address) : "memory");
+	invlpg(address);
 }
 void MemoryRemap(uint64_t memory,uint64_t address,int flags){
 	int p=memory/PAGE_WIDTH;

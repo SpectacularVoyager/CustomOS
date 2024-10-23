@@ -1,7 +1,7 @@
 # CUSTOM OS
 
 ## TODO
-- MSI Support for XHCI(Real Hardware BS)
+- GET TYPE FOR SLOT ENABLE
 - Get Keyboard Input
 - Higher Half Kernel
 - Better Malloc

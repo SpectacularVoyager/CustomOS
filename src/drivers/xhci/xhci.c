@@ -75,11 +75,14 @@ inline void XHCI_COMMAND(volatile XHCI_TRB* command_ring,XHCI_TRB* ptr){
 }
 void XHCI_HANDLE_CAPABILITIES(void* data,PCIGeneralDevice* device,unsigned int maxintrs){
 	SetColor(0x13fc03);
-	printf("CAP ADDRESS:\t%p\n",data);
 	void* msix=0;
 	void* msi=0;
 	while(1){
 		uint32_t d=U32(data);
+		if(BYTE(d,0)==0||BYTE(d,0)==0xFF) {
+			printf("NO CAPABILITIES FOUND\n");
+			return;
+		}
 		if(BYTE(d,0)==MSI_X_CAP_SIG){
 #ifdef XHCI_DEBUG
 			printf("MSI-X DETECTED\t ENABLED=%x\n",BIT(WORD(d,1),MSI_X_ENABLED));
@@ -113,6 +116,37 @@ void XHCI_HANDLE_CAPABILITIES(void* data,PCIGeneralDevice* device,unsigned int m
 	}else{
 		printf("NEITHER MSI NOR MSI-X FOUND\n");
 	}
+}
+void XHCI_HANDLE_EXTENDED_CAPABILITIES(XHCI_HUB* xhci_hub,void* data){
+	void* supportedprotocols[10];	
+	int spn=0;
+	while(1){
+		uint32_t d=U32(data);
+		printf("DATA\t%p\t%x\n",data,d);
+		int off=BYTE(d,1);
+		if(BYTE(d,0)==0||BYTE(d,0)==0xFF) {
+			printf("NO EXTENDED CAPABILITIES FOUND\n");
+			return;
+		}
+		if(BYTE(d,0)==XHCI_CAP_SUPPORTED_PROTOCOL){
+			printf("SUPPORTED VALUES FOUND\n");
+			supportedprotocols[spn]=data;
+			spn++;
+			XHCI_SUPPORTED_PROTOCOL* proto=data;
+			printf("SLOT:\t%x\n",XHCI_SUPPORTED_PROTOCOL_SLOT_TYPE(proto));
+			// DO STUFF
+		}else{
+			printf("UNRECOGNIZED EXTENDED CAPABILITY [%x]\n",BYTE(d,0));
+		}
+		data=(void*)(((uint64_t)data&(~0xFF))|off<<2);
+		if(off==0x0)break;
+	}
+	void** supportedprotocolm=malloc(sizeof(void*)*spn);
+	FORI(spn){
+		supportedprotocolm[i]=supportedprotocols[i];
+	}
+	xhci_hub->SupportedProtocols.n=spn;
+	xhci_hub->SupportedProtocols.data=supportedprotocolm;
 	SetColor(0xff0000);
 }
 int XHCI_SLOT_ENABLE(int type,int cycle){
@@ -183,6 +217,8 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	printf("DBOFF:\t%x\n",config.DBOFF);
 	printf("CONFIG:\t%x\n", XHCI_OP(XHCI_REG_CONFIG));
 #endif
+	printf("HCCPARAMS1:\t%x\n",config.HCCParams1);
+	printf("VERSION:\t%x\n",config.HCIVersion);
 	//NOTE WAIT FOR CNR IN XHCI_USBSTS
 	while(BIT(*XHCI_OP(XHCI_REG_USBSTS),XHCI_USBSTS_CNR)!=0);
 	SetColor(0xff0000);
@@ -191,9 +227,9 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	unsigned int maxslots=XHCI_MAX_SLOTS(&config);
 	unsigned int maxintrs=XHCI_MAX_INTRS(&config);
 	unsigned int maxports=XHCI_MAX_PORTS(&config);
+	//*XHCI_OP(XHCI_REG_CONFIG)|=8;
 	unsigned int CONFIG=*XHCI_OP(XHCI_REG_CONFIG);
 #ifdef XHCI_DEBUG
-	*XHCI_OP(XHCI_REG_CONFIG)|=maxslots;
 	printf("MAX INTRS:\t%x\n", maxintrs);
 	//printf("SLOTS ENABLED:\t%x\n", BYTE(*XHCI_OP(XHCI_REG_CONFIG),0));
 #endif
@@ -237,7 +273,25 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	XHCI_WRITE_ERDP(&reg_int[0],(uint64_t)event_ring_addr,0);
 	//-------------//
 	void* mmio=PCI_GetMMIO(device,pcibase)+usb.capabilities_pointer;
+	void* extended_cap=(void*)((usb.BAR[0]&(~0xF))+(XHCI_EXTENDED_CAP_PTR(&config)<<2));
 	XHCI_HANDLE_CAPABILITIES(mmio,&usb,maxintrs);
+	XHCI_HANDLE_EXTENDED_CAPABILITIES(&xhci_hub,extended_cap);
+	
+	volatile XHCI_SUPPORTED_PROTOCOL* proto=0;
+	//FORI(xhci_hub.SupportedProtocols.n){
+	//	XHCI_SUPPORTED_PROTOCOL* _proto=((XHCI_SUPPORTED_PROTOCOL**)xhci_hub.SupportedProtocols.data)[i];
+	//	if(XHCI_SUPPORTED_PROTOCOL_VERSION(_proto)==config.HCIVersion){
+	//		proto=_proto;
+	//	}
+	//	printf("PROTO:\t%x\n",_proto->int1);
+	//	LOGVAL(config.HCIVersion);
+	//}
+	proto=((XHCI_SUPPORTED_PROTOCOL**)xhci_hub.SupportedProtocols.data)[0];
+	//printf("proto:\t%x\n",proto->int1);
+	//if(proto){
+	//	printf("PROTO SLOT TYPE:\t%x\n",XHCI_SUPPORTED_PROTOCOL_SLOT_TYPE(proto));
+	//}
+
 	xhci_hub.device=&usb;
 	xhci_hub.config=&config,
 	xhci_hub.ports=ports,
@@ -257,14 +311,16 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	*XHCI_OP(XHCI_REG_USBCMD)|=XHCI_USBCMD_RS;
 
 	XHCI_TRB noop=XHCI_CMD_NOOP(1);
+	XHCI_TRB slot_en=XHCI_CMD_ENABLE_SLOT(0,1);
 	XHCI_COMMAND(xhci_hub.command_ring,&noop);
 	XHCI_COMMAND(xhci_hub.command_ring,&noop);
+	XHCI_COMMAND(xhci_hub.command_ring,&slot_en);
 	XHCI_DOORBELL(0,0);
 	SetColor(0xffffff);
 
-	XHCI_TRB slot_en=XHCI_CMD_ENABLE_SLOT(0,1);
-	FORI(maxports)
-		XHCI_PORT_RESET(i);
+	//FORI(maxports)
+		//XHCI_PORT_RESET(i);
+	XHCI_COMMAND(xhci_hub.command_ring,&noop);
 	XHCI_DOORBELL(0,0);
 #ifdef XHCI_DEBUG
 	for(int i=0;i<maxports;i++){

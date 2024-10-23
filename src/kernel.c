@@ -49,6 +49,7 @@ void graphicsStuff(MULTIBOOT_HEADERS headers){
 	struct multiboot_tag_framebuffer* fb=(struct multiboot_tag_framebuffer*)headers.fb;
 	unsigned long addr=fb->common.framebuffer_addr;
 	unsigned long page=addr/PAGE_WIDTH;
+
 	AllocatePage(page,page*PAGE_WIDTH,0x10);
 	AllocatePage(1,1L*PAGE_WIDTH,0x10);
 	AllocatePage(2,2L*PAGE_WIDTH,0x10);

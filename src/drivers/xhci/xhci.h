@@ -4,6 +4,7 @@
 #include "interrupts/irq.h"
 #include "drivers/pci.h"
 #include "utils/bit.h"
+#include "utils/fixedlist.h"
 #define XHCI_REG_USBCMD		(0x0)
 #define XHCI_REG_USBSTS		(0x4)
 #define XHCI_REG_PAGESIZE	(0x8)
@@ -64,9 +65,14 @@
 #define XHCI_TRB_CODE_PORT_STATUS_CHANGE	(0x22)
 #define XHCI_TRB_CODE_COMMAND_COMPLETED		(0x21)
 
-#define XHCI_NO_INT 0x1000
+#define XHCI_NO_INT (0x1000)
 #define WAIT_FOR_INT(xhci_hub) xhci_hub.flag=XHCI_NO_INT;\
 							while(xhci_hub.flag!=XHCI_NO_INT);
+#define XHCI_CAP_SUPPORTED_PROTOCOL		(0x2)
+
+#define XHCI_SUPPORTED_PROTOCOL_VERSION(proto)		WORD((proto->int1),1)
+#define XHCI_SUPPORTED_PROTOCOL_PSIC(proto)			((BYTE((proto->int3),3)>>4)&0xF)
+#define XHCI_SUPPORTED_PROTOCOL_SLOT_TYPE(proto)	((proto->int4)&0xF)
 
 extern char* XHCI_CMD_CODE[64];
 typedef struct{
@@ -83,7 +89,6 @@ typedef struct{
 
 int XHCI_INIT(PCI_device* device,void* pcibase);
 void XHCI_INT(registers* _r);
-
 
 
 typedef struct {
@@ -122,6 +127,14 @@ typedef struct{
 	uint32_t def;
 }__attribute__((packed)) XHCI_TRB;
 
+typedef struct {
+	uint32_t int1;
+	uint32_t int2;
+	uint32_t int3;
+	uint32_t int4;
+	uint32_t psiv[1];
+}__attribute__((packed)) XHCI_SUPPORTED_PROTOCOL;
+
 typedef struct{
 	PCIGeneralDevice* device;
 	XHCI_CAP_REG* config;
@@ -132,7 +145,10 @@ typedef struct{
 	uint32_t flag;
 	volatile XHCI_TRB* command_ring;
 	volatile uint64_t* event_ring;
+	fixedlist SupportedProtocols;
 }XHCI_HUB;
+
+
 typedef union {
 	struct {
 		unsigned reg1 : 25;
