@@ -41,8 +41,11 @@ void* XHCI_SetUpDCBAA(unsigned int maxslots,unsigned int pagesize,XHCI_CAP_REG* 
 	int scratchpadEntN=(config->HCSParams2>>21)&(0x1f);
 	printf("SCRATCHPAD ENTRIES:\t%x\n",scratchpadEntN);
 	if(scratchpadEntN>0){
-		void* scratchpad=mallocAB(pagesize,pagesize,pagesize);
+		char* scratchpad=mallocAB(pagesize,pagesize,pagesize);
 		dcbaa[0]=(uint64_t)scratchpad;
+		FORI(pagesize){
+			scratchpad[i]=0;
+		}
 	}else{
 		dcbaa[0]=0;
 	}
@@ -226,10 +229,13 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	while(BIT(*XHCI_OP(XHCI_REG_USBSTS),XHCI_USBSTS_CNR)!=0);
 	SetColor(0xff0000);
 
+	//ENABLE SLOTS
+	*XHCI_OP(XHCI_REG_CONFIG)=8;
 	unsigned int pagesize=*XHCI_OP(XHCI_REG_PAGESIZE)<<(12);
 	unsigned int maxslots=XHCI_MAX_SLOTS(&config);
 	unsigned int maxintrs=XHCI_MAX_INTRS(&config);
 	unsigned int maxports=XHCI_MAX_PORTS(&config);
+
 	unsigned int CONFIG=*XHCI_OP(XHCI_REG_CONFIG);
 
 
@@ -319,7 +325,7 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	XHCI_TRB noop=XHCI_CMD_NOOP(1);
 	XHCI_TRB slot_en=XHCI_CMD_ENABLE_SLOT(0,1);
 	//XHCI_COMMAND(xhci_hub.command_ring,&noop);
-	//XHCI_COMMAND(xhci_hub.command_ring,&noop);
+	XHCI_COMMAND(xhci_hub.command_ring,&noop);
 	XHCI_COMMAND(xhci_hub.command_ring,&slot_en);
 	XHCI_DOORBELL(0,0);
 	SetColor(0xffffff);
@@ -337,8 +343,6 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	printf("\n");
 #endif
 
-	//ENABLE SLOTS
-	*XHCI_OP(XHCI_REG_CONFIG)=8;
 	return 1;
 }
 void XHCI_IRQ8(registers* _r){
