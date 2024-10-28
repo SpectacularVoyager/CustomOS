@@ -23,6 +23,7 @@
 #define XHCI_USBCMD_MF_WRAP	(1<<0xA)
 
 #define XHCI_USBSTS_CNR		(11)
+#define XHCI_USBSTS_EINT	(1<<3)
 
 #define XHCI_PORT_OFF		(0x400)
 
@@ -74,6 +75,7 @@
 #define XHCI_SUPPORTED_PROTOCOL_PSIC(proto)			((BYTE((proto->int3),3)>>4)&0xF)
 #define XHCI_SUPPORTED_PROTOCOL_SLOT_TYPE(proto)	((proto->int4)&0xF)
 
+#define XHCI_IMAN_INTE		(1<<1)
 extern char* XHCI_CMD_CODE[64];
 typedef struct{
 	uint32_t IMAN;
@@ -90,6 +92,7 @@ typedef struct{
 int XHCI_INIT(PCI_device* device,void* pcibase);
 void XHCI_INT(registers* _r);
 
+void XHCI_IRQ8(registers* _r);
 
 typedef struct {
 	uint8_t CAPLENGTH;
@@ -141,6 +144,8 @@ typedef struct{
 	XHCI_PORT_REG* ports;
 	XHCI_INT_RUNTIME_REG* ints;
 	void* dcbaa;
+	XHCI_CAP_REG* cap;
+	void* xhci_operation_registers;
 	uint32_t* doorbell;
 	uint32_t flag;
 	volatile XHCI_TRB* command_ring;

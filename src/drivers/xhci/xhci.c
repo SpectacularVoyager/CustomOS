@@ -12,8 +12,8 @@
 //#define XHCI_DEBUG
 
 void* xhci_operation_registers;
-#define XHCI_OP(of)	((uint32_t*)((xhci_operation_registers+of)))
-#define XHCI_RT(of)	((uint32_t*)((config.RTSOFF+of)))
+#define XHCI_OP(of)	((uint32_t*)((xhci_hub.xhci_operation_registers+of)))
+#define XHCI_RT(of)	((uint32_t*)((xhci_hub.config.RTSOFF+of)))
 #define XHCI_EVENT_RING_SIZE	128
 
 void XHCI_READ_CAP(XHCI_CAP_REG* cap,void* address){
@@ -34,7 +34,7 @@ void* XHCI_SetUpDCBAA(unsigned int maxslots,unsigned int pagesize,XHCI_CAP_REG* 
 	uint64_t* dcbaa=mallocAB((maxslots+1)*8,64,pagesize);
 	//void* device_context=mallocAB(2048,64,pagesize);
 	FORI(maxslots){
-		dcbaa=0;
+		dcbaa[i]=0;
 	}
 
 
@@ -196,9 +196,12 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	xhci_operation_registers=address+config.CAPLENGTH;
 	volatile XHCI_INT_RUNTIME_REG* reg_int=address+XHCI_RTSOFF(&config)+0x20;
 	volatile XHCI_PORT_REG*	ports=xhci_operation_registers+XHCI_PORT_OFF;
+
+	xhci_hub.config=&config;
+	xhci_hub.xhci_operation_registers=xhci_operation_registers;
 	XHCI_RESET(XHCI_OP(XHCI_REG_USBCMD));
 	
-	//config=XHCI_READ_CAP(address);
+	//AFTER RESET
 	xhci_operation_registers=address+config.CAPLENGTH;
 	reg_int=address+XHCI_RTSOFF(&config)+0x20;
 	ports=xhci_operation_registers+XHCI_PORT_OFF;
@@ -227,17 +230,15 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	unsigned int maxslots=XHCI_MAX_SLOTS(&config);
 	unsigned int maxintrs=XHCI_MAX_INTRS(&config);
 	unsigned int maxports=XHCI_MAX_PORTS(&config);
-	//*XHCI_OP(XHCI_REG_CONFIG)|=8;
 	unsigned int CONFIG=*XHCI_OP(XHCI_REG_CONFIG);
-#ifdef XHCI_DEBUG
-	printf("MAX INTRS:\t%x\n", maxintrs);
-	//printf("SLOTS ENABLED:\t%x\n", BYTE(*XHCI_OP(XHCI_REG_CONFIG),0));
-#endif
+
+
+
 	printf("MAX SLOTS:\t%x\n", maxslots);
 	printf("SLOTS ENABLED:\t%x\n", BYTE(CONFIG,0));
 
 	void* dcbaa=XHCI_SetUpDCBAA(maxslots,pagesize,&config);
-	*XHCI_OP(XHCI_REG_DCBAAP)=(uint64_t)dcbaa;
+	*XHCI_OP(XHCI_REG_DCBAAP)=(uint64_t)(dcbaa)&(~0x3F);
 
 
 	/** CRCR STUFF */
@@ -259,18 +260,22 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	XHCI_LOAD_CRCR(xhci_hub.command_ring,1);
 
 	//-------------//
+	//FORI(maxintrs){
+	FORI(1){
 	uint64_t* event_ring_table=mallocAB(4096,4096,4096);
 	void* event_ring_addr=malloc(16*XHCI_EVENT_RING_SIZE);
 	memset(event_ring_addr,0,16*XHCI_EVENT_RING_SIZE);
 
 	event_ring_table[0]=(uint64_t)event_ring_addr;
 	event_ring_table[1]=4096;
-	reg_int[0].IMAN=1<<1|1<<0;
-	reg_int[0].IMOD=0;
-	reg_int[0].ERSTSZ=1;
-	reg_int[0].ERSTBA_low=(DWORD((uint64_t)event_ring_table,0)&(~0x3F))|1<<3;
-	reg_int[0].ERSTBA_high=DWORD((uint64_t)event_ring_table,1);
-	XHCI_WRITE_ERDP(&reg_int[0],(uint64_t)event_ring_addr,0);
+	//reg_int[0].IMAN=1<<1|1<<0;
+	reg_int[i].IMAN=XHCI_IMAN_INTE;
+	reg_int[i].IMOD=4000;
+	reg_int[i].ERSTSZ=1;
+	reg_int[i].ERSTBA_low=(DWORD((uint64_t)event_ring_table,0)&(~0x3F))|1<<3;
+	reg_int[i].ERSTBA_high=DWORD((uint64_t)event_ring_table,1);
+	XHCI_WRITE_ERDP(&reg_int[i],(uint64_t)event_ring_addr,0);
+	}
 	//-------------//
 	void* mmio=PCI_GetMMIO(device,pcibase)+usb.capabilities_pointer;
 	void* extended_cap=(void*)((usb.BAR[0]&(~0xF))+(XHCI_EXTENDED_CAP_PTR(&config)<<2));
@@ -299,10 +304,11 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	xhci_hub.dcbaa=dcbaa,
 	xhci_hub.doorbell=doorbell,
 	xhci_hub.flag=0,
-	xhci_hub.event_ring=event_ring_table;
+	xhci_hub.event_ring=NULL;
 
 
 	IRQ_RegisterHandler(0xB,XHCI_INT);
+	IRQ_RegisterHandler(0x8,XHCI_IRQ8);
 	
 	*XHCI_OP(XHCI_REG_DNCTRL)=0xFFFF;
 	*XHCI_OP(XHCI_REG_USBSTS)|=1<<3;
@@ -312,8 +318,8 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 
 	XHCI_TRB noop=XHCI_CMD_NOOP(1);
 	XHCI_TRB slot_en=XHCI_CMD_ENABLE_SLOT(0,1);
-	XHCI_COMMAND(xhci_hub.command_ring,&noop);
-	XHCI_COMMAND(xhci_hub.command_ring,&noop);
+	//XHCI_COMMAND(xhci_hub.command_ring,&noop);
+	//XHCI_COMMAND(xhci_hub.command_ring,&noop);
 	XHCI_COMMAND(xhci_hub.command_ring,&slot_en);
 	XHCI_DOORBELL(0,0);
 	SetColor(0xffffff);
@@ -330,7 +336,13 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	}
 	printf("\n");
 #endif
+
+	//ENABLE SLOTS
+	*XHCI_OP(XHCI_REG_CONFIG)=8;
 	return 1;
+}
+void XHCI_IRQ8(registers* _r){
+	XHCI_INT(_r);
 }
 void XHCI_PRINT_PORT(int i,XHCI_PORT_REG* reg){
 	printf("PORT[%d]  CON:%d  EN:%d  ST:%d",i,
@@ -396,6 +408,7 @@ void XHCI_PROC_EVENT(XHCI_TRB* trb){
 
 // ERROR: FIX BUFFER OVERFLOW IN ERDP
 void XHCI_INT(registers* _r){
+	printf("INT\n");
 	XHCI_TRB* trb=(void*)(COMBINE_DWORD(xhci_hub.ints[0].ERDP_high, xhci_hub.ints[0].ERDP_low)&(~0xF));
 	int trb_code=XHCI_TRB_TYPE(trb->def);
 	while(XHCI_TRB_TYPE(trb->def)!=0&&XHCI_TRB_CYCLE(trb->def)==CCS){
@@ -404,6 +417,8 @@ void XHCI_INT(registers* _r){
 	}
 	XHCI_WRITE_ERDP(&xhci_hub.ints[0],(uint64_t)(trb),1<<3);
 	xhci_hub.flag=trb_code;
+	*XHCI_OP(XHCI_REG_USBSTS)|=XHCI_USBSTS_EINT;
+	LOGVAL(*XHCI_OP(XHCI_REG_USBSTS));
 	XHCI_DOORBELL(0,0);
 }
 char* XHCI_CMD_CODE[64]={
