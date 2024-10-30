@@ -58,9 +58,11 @@
 #define XHCI_PORT_PLC				(1<<22)
 #define XHCI_PORT_CEC				(1<<23)
 
-#define XHCI_CMD_NOOP_CODE				23
-#define XHCI_CMD_ENABLE_SLOT_CODE		9
-#define XHCI_CMD_ADDRESS_DEVICE_CODE	11
+#define XHCI_CMD_NOOP_CODE				(23)
+#define XHCI_CMD_ENABLE_SLOT_CODE		( 9)
+#define XHCI_CMD_ADDRESS_DEVICE_CODE	(11)
+#define XHCI_CMD_SETUP_STAGE_CODE		( 2)
+
 #define XHCI_CMD_NOOP(C) ((XHCI_TRB){.int1=0,.int2=0,.int3=0,.def=XHCI_CMD_NOOP_CODE<<10|((C)&0x1)})
 #define XHCI_CMD_ENABLE_SLOT(type,C) ((XHCI_TRB){.int1=0,.int2=0,.int3=0,.def=XHCI_CMD_ENABLE_SLOT_CODE<<10|type<<16|((C)&0x1)})
 #define XHCI_CMD_ADDRESS_DEVICE(ptr,slot,bsr,C) ((XHCI_TRB){\
@@ -84,9 +86,9 @@
 
 #define XHCI_IMAN_INTE		(1<<1)
 
-#define XHCI_CONTEXT_SLOT_ENTRIES(ent)		((((ent)&(~0x1F))<<27))
-#define XHCI_CONTEXT_SLOT_PORT(port)		(((port)&(~0xFF))<<16)
-#define XHCI_CONTEXT_SLOT_ROUTE_STR(str)	((((str)&(~0xFFFFF))<<0))
+#define XHCI_CONTEXT_SLOT_ENTRIES(ent)		((((ent)&(0x1F))<<27))
+#define XHCI_CONTEXT_SLOT_PORT(port)		(((port)&(0xFF))<<16)
+#define XHCI_CONTEXT_SLOT_ROUTE_STR(str)	((((str)&(0xFFFFF))<<0))
 
 #define XHCI_PORT_SPEED_PACK_SIZE_LS	(8)
 #define XHCI_PORT_SPEED_PACK_SIZE_HS	(64)
@@ -95,9 +97,11 @@
 #define XHCI_ENPOINT_TYPE_CONTROL		(0x4)
 #define XHCI_DEQUEUE_PTR(ptr,c)	(((ptr)&(~0xF))|(c&0x1))
 
-#define XHCI_TRANSFER_IOC		1<<5
-#define XHCI_TRANSFER_CHAIN		1<<4
-#define XHCI_TRANSFER_ENT		1<<1
+#define XHCI_TRANSFER_IOC		(1<<5)
+#define XHCI_TRANSFER_CHAIN		(1<<4)
+#define XHCI_TRANSFER_ENT		(1<<1)
+
+#define XHCI_OUTPUT_CONTEXT_STATE(con) 
 
 extern char* XHCI_CMD_CODE[64];
 typedef struct{
@@ -173,7 +177,7 @@ typedef struct{
 	XHCI_CAP_REG* config;
 	XHCI_PORT_REG* ports;
 	XHCI_INT_RUNTIME_REG* ints;
-	void* dcbaa;
+	uint64_t* dcbaa;
 	XHCI_CAP_REG* cap;
 	void* xhci_operation_registers;
 	uint32_t* doorbell;

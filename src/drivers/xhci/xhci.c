@@ -30,7 +30,7 @@ void XHCI_READ_CAP(XHCI_CAP_REG* cap,void* address){
 	cap->RTSOFF=U32(address+0x18);
 	cap->HCCParams2=U32(address+0x1C);
 }
-void* XHCI_SetUpDCBAA(unsigned int maxslots,unsigned int pagesize,XHCI_CAP_REG* config){
+uint64_t* XHCI_SetUpDCBAA(unsigned int maxslots,unsigned int pagesize,XHCI_CAP_REG* config){
 	uint64_t* dcbaa=mallocAB((maxslots+1)*8,64,pagesize);
 	//void* device_context=mallocAB(2048,64,pagesize);
 	FORI(maxslots){
@@ -167,6 +167,16 @@ inline void XHCIprintTRB(XHCI_TRB* trb){
 	LOGVAL(trb->int3);
 	LOGVAL(trb->def);
 }
+inline void XHCIprintContext(XHCI_CONTEXT_GENERIC* gen){
+	LOGVAL(gen->int1);
+	LOGVAL(gen->int2);
+	LOGVAL(gen->int3);
+	LOGVAL(gen->int4);
+	LOGVAL(gen->int5);
+	LOGVAL(gen->int6);
+	LOGVAL(gen->int7);
+	LOGVAL(gen->int8);
+}
 void XHCI_SLOT_INITIALIZE(int slot,int port,XHCI_TRB* transfer){
 	int cz;
 	if(XHCI_CONTEXT_SIZE(xhci_hub.config)==0){
@@ -181,14 +191,13 @@ void XHCI_SLOT_INITIALIZE(int slot,int port,XHCI_TRB* transfer){
 
 	//CONTROL CONTEXT
 	XHCI_CONTEXT_CONTROL* input_control_context=input_context;
-	input_control_context->add=0b11;
+	input_control_context->add=0x3;
 	
 	//SLOT CONTEXT
-	XHCI_CONTEXT_SLOT* input_slot_context=input_context+cz;
-	//input_slot_context->int1=XHCI_CONTEXT_SLOT_ENTRIES(1)|XHCI_CONTEXT_SLOT_ROUTE_STR(0);
-	//input_slot_context->int2=XHCI_CONTEXT_SLOT_PORT(port);
-	input_slot_context->int1=1<<27;
-	input_slot_context->int2=port<<16;
+	XHCI_CONTEXT_SLOT* input_slot_context=(void*)input_context+cz;
+	input_slot_context->int1=XHCI_CONTEXT_SLOT_ENTRIES(1)|XHCI_CONTEXT_SLOT_ROUTE_STR(0);
+	input_slot_context->int2=XHCI_CONTEXT_SLOT_PORT(port);
+
 	//ENDPOINT CONTEXT 0
 	XHCI_CONTEXT_ENDPOINT* endpoint0=input_context+(cz*2);
 	endpoint0->ep_type=XHCI_ENPOINT_TYPE_CONTROL;
@@ -287,7 +296,7 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	printf("MAX SLOTS:\t%x\n", maxslots);
 	printf("SLOTS ENABLED:\t%x\n", BYTE(CONFIG,0));
 
-	void* dcbaa=XHCI_SetUpDCBAA(maxslots,pagesize,&config);
+	uint64_t* dcbaa=XHCI_SetUpDCBAA(maxslots,pagesize,&config);
 	*XHCI_OP(XHCI_REG_DCBAAP)=(uint64_t)(dcbaa)&(~0x3F);
 
 
@@ -418,17 +427,32 @@ void XHCI_ON_COMMAND_COMPLETE(XHCI_TRB* trb){
 			printf("\tENABLED SLOT[%x]\tWITH STATUS:\t%x\n",slot,status);
 			//INIT PORT
 			XHCI_TRB* trbs= XHCI_getTransferTRBs();
-			((void**)xhci_hub.transfer_trb.data)[slot]=trbs;
+			((XHCI_TRB**)xhci_hub.transfer_trb.data)[slot]=trbs;
 			XHCI_SLOT_INITIALIZE(slot,1,trbs);
 			break;
 		case XHCI_CMD_ADDRESS_DEVICE_CODE:
 			printf("\tADDRESSED SLOT[%x]\tWITH STATUS:\t%x\n",slot,status);
 			if(status!=1)return;
+			XHCI_CONTEXT_GENERIC* output=(XHCI_CONTEXT_GENERIC*)(xhci_hub.dcbaa[slot]);
+			printf("\t\tSLOT[%d] STATE:\t%x\n",slot,output[0].int4>>27);
+
+			//READ BUFFER
+			void* buffer=malloc(8);
 			XHCI_TRB* t=((XHCI_TRB**)xhci_hub.transfer_trb.data)[slot];
-			t[0].int1=0;
-			t[0].int2=0;
-			t[0].int3=1<<22;
-			t[0].def=XHCI_TRANSFER_IOC;
+			t[0].int1=0x80|6<<8|0x100<<16;
+			t[0].int2=8<<16|0;
+			t[0].int3=8;
+			t[0].def=1|1<<6|2<<10|3<<16;
+
+			t[1].int1=DWORD((uint64_t)buffer,0);
+			t[1].int2=DWORD((uint64_t)buffer,1);
+			t[1].int3=8;
+			t[1].def =1|3<<10|1<<16;
+
+			t[2].int1=0;
+			t[2].int2=0;
+			t[2].int3=0;
+			t[2].def =1|4<<10|1<<5;
 			XHCI_DOORBELL(slot,1);
 			break;
 		default:
