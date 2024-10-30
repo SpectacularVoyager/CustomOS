@@ -63,7 +63,12 @@
 #define XHCI_CMD_ADDRESS_DEVICE_CODE	11
 #define XHCI_CMD_NOOP(C) ((XHCI_TRB){.int1=0,.int2=0,.int3=0,.def=XHCI_CMD_NOOP_CODE<<10|((C)&0x1)})
 #define XHCI_CMD_ENABLE_SLOT(type,C) ((XHCI_TRB){.int1=0,.int2=0,.int3=0,.def=XHCI_CMD_ENABLE_SLOT_CODE<<10|type<<16|((C)&0x1)})
-#define XHCI_CMD_ADDRESS_DEVICE(ptr,slot,bsr,C) ((XHCI_TRB){.int1=(DWORD(ptr,0)&(~0xF)),.int2=DWORD(ptr,1),.int3=0,.def=XHCI_CMD_ADDRESS_DEVICE_CODE<<10|(((slot)&0xFF)<<24)|(((bsr)&0x1)<<9)|((C)&0x1)})
+#define XHCI_CMD_ADDRESS_DEVICE(ptr,slot,bsr,C) ((XHCI_TRB){\
+		.int1=(DWORD(ptr,0)&(~0xF)),\
+		.int2=DWORD(ptr,1),.int3=0,\
+		.def=(((slot)&0xFF)<<24)|(XHCI_CMD_ADDRESS_DEVICE_CODE<<10)|(((bsr)&0x1)<<9)|((C)&0x1)})
+
+#define XHCI_TRB_NOOP(C,target) ((XHCI_TRB){.int1=0,.int2=0,.int3=target<<22,.def=XHCI_CMD_NOOP_CODE<<10|((C)&0x1)})
 
 #define XHCI_TRB_CODE_PORT_STATUS_CHANGE	(0x22)
 #define XHCI_TRB_CODE_COMMAND_COMPLETED		(0x21)
@@ -79,9 +84,9 @@
 
 #define XHCI_IMAN_INTE		(1<<1)
 
-#define XHCI_CONTEXT_SLOT_ENTRIES(ent) (((ent)<<27)&(~0x1F))
-#define XHCI_CONTEXT_SLOT_PORT(port) (((port)<<16)&(~0xFF))
-#define XHCI_CONTEXT_SLOT_ROUTE_STR(str) (((str)<<0)&(~0xFFFFF))
+#define XHCI_CONTEXT_SLOT_ENTRIES(ent)		((((ent)&(~0x1F))<<27))
+#define XHCI_CONTEXT_SLOT_PORT(port)		(((port)&(~0xFF))<<16)
+#define XHCI_CONTEXT_SLOT_ROUTE_STR(str)	((((str)&(~0xFFFFF))<<0))
 
 #define XHCI_PORT_SPEED_PACK_SIZE_LS	(8)
 #define XHCI_PORT_SPEED_PACK_SIZE_HS	(64)
@@ -89,6 +94,10 @@
 
 #define XHCI_ENPOINT_TYPE_CONTROL		(0x4)
 #define XHCI_DEQUEUE_PTR(ptr,c)	(((ptr)&(~0xF))|(c&0x1))
+
+#define XHCI_TRANSFER_IOC		1<<5
+#define XHCI_TRANSFER_CHAIN		1<<4
+#define XHCI_TRANSFER_ENT		1<<1
 
 extern char* XHCI_CMD_CODE[64];
 typedef struct{
@@ -152,6 +161,13 @@ typedef struct {
 	uint32_t psiv[1];
 }__attribute__((packed)) XHCI_SUPPORTED_PROTOCOL;
 
+
+typedef struct {
+	XHCI_TRB* transfer;	
+	int n;
+	int i;
+}XHCI_Endpoint;
+
 typedef struct{
 	PCIGeneralDevice* device;
 	XHCI_CAP_REG* config;
@@ -164,6 +180,8 @@ typedef struct{
 	uint32_t flag;
 	volatile XHCI_TRB* command_ring;
 	volatile uint64_t* event_ring;
+	fixedlist transfer_trb;
+	unsigned long pagesize;
 	fixedlist SupportedProtocols;
 }XHCI_HUB;
 
@@ -225,7 +243,7 @@ typedef struct{
     uint32_t ep_state: 3;
     uint32_t rsvdZ1: 5;
     uint32_t mult: 2;
-    uint32_t max_p_streams: 6;
+    uint32_t max_p_streams: 5;
     uint32_t lsa: 1;
     uint32_t interval: 8;
     uint32_t max_esit_payload_hi: 8;
@@ -235,11 +253,15 @@ typedef struct{
     uint32_t ep_type: 3;
     uint32_t rsvdZ3: 1;
     uint32_t hid: 1;
-    uint32_t max_burst_size: 4;
+    uint32_t max_burst_size: 8;
     uint32_t max_packet_size: 16;
 	//+0x8
     uint64_t tr_dequeue_pointer;
 	//+0x10
     uint32_t avg_trb_length: 16;
     uint32_t max_esit_payload_lo: 16;
+	uint32_t rsvdZ4;
+	uint32_t rsvdZ5;
+	uint32_t rsvdZ6;
 }__attribute__((packed)) XHCI_CONTEXT_ENDPOINT;
+
