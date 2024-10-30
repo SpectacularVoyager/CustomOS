@@ -1,6 +1,6 @@
 #include "stdlib.h"
 #include "stdio.h"
-
+#include "string.h"
 
 
 unsigned long malloc_start=0x270000;
@@ -47,6 +47,11 @@ void* malloc(unsigned long size){
 	malloc_start+=size;
 	return start;
 }
+void* calloc(unsigned long size){
+	void* start=malloc(size);
+	memset(start,0,size);
+	return start;
+}
 void* mallocA(unsigned long size,unsigned long align){
 	malloc_start=(malloc_start-1)+align-((malloc_start-1)%align);
 	void* start=(void*)malloc_start;
@@ -66,5 +71,10 @@ void* mallocAB(unsigned long size,unsigned long align,unsigned long boundary){
 		malloc_start+=size;
 	}
 	kprintf(INFO"MALLOCA :\t%p\n",start);
+	return start;
+}
+void* callocAB(unsigned long size,unsigned long align,unsigned long boundary){
+	void* start=mallocAB(size,align,boundary);
+	memset(start,0,size);
 	return start;
 }
