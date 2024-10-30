@@ -160,24 +160,44 @@ int XHCI_SLOT_ENABLE(int type,int cycle){
 void XHCI_DOORBELL(int slot,int val){
 	xhci_hub.doorbell[slot]=val;
 }
-void XHCI_SLOT_INITIALIZE(int slot,int port){
+void XHCI_SLOT_INITIALIZE(int slot,int port,XHCI_TRB* transfer,int pagesize){
 	int cz;
 	if(XHCI_CONTEXT_SIZE(xhci_hub.config)==0){
 		cz=32;
 	}else{
 		cz=64;
 	}
-	void* data=malloc(cz*33);
-	memset32(data,0,cz*33/4);
-	XHCI_CONTEXT_GENERIC* control_ctx=data;
-	control_ctx->int2=0b11;
-	XHCI_CONTEXT_SLOT* slot_context=data+cz;
-	slot_context->int1=1<<27;
-	slot_context->int2=port<<16;
-	XHCI_CONTEXT_SLOT* endpoint=malloc(cz);
-	//int maxpacksize=?;
-	//endpoint->int2=4<<3|maxpacksize<<16|0<<8|3<<1;
-	endpoint->int3=1;
+
+	//DO INPUT CONTEXT STUFF
+	void* input_context=mallocAB(cz*33,64,pagesize);
+	memset32(input_context,0,cz*33/4);
+
+	//CONTROL CONTEXT
+	XHCI_CONTEXT_CONTROL* input_control_context=input_context;
+	input_control_context->add=0b11;
+	
+	//SLOT CONTEXT
+	XHCI_CONTEXT_SLOT* input_slot_context=input_context+cz;
+	input_slot_context->int1=XHCI_CONTEXT_SLOT_ENTRIES(1)|XHCI_CONTEXT_SLOT_ROUTE_STR(0);
+	input_slot_context->int2=XHCI_CONTEXT_SLOT_PORT(port);
+	//ENDPOINT CONTEXT 0
+	XHCI_CONTEXT_ENDPOINT* endpoint0=input_context+(cz*2);
+	endpoint0->ep_type=XHCI_ENPOINT_TYPE_CONTROL;
+	endpoint0->max_packet_size=XHCI_PORT_SPEED_PACK_SIZE_LS;
+	endpoint0->max_burst_size=0;
+	endpoint0->tr_dequeue_pointer=XHCI_DEQUEUE_PTR((uint64_t)transfer, 1);
+	endpoint0->interval=0;
+	endpoint0->max_p_streams=0;
+	endpoint0->mult=0;
+	endpoint0->c_err=3;
+
+	//SET UP IN DCBAA
+	void* output_context=mallocAB(cz*32,64,pagesize);
+	memset32(output_context,0,cz*32/4);
+	((uint64_t*)xhci_hub.dcbaa)[slot]=(uint64_t)output_context;
+
+	XHCI_TRB address=XHCI_CMD_ADDRESS_DEVICE((uint64_t)input_slot_context, slot, 1, 1);
+	XHCI_COMMAND(xhci_hub.command_ring,&address);
 }
 void __attribute__((optimize("O0"))) XHCI_LOAD_CRCR(volatile void* crcr,unsigned int flags){
 	*XHCI_OP(XHCI_REG_CRCR)=DWORD(((uint64_t)crcr&(~0x3F))|flags,0);
@@ -230,12 +250,12 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	SetColor(0xff0000);
 
 	//ENABLE SLOTS
-	*XHCI_OP(XHCI_REG_CONFIG)=8;
 	unsigned int pagesize=*XHCI_OP(XHCI_REG_PAGESIZE)<<(12);
 	unsigned int maxslots=XHCI_MAX_SLOTS(&config);
 	unsigned int maxintrs=XHCI_MAX_INTRS(&config);
 	unsigned int maxports=XHCI_MAX_PORTS(&config);
 
+	*XHCI_OP(XHCI_REG_CONFIG)=maxslots;
 	unsigned int CONFIG=*XHCI_OP(XHCI_REG_CONFIG);
 
 
@@ -289,19 +309,7 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	XHCI_HANDLE_EXTENDED_CAPABILITIES(&xhci_hub,extended_cap);
 	
 	volatile XHCI_SUPPORTED_PROTOCOL* proto=0;
-	//FORI(xhci_hub.SupportedProtocols.n){
-	//	XHCI_SUPPORTED_PROTOCOL* _proto=((XHCI_SUPPORTED_PROTOCOL**)xhci_hub.SupportedProtocols.data)[i];
-	//	if(XHCI_SUPPORTED_PROTOCOL_VERSION(_proto)==config.HCIVersion){
-	//		proto=_proto;
-	//	}
-	//	printf("PROTO:\t%x\n",_proto->int1);
-	//	LOGVAL(config.HCIVersion);
-	//}
 	proto=((XHCI_SUPPORTED_PROTOCOL**)xhci_hub.SupportedProtocols.data)[0];
-	//printf("proto:\t%x\n",proto->int1);
-	//if(proto){
-	//	printf("PROTO SLOT TYPE:\t%x\n",XHCI_SUPPORTED_PROTOCOL_SLOT_TYPE(proto));
-	//}
 
 	xhci_hub.device=&usb;
 	xhci_hub.config=&config,
@@ -324,15 +332,11 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 
 	XHCI_TRB noop=XHCI_CMD_NOOP(1);
 	XHCI_TRB slot_en=XHCI_CMD_ENABLE_SLOT(0,1);
-	//XHCI_COMMAND(xhci_hub.command_ring,&noop);
-	XHCI_COMMAND(xhci_hub.command_ring,&noop);
-	XHCI_COMMAND(xhci_hub.command_ring,&slot_en);
 	XHCI_DOORBELL(0,0);
 	SetColor(0xffffff);
 
-	//FORI(maxports)
-		//XHCI_PORT_RESET(i);
-	XHCI_COMMAND(xhci_hub.command_ring,&noop);
+	FORI(maxports)
+		XHCI_PORT_RESET(i);
 	XHCI_DOORBELL(0,0);
 #ifdef XHCI_DEBUG
 	for(int i=0;i<maxports;i++){
@@ -412,7 +416,6 @@ void XHCI_PROC_EVENT(XHCI_TRB* trb){
 
 // ERROR: FIX BUFFER OVERFLOW IN ERDP
 void XHCI_INT(registers* _r){
-	printf("INT\n");
 	XHCI_TRB* trb=(void*)(COMBINE_DWORD(xhci_hub.ints[0].ERDP_high, xhci_hub.ints[0].ERDP_low)&(~0xF));
 	int trb_code=XHCI_TRB_TYPE(trb->def);
 	while(XHCI_TRB_TYPE(trb->def)!=0&&XHCI_TRB_CYCLE(trb->def)==CCS){
@@ -421,8 +424,6 @@ void XHCI_INT(registers* _r){
 	}
 	XHCI_WRITE_ERDP(&xhci_hub.ints[0],(uint64_t)(trb),1<<3);
 	xhci_hub.flag=trb_code;
-	*XHCI_OP(XHCI_REG_USBSTS)|=XHCI_USBSTS_EINT;
-	LOGVAL(*XHCI_OP(XHCI_REG_USBSTS));
 	XHCI_DOORBELL(0,0);
 }
 char* XHCI_CMD_CODE[64]={

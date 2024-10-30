@@ -58,10 +58,12 @@
 #define XHCI_PORT_PLC				(1<<22)
 #define XHCI_PORT_CEC				(1<<23)
 
-#define XHCI_CMD_NOOP_CODE			23
-#define XHCI_CMD_ENABLE_SLOT_CODE	9
+#define XHCI_CMD_NOOP_CODE				23
+#define XHCI_CMD_ENABLE_SLOT_CODE		9
+#define XHCI_CMD_ADDRESS_DEVICE_CODE	11
 #define XHCI_CMD_NOOP(C) ((XHCI_TRB){.int1=0,.int2=0,.int3=0,.def=XHCI_CMD_NOOP_CODE<<10|((C)&0x1)})
 #define XHCI_CMD_ENABLE_SLOT(type,C) ((XHCI_TRB){.int1=0,.int2=0,.int3=0,.def=XHCI_CMD_ENABLE_SLOT_CODE<<10|type<<16|((C)&0x1)})
+#define XHCI_CMD_ADDRESS_DEVICE(ptr,slot,bsr,C) ((XHCI_TRB){.int1=(DWORD(ptr,0)&(~0xF)),.int2=DWORD(ptr,1),.int3=0,.def=XHCI_CMD_ADDRESS_DEVICE_CODE<<10|(((slot)&0xFF)<<24)|(((bsr)&0x1)<<9)|((C)&0x1)})
 
 #define XHCI_TRB_CODE_PORT_STATUS_CHANGE	(0x22)
 #define XHCI_TRB_CODE_COMMAND_COMPLETED		(0x21)
@@ -76,6 +78,18 @@
 #define XHCI_SUPPORTED_PROTOCOL_SLOT_TYPE(proto)	((proto->int4)&0xF)
 
 #define XHCI_IMAN_INTE		(1<<1)
+
+#define XHCI_CONTEXT_SLOT_ENTRIES(ent) (((ent)<<27)&(~0x1F))
+#define XHCI_CONTEXT_SLOT_PORT(port) (((port)<<16)&(~0xFF))
+#define XHCI_CONTEXT_SLOT_ROUTE_STR(str) (((str)<<0)&(~0xFFFFF))
+
+#define XHCI_PORT_SPEED_PACK_SIZE_LS	(8)
+#define XHCI_PORT_SPEED_PACK_SIZE_HS	(64)
+#define XHCI_PORT_SPEED_PACK_SIZE_SS	(512)
+
+#define XHCI_ENPOINT_TYPE_CONTROL		(0x4)
+#define XHCI_DEQUEUE_PTR(ptr,c)	(((ptr)&(~0xF))|(c&0x1))
+
 extern char* XHCI_CMD_CODE[64];
 typedef struct{
 	uint32_t IMAN;
@@ -188,9 +202,44 @@ typedef struct{
 	uint32_t int4;
 }__attribute__((packed)) XHCI_CONTEXT_SLOT;
 
+typedef struct{
+	uint32_t drop;
+	uint32_t add;
+	uint32_t res1;
+	uint32_t res2;
+	uint32_t res3;
+	uint32_t res4;
+	uint32_t res5;
+	uint32_t conf;
+}__attribute__((packed)) XHCI_CONTEXT_CONTROL;
+
 typedef union{
 	XHCI_CONTEXT_GENERIC c;
 }__attribute__((packed)) XHCI_CONTEXT;
 
 void XHCI_PRINT_PORT(int i,XHCI_PORT_REG* reg);
 
+
+typedef struct{
+	//+0x0
+    uint32_t ep_state: 3;
+    uint32_t rsvdZ1: 5;
+    uint32_t mult: 2;
+    uint32_t max_p_streams: 6;
+    uint32_t lsa: 1;
+    uint32_t interval: 8;
+    uint32_t max_esit_payload_hi: 8;
+	//+0x4
+    uint32_t rsvdZ2: 1;
+    uint32_t c_err: 2;
+    uint32_t ep_type: 3;
+    uint32_t rsvdZ3: 1;
+    uint32_t hid: 1;
+    uint32_t max_burst_size: 4;
+    uint32_t max_packet_size: 16;
+	//+0x8
+    uint64_t tr_dequeue_pointer;
+	//+0x10
+    uint32_t avg_trb_length: 16;
+    uint32_t max_esit_payload_lo: 16;
+}__attribute__((packed)) XHCI_CONTEXT_ENDPOINT;

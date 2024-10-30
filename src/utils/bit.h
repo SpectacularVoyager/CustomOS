@@ -32,3 +32,6 @@
 #define U8(addr) (*(uint8_t*)(addr))
 
 #define BIT_RANGE(a,l,h)	(a&BIT_RANGE_MASK(h+1,l))>>l
+
+#define MASK(a,b)	((a)&(~(b)))
+#define VAL(a)		(a)
