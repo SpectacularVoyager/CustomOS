@@ -60,7 +60,7 @@ void* mallocA(unsigned long size,unsigned long align){
 	return start;
 }
 void* mallocAB(unsigned long size,unsigned long align,unsigned long boundary){
-	if(boundary>size)return NULL;
+	if(boundary<align)return NULL;
 
 	malloc_start=(malloc_start-1)+align-((malloc_start-1)%align);
 	void* start=(void*)malloc_start;
