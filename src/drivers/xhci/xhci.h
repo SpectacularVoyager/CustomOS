@@ -190,7 +190,7 @@ typedef struct {
 	int port;
 	XHCI_TRB* base;
 	void* contexts;
-	char desc_product[18];
+	char desc_product[100];
 	int done;
 }XHCI_Endpoint;
 
