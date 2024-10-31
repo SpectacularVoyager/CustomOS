@@ -63,14 +63,27 @@
 #define XHCI_TRB_STATUS_CODE			( 4)
 #define XHCI_CMD_ENABLE_SLOT_CODE		( 9)
 #define XHCI_CMD_ADDRESS_DEVICE_CODE	(11)
+#define XHCI_CMD_CONFIGURE_CODE			(12)
+#define XHCI_CMD_EVALUATE_CONTEXT_CODE	(13)
 #define XHCI_CMD_NOOP_CODE				(23)
 
 #define XHCI_CMD_NOOP(C) ((XHCI_TRB){.int1=0,.int2=0,.int3=0,.def=XHCI_CMD_NOOP_CODE<<10|((C)&0x1)})
 #define XHCI_CMD_ENABLE_SLOT(type,C) ((XHCI_TRB){.int1=0,.int2=0,.int3=0,.def=XHCI_CMD_ENABLE_SLOT_CODE<<10|type<<16|((C)&0x1)})
+
 #define XHCI_CMD_ADDRESS_DEVICE(ptr,slot,bsr,C) ((XHCI_TRB){\
 		.int1=(DWORD(ptr,0)&(~0xF)),\
 		.int2=DWORD(ptr,1),.int3=0,\
 		.def=(((slot)&0xFF)<<24)|(XHCI_CMD_ADDRESS_DEVICE_CODE<<10)|(((bsr)&0x1)<<9)|((C)&0x1)})
+
+#define XHCI_CMD_EVALUATE_CONTEXT(ptr,slot,bsr,C) ((XHCI_TRB){\
+		.int1=(DWORD(ptr,0)&(~0xF)),\
+		.int2=DWORD(ptr,1),.int3=0,\
+		.def=(((slot)&0xFF)<<24)|(XHCI_CMD_EVALUATE_CONTEXT_CODE<<10)|(((bsr)&0x1)<<9)|((C)&0x1)})
+
+#define XHCI_CMD_CONFIGURE_CONTEXT(ptr,slot,bsr,C) ((XHCI_TRB){\
+		.int1=(DWORD(ptr,0)&(~0xF)),\
+		.int2=DWORD(ptr,1),.int3=0,\
+		.def=(((slot)&0xFF)<<24)|(XHCI_CMD_CONFIGURE_CODE<<10)|(((bsr)&0x1)<<9)|((C)&0x1)})
 
 #define XHCI_TRB_NOOP(C,target) ((XHCI_TRB){.int1=0,.int2=0,.int3=target<<22,.def=XHCI_CMD_NOOP_CODE<<10|((C)&0x1)})
 
@@ -176,6 +189,8 @@ typedef struct {
 	int sz;
 	int port;
 	XHCI_TRB* base;
+	void* contexts;
+	char* desc_product;
 }XHCI_Endpoint;
 
 typedef struct{

@@ -186,12 +186,7 @@ inline void XHCIprintContext(XHCI_CONTEXT_GENERIC* gen){
 	LOGVAL(gen->int8);
 }
 void XHCI_SLOT_INITIALIZE(int slot,int port,XHCI_TRB* transfer){
-	int cz;
-	if(XHCI_CONTEXT_SIZE(xhci_hub.config)==0){
-		cz=32;
-	}else{
-		cz=64;
-	}
+	int cz=32<<XHCI_CONTEXT_SIZE(xhci_hub.config);
 
 	//DO INPUT CONTEXT STUFF
 	void* input_context=mallocAB(cz*33,64,xhci_hub.pagesize);
@@ -216,6 +211,8 @@ void XHCI_SLOT_INITIALIZE(int slot,int port,XHCI_TRB* transfer){
 	endpoint0->max_p_streams=0;
 	endpoint0->mult=0;
 	endpoint0->c_err=3;
+
+	xhci_hub.endpoints[slot].contexts=input_context;
 
 	//SET UP IN DCBAA
 	void* output_context=mallocAB(cz*32,64,xhci_hub.pagesize);
@@ -426,7 +423,7 @@ void XHCI_ON_PORT_RESET(XHCI_TRB* trb){
 	XHCI_TRB slot_en=XHCI_CMD_ENABLE_SLOT(0,1);
 	XHCI_COMMAND(xhci_hub.command_ring,&slot_en);
 }
-void XHCI_GetDescriptor(XHCI_Endpoint* endp,void* buff,int len){
+void XHCI_GetDescriptor(XHCI_Endpoint* endp,void* buff,int index,int len){
 			XHCI_TRB_SETUP setup={0};
 			XHCI_TRB_DATA data={0};
 			XHCI_TRB_STATUS status={0};
@@ -439,7 +436,8 @@ void XHCI_GetDescriptor(XHCI_Endpoint* endp,void* buff,int len){
 					.bmRequestType=0x80,
 					.bRequest=6,
 					.wValue=0x100,
-					.wIndex=0,
+					.wIndex=index,
+					.wLength=len,
 					.C=1
 			};
 			data=(XHCI_TRB_DATA){
@@ -469,6 +467,9 @@ void XHCI_ON_COMMAND_COMPLETE(XHCI_TRB* trb){
 	int trb_code=XHCI_TRB_TYPE(ptr->def);
 	int status=BYTE(trb->int3,3);
 	int slot=XHCI_TRB_SLOT(trb->def);
+
+	XHCI_Endpoint* endp=&xhci_hub.endpoints[slot];
+	XHCI_CONTEXT_GENERIC* output=(XHCI_CONTEXT_GENERIC*)(xhci_hub.dcbaa[slot]);
 	switch(trb_code){
 		case XHCI_CMD_NOOP_CODE:
 			printf("\tNOOP EXECUTED WITH STATUS:\t%x\n",status);
@@ -490,14 +491,15 @@ void XHCI_ON_COMMAND_COMPLETE(XHCI_TRB* trb){
 			if(status!=1)return;
 			XHCI_CONTEXT_GENERIC* output=(XHCI_CONTEXT_GENERIC*)(xhci_hub.dcbaa[slot]);
 			printf("\t\tSLOT[%d] STATE:\t%x\n",slot,output[0].int4>>27);
-
-			void* buffer=malloc(8);
-
-			XHCI_Endpoint* endp=&xhci_hub.endpoints[slot];
-			XHCI_GetDescriptor(endp,buffer,8);
+			XHCI_GetDescriptor(endp,endp->desc,0,18);
 			XHCI_DOORBELL(slot,1);
-			LOGVALD(buffer);
-			LOGVALD(U64(buffer));
+			break;
+		case XHCI_CMD_EVALUATE_CONTEXT_CODE:
+			printf("\tEVALUATED SLOT[%x]\tWITH STATUS:\t%x\n",slot,status);
+			if(status!=1)return;
+			printf("\t\tSLOT[%d] STATE:\t%x\n",slot,output[0].int4>>27);
+			//XHCI_GetDescriptor(endp,endp->desc,18);
+			//XHCI_DOORBELL(slot,1);
 			break;
 		default:
 			printf("\tCOMMAND COMPLETE[%x]\t%x->%s\tSTATUS:\t%x\n",
@@ -510,12 +512,27 @@ void XHCI_ON_COMMAND_COMPLETE(XHCI_TRB* trb){
 	}
 }
 void XHCI_ON_TRANSFER_COMPLETE(XHCI_TRB* trb){
+	printf("\tTRANSFER COMPLETE\n");
 	XHCI_TRB* ptr=(void*)((uint64_t)trb->int1|((uint64_t)trb->int2<<32));
+
+	int cz=32<<XHCI_CONTEXT_SIZE(xhci_hub.config);
 
 	int status=BYTE(trb->int3,3);
 	int slot=XHCI_TRB_SLOT(trb->def);
 	int endpointid=BYTE(trb->def,2)&0x1F;
-	printf("PTR:\t%p\n",ptr);
+
+	XHCI_Endpoint* endp=&xhci_hub.endpoints[slot];
+
+	//EVALUATE CONTEXT
+	XHCI_CONTEXT_GENERIC* output=(XHCI_CONTEXT_GENERIC*)(xhci_hub.dcbaa[slot]);
+	if(endp->desc[7]!=8){
+		void* input_context=xhci_hub.endpoints[slot].contexts;
+		XHCI_CONTEXT_ENDPOINT* endp1=input_context+2*cz;
+		endp1->max_packet_size=512;
+		XHCI_TRB address=XHCI_CMD_EVALUATE_CONTEXT((uint64_t)input_context, slot, 0, 1);
+		XHCI_COMMAND(xhci_hub.command_ring,&address);
+		XHCI_DOORBELL(0,0);
+	}
 }
 void XHCI_PROC_EVENT(XHCI_TRB* trb){
 	int trb_code=XHCI_TRB_TYPE(trb->def);
