@@ -58,7 +58,9 @@
 #define XHCI_PORT_PLC				(1<<22)
 #define XHCI_PORT_CEC				(1<<23)
 
-#define XHCI_CMD_SETUP_STAGE_CODE		( 2)
+#define XHCI_TRB_SETUP_STAGE_CODE		( 2)
+#define XHCI_TRB_DATA_CODE				( 3)
+#define XHCI_TRB_STATUS_CODE			( 4)
 #define XHCI_CMD_ENABLE_SLOT_CODE		( 9)
 #define XHCI_CMD_ADDRESS_DEVICE_CODE	(11)
 #define XHCI_CMD_NOOP_CODE				(23)
@@ -102,7 +104,8 @@
 #define XHCI_TRANSFER_CHAIN		(1<<4)
 #define XHCI_TRANSFER_ENT		(1<<1)
 
-#define XHCI_OUTPUT_CONTEXT_STATE(con) 
+
+#define XHCI_TRANSFER_TYPE_IN_DATA	(3)
 
 extern char* XHCI_CMD_CODE[64];
 typedef struct{
@@ -273,4 +276,56 @@ typedef struct{
 	uint32_t rsvdZ6;
 }__attribute__((packed)) XHCI_CONTEXT_ENDPOINT;
 
-typedef
+typedef struct {
+    uint8_t bmRequestType;
+    uint8_t bRequest;
+    uint16_t wValue;
+    uint16_t wIndex;
+    uint16_t wLength;
+    uint32_t TRBTransferLength :17;
+    uint32_t ReservedZ1 : 5;
+    uint32_t InterrupterTarget : 10;
+    uint32_t C : 1;
+    uint32_t ReservedZ2 : 4;
+    uint32_t IOC : 1;
+    uint32_t IDT : 1;
+    uint32_t ReservedZ3 : 3;
+    uint32_t TRBType : 6;
+    uint32_t TransferType : 2;
+    uint32_t ReservedZ4 : 14;
+}__attribute__((packed)) XHCI_TRB_SETUP;
+
+typedef struct {
+	uint32_t data_low;
+	uint32_t data_high;
+	uint16_t transfer_len;
+	uint16_t tdsize:5;
+	uint16_t int_target: 11;
+    uint32_t C : 1;
+    uint32_t ENT : 1;
+    uint32_t ISP : 1;
+    uint32_t NS : 1;
+    uint32_t CH : 1;
+    uint32_t IOC : 1;
+    uint32_t IDT : 1;
+    uint32_t ReservedZ3 : 3;
+    uint32_t TRBType : 6;
+    uint32_t D : 1;
+    uint32_t ReservedZ4 : 15;
+}__attribute__((packed)) XHCI_TRB_DATA;
+
+typedef struct {
+	uint32_t res1;
+	uint32_t res2;
+	uint32_t res3:21;
+	uint32_t int_target: 11;
+    uint32_t C : 1;
+    uint32_t ENT : 1;
+    uint32_t res4 : 2;
+    uint32_t CH : 1;
+    uint32_t IOC : 1;
+    uint32_t res5 : 4;
+    uint32_t TRBType : 6;
+    uint32_t D : 1;
+    uint32_t ReservedZ4 : 15;
+}__attribute__((packed)) XHCI_TRB_STATUS;

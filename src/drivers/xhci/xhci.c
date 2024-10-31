@@ -426,6 +426,44 @@ void XHCI_ON_PORT_RESET(XHCI_TRB* trb){
 	XHCI_TRB slot_en=XHCI_CMD_ENABLE_SLOT(0,1);
 	XHCI_COMMAND(xhci_hub.command_ring,&slot_en);
 }
+void XHCI_GetDescriptor(XHCI_Endpoint* endp,void* buff,int len){
+			XHCI_TRB_SETUP setup={0};
+			XHCI_TRB_DATA data={0};
+			XHCI_TRB_STATUS status={0};
+			setup=(XHCI_TRB_SETUP){
+					.TRBType=XHCI_TRB_SETUP_STAGE_CODE,
+					.TransferType=XHCI_TRANSFER_TYPE_IN_DATA,
+					.TRBTransferLength=8,
+					.IOC=0,
+					.IDT=1,
+					.bmRequestType=0x80,
+					.bRequest=6,
+					.wValue=0x100,
+					.wIndex=0,
+					.C=1
+			};
+			data=(XHCI_TRB_DATA){
+					.TRBType=XHCI_TRB_DATA_CODE,
+					.D=1,
+					.transfer_len=len,
+					.CH=0,
+					.IOC=0,
+					.IDT=0,
+					.data_low=DWORD((uint64_t)buff,0),
+					.data_high=DWORD((uint64_t)buff,1),
+					.C=1
+			};
+			status=(XHCI_TRB_STATUS){
+					.TRBType=XHCI_TRB_STATUS_CODE,
+					.D=0,
+					.CH=0,
+					.IOC=1,
+					.C=1
+			};
+			XHCI_TRANSFER(endp, (XHCI_TRB*)&setup);
+			XHCI_TRANSFER(endp, (XHCI_TRB*)&data);
+			XHCI_TRANSFER(endp, (XHCI_TRB*)&status);
+}
 void XHCI_ON_COMMAND_COMPLETE(XHCI_TRB* trb){
 	XHCI_TRB* ptr=((XHCI_TRB*)(COMBINE_DWORD((uint64_t)trb->int2, trb->int1)&(~0xF)));
 	int trb_code=XHCI_TRB_TYPE(ptr->def);
@@ -453,28 +491,13 @@ void XHCI_ON_COMMAND_COMPLETE(XHCI_TRB* trb){
 			XHCI_CONTEXT_GENERIC* output=(XHCI_CONTEXT_GENERIC*)(xhci_hub.dcbaa[slot]);
 			printf("\t\tSLOT[%d] STATE:\t%x\n",slot,output[0].int4>>27);
 
+			void* buffer=malloc(8);
 
 			XHCI_Endpoint* endp=&xhci_hub.endpoints[slot];
-			XHCI_TRB setup,data,status;
-
-			setup.int1=0x80|6<<8|0x100<<16;
-			setup.int2=8<<16|0;
-			setup.int3=8;
-			setup.def=1|1<<6|2<<10|3<<16;
-
-			data.int1=DWORD((uint64_t)endp->base,0);
-			data.int2=DWORD((uint64_t)endp->base,1);
-			data.int3=8;
-			data.def =1|3<<10|1<<16;
-
-			status.int1=0;
-			status.int2=0;
-			status.int3=0;
-			status.def =1|4<<10|1<<5;
-			XHCI_TRANSFER(endp, &setup);
-			XHCI_TRANSFER(endp, &data);
-			XHCI_TRANSFER(endp, &status);
+			XHCI_GetDescriptor(endp,buffer,8);
 			XHCI_DOORBELL(slot,1);
+			LOGVALD(buffer);
+			LOGVALD(U64(buffer));
 			break;
 		default:
 			printf("\tCOMMAND COMPLETE[%x]\t%x->%s\tSTATUS:\t%x\n",
