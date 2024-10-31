@@ -182,8 +182,12 @@ typedef struct {
 	uint32_t psiv[1];
 }__attribute__((packed)) XHCI_SUPPORTED_PROTOCOL;
 
+typedef struct{
+	USB_CONFIG_DESCRIPTOR* config;
+	void** interfaces;
+}  XHCI_CONFIG;
 typedef struct {
-	uint8_t desc[18];
+	USB_DEVICE_DESCRIPTOR desc;
 	int mutex;
 	int c;
 	int sz;
@@ -192,6 +196,7 @@ typedef struct {
 	void* contexts;
 	char desc_product[100];
 	int done;
+	XHCI_CONFIG* configs;
 }XHCI_Endpoint;
 
 typedef struct{
@@ -211,7 +216,6 @@ typedef struct{
 	fixedlist SupportedProtocols;
 	XHCI_Endpoint* endpoints;
 }XHCI_HUB;
-
 
 typedef union {
 	struct {

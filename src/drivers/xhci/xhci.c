@@ -1,5 +1,6 @@
 #include "xhci.h"
 #include "drivers/pci.h"
+#include "drivers/usb/usb.h"
 #include "stdlib/stdio.h"
 #include "stdlib/stdlib.h"
 #include "stdlib/string.h"
@@ -493,8 +494,8 @@ void XHCI_ON_COMMAND_COMPLETE(XHCI_TRB* trb){
 			printf("\tADDRESSED SLOT[%x]\tWITH STATUS:\t%x\n",slot,status);
 			if(status!=1)return;
 			XHCI_CONTEXT_GENERIC* output=(XHCI_CONTEXT_GENERIC*)(xhci_hub.dcbaa[slot]);
-			printf("\t\tSLOT[%d] STATE:\t%x\n",slot,output[0].int4>>27);
-			XHCI_GetDescriptor(endp,endp->desc,USB_DESC_TYPE_DEVICE,0,18);
+			//printf("\t\tSLOT[%d] STATE:\t%x\n",slot,output[0].int4>>27);
+			XHCI_GetDescriptor(endp,&endp->desc,USB_DESC_TYPE_DEVICE,0,18);
 			XHCI_DOORBELL(slot,1);
 			break;
 		case XHCI_CMD_EVALUATE_CONTEXT_CODE:
@@ -526,16 +527,39 @@ void XHCI_ON_TRANSFER_COMPLETE(XHCI_TRB* trb){
 	XHCI_Endpoint* endp=&xhci_hub.endpoints[slot];
 
 	if(endp->done==0){
-		XHCI_GetDescriptor(endp,endp->desc_product,USB_DESC_TYPE_STRING,endp->desc[15],18);
+		XHCI_GetDescriptor(endp,endp->desc_product,USB_DESC_TYPE_STRING,endp->desc.product_idx,18);
 		endp->done=1;
 		XHCI_DOORBELL(slot,1);
 	}else if(endp->done==1){
-		XHCI_GetDescriptor(endp,endp->desc_product,USB_DESC_TYPE_STRING,endp->desc[15],endp->desc_product[0]);
+		XHCI_GetDescriptor(endp,endp->desc_product,USB_DESC_TYPE_STRING,endp->desc.product_idx,endp->desc_product[0]);
 		endp->done=2;
 		XHCI_DOORBELL(slot,1);
-	}else{
-		printf("\t FOUND DEVICE\t");
+	}else if(endp->done==2){
+		printf("\t FOUND DEVICE [%x][%x] -> [%x][%x]\t",endp->desc.clazz,endp->desc.subclass,endp->desc.vendorid,endp->desc.productid);
 		printWStr((uint16_t*)(endp->desc_product+2),endp->desc_product[0]);
+		endp->configs=malloc(sizeof(XHCI_CONFIG)*endp->desc.numConfigs);
+		FORI(endp->desc.numConfigs){
+			endp->configs[i].config=malloc(9);
+			XHCI_GetDescriptor(endp,endp->configs[i].config,USB_DESC_TYPE_CONFIG,i,9);
+		}
+		XHCI_DOORBELL(slot,1);
+		endp->done++;
+	}else if(endp->done==3){
+		FORI(endp->desc.numConfigs){
+			USB_CONFIG_DESCRIPTOR* conf=endp->configs[i].config;
+			int len=conf->total_len;
+			endp->configs[i].config=malloc(len);
+			XHCI_GetDescriptor(endp, endp->configs[i].config,USB_DESC_TYPE_CONFIG, i, len);
+		}
+		XHCI_DOORBELL(slot,1);
+		endp->done++;
+	}else if(endp->done==4){
+		FORI(endp->desc.numConfigs){
+			USB_CONFIG_DESCRIPTOR* conf=endp->configs[i].config;
+			LOGVALD(endp->configs[i]);
+		}
+	}else{
+
 	}
 
 	//EVALUATE CONTEXT
