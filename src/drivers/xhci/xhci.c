@@ -120,6 +120,14 @@ void XHCI_HANDLE_CAPABILITIES(void* data,PCIGeneralDevice* device,unsigned int m
 		printf("NEITHER MSI NOR MSI-X FOUND\n");
 	}
 }
+
+inline void XHCI_TRANSFER(XHCI_Endpoint* endp,XHCI_TRB* ptr){
+	endp->base[endp->c].int1=ptr->int1;
+	endp->base[endp->c].int2=ptr->int2;
+	endp->base[endp->c].int3=ptr->int3;
+	endp->base[endp->c].def =ptr->def;
+	endp->c++;
+}
 void XHCI_HANDLE_EXTENDED_CAPABILITIES(XHCI_HUB* xhci_hub,void* data){
 	void* supportedprotocols[10];	
 	int spn=0;
@@ -355,6 +363,10 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	void* transfer=calloc(sizeof(void*)*maxslots);
 	xhci_hub.transfer_trb=(fixedlist){.n=maxslots,.data=transfer};
 	xhci_hub.pagesize=pagesize;
+	XHCI_Endpoint* endpoints=malloc(sizeof(XHCI_Endpoint)*maxslots);
+	FORI(maxslots)
+		endpoints[i]=(XHCI_Endpoint){0};
+	xhci_hub.endpoints=endpoints;
 
 
 	IRQ_RegisterHandler(0xB,XHCI_INT);
@@ -428,7 +440,12 @@ void XHCI_ON_COMMAND_COMPLETE(XHCI_TRB* trb){
 			//INIT PORT
 			XHCI_TRB* trbs= XHCI_getTransferTRBs();
 			((XHCI_TRB**)xhci_hub.transfer_trb.data)[slot]=trbs;
-			XHCI_SLOT_INITIALIZE(slot,1,trbs);
+			int port=1;
+			XHCI_SLOT_INITIALIZE(slot,port,trbs);
+			xhci_hub.endpoints[slot].c=0;
+			xhci_hub.endpoints[slot].sz=128;
+			xhci_hub.endpoints[slot].port=port;
+			xhci_hub.endpoints[slot].base=trbs;
 			break;
 		case XHCI_CMD_ADDRESS_DEVICE_CODE:
 			printf("\tADDRESSED SLOT[%x]\tWITH STATUS:\t%x\n",slot,status);
@@ -436,23 +453,27 @@ void XHCI_ON_COMMAND_COMPLETE(XHCI_TRB* trb){
 			XHCI_CONTEXT_GENERIC* output=(XHCI_CONTEXT_GENERIC*)(xhci_hub.dcbaa[slot]);
 			printf("\t\tSLOT[%d] STATE:\t%x\n",slot,output[0].int4>>27);
 
-			//READ BUFFER
-			void* buffer=malloc(8);
-			XHCI_TRB* t=((XHCI_TRB**)xhci_hub.transfer_trb.data)[slot];
-			t[0].int1=0x80|6<<8|0x100<<16;
-			t[0].int2=8<<16|0;
-			t[0].int3=8;
-			t[0].def=1|1<<6|2<<10|3<<16;
 
-			t[1].int1=DWORD((uint64_t)buffer,0);
-			t[1].int2=DWORD((uint64_t)buffer,1);
-			t[1].int3=8;
-			t[1].def =1|3<<10|1<<16;
+			XHCI_Endpoint* endp=&xhci_hub.endpoints[slot];
+			XHCI_TRB setup,data,status;
 
-			t[2].int1=0;
-			t[2].int2=0;
-			t[2].int3=0;
-			t[2].def =1|4<<10|1<<5;
+			setup.int1=0x80|6<<8|0x100<<16;
+			setup.int2=8<<16|0;
+			setup.int3=8;
+			setup.def=1|1<<6|2<<10|3<<16;
+
+			data.int1=DWORD((uint64_t)endp->base,0);
+			data.int2=DWORD((uint64_t)endp->base,1);
+			data.int3=8;
+			data.def =1|3<<10|1<<16;
+
+			status.int1=0;
+			status.int2=0;
+			status.int3=0;
+			status.def =1|4<<10|1<<5;
+			XHCI_TRANSFER(endp, &setup);
+			XHCI_TRANSFER(endp, &data);
+			XHCI_TRANSFER(endp, &status);
 			XHCI_DOORBELL(slot,1);
 			break;
 		default:
@@ -465,6 +486,14 @@ void XHCI_ON_COMMAND_COMPLETE(XHCI_TRB* trb){
 			break;
 	}
 }
+void XHCI_ON_TRANSFER_COMPLETE(XHCI_TRB* trb){
+	XHCI_TRB* ptr=(void*)((uint64_t)trb->int1|((uint64_t)trb->int2<<32));
+
+	int status=BYTE(trb->int3,3);
+	int slot=XHCI_TRB_SLOT(trb->def);
+	int endpointid=BYTE(trb->def,2)&0x1F;
+	printf("PTR:\t%p\n",ptr);
+}
 void XHCI_PROC_EVENT(XHCI_TRB* trb){
 	int trb_code=XHCI_TRB_TYPE(trb->def);
 	switch(trb_code){
@@ -473,6 +502,9 @@ void XHCI_PROC_EVENT(XHCI_TRB* trb){
 			break;
 		case XHCI_TRB_CODE_COMMAND_COMPLETED:
 			XHCI_ON_COMMAND_COMPLETE(trb);
+			break;
+		case XHCI_TRB_CODE_TRANSFER_COMPLETED:
+			XHCI_ON_TRANSFER_COMPLETE(trb);
 			break;
 		default:
 			printf("\tXHCI_TRB\t%x\n",XHCI_TRB_TYPE(trb[0].def));

@@ -58,10 +58,10 @@
 #define XHCI_PORT_PLC				(1<<22)
 #define XHCI_PORT_CEC				(1<<23)
 
-#define XHCI_CMD_NOOP_CODE				(23)
+#define XHCI_CMD_SETUP_STAGE_CODE		( 2)
 #define XHCI_CMD_ENABLE_SLOT_CODE		( 9)
 #define XHCI_CMD_ADDRESS_DEVICE_CODE	(11)
-#define XHCI_CMD_SETUP_STAGE_CODE		( 2)
+#define XHCI_CMD_NOOP_CODE				(23)
 
 #define XHCI_CMD_NOOP(C) ((XHCI_TRB){.int1=0,.int2=0,.int3=0,.def=XHCI_CMD_NOOP_CODE<<10|((C)&0x1)})
 #define XHCI_CMD_ENABLE_SLOT(type,C) ((XHCI_TRB){.int1=0,.int2=0,.int3=0,.def=XHCI_CMD_ENABLE_SLOT_CODE<<10|type<<16|((C)&0x1)})
@@ -72,8 +72,9 @@
 
 #define XHCI_TRB_NOOP(C,target) ((XHCI_TRB){.int1=0,.int2=0,.int3=target<<22,.def=XHCI_CMD_NOOP_CODE<<10|((C)&0x1)})
 
-#define XHCI_TRB_CODE_PORT_STATUS_CHANGE	(0x22)
+#define XHCI_TRB_CODE_TRANSFER_COMPLETED	(0x20)
 #define XHCI_TRB_CODE_COMMAND_COMPLETED		(0x21)
+#define XHCI_TRB_CODE_PORT_STATUS_CHANGE	(0x22)
 
 #define XHCI_NO_INT (0x1000)
 #define WAIT_FOR_INT(xhci_hub) xhci_hub.flag=XHCI_NO_INT;\
@@ -165,11 +166,13 @@ typedef struct {
 	uint32_t psiv[1];
 }__attribute__((packed)) XHCI_SUPPORTED_PROTOCOL;
 
-
 typedef struct {
-	XHCI_TRB* transfer;	
-	int n;
-	int i;
+	uint8_t desc[18];
+	int mutex;
+	int c;
+	int sz;
+	int port;
+	XHCI_TRB* base;
 }XHCI_Endpoint;
 
 typedef struct{
@@ -187,6 +190,7 @@ typedef struct{
 	fixedlist transfer_trb;
 	unsigned long pagesize;
 	fixedlist SupportedProtocols;
+	XHCI_Endpoint* endpoints;
 }XHCI_HUB;
 
 
@@ -269,3 +273,4 @@ typedef struct{
 	uint32_t rsvdZ6;
 }__attribute__((packed)) XHCI_CONTEXT_ENDPOINT;
 
+typedef
