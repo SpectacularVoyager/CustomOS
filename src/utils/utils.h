@@ -1,3 +1,6 @@
+#pragma once
+#include "stdint.h"
+#include "stdlib/stdio.h"
 #define BETWEEN(x,a,b) (x>=a && x<=b)
 
 #define MIN(a,b) (((a)<(b))?(a):(b))
@@ -14,3 +17,4 @@
 
 #define GETOR(a,b)	((a)!=0)?(a):(b)
 
+void printWStr(uint16_t* ptr,size_t len);

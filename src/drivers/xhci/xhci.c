@@ -4,11 +4,11 @@
 #include "stdlib/stdlib.h"
 #include "stdlib/string.h"
 #include <stddef.h>
+#include <stdint.h>
 #include "utils/bit.h"
 #include "utils/utils.h"
 #include "drivers/msix/msix.h"
 #include "devices/apic/timer.h"
-
 //#define XHCI_DEBUG
 
 void* xhci_operation_registers;
@@ -423,7 +423,7 @@ void XHCI_ON_PORT_RESET(XHCI_TRB* trb){
 	XHCI_TRB slot_en=XHCI_CMD_ENABLE_SLOT(0,1);
 	XHCI_COMMAND(xhci_hub.command_ring,&slot_en);
 }
-void XHCI_GetDescriptor(XHCI_Endpoint* endp,void* buff,int index,int len){
+void XHCI_GetDescriptor(XHCI_Endpoint* endp,void* buff,int type,int index,int len){
 			XHCI_TRB_SETUP setup={0};
 			XHCI_TRB_DATA data={0};
 			XHCI_TRB_STATUS status={0};
@@ -434,9 +434,9 @@ void XHCI_GetDescriptor(XHCI_Endpoint* endp,void* buff,int index,int len){
 					.IOC=0,
 					.IDT=1,
 					.bmRequestType=0x80,
-					.bRequest=6,
-					.wValue=0x100,
-					.wIndex=index,
+					.bRequest=USB_REQUEST_GET_DESCRIPTOR,
+					.wValue=USB_GET_DESC_VAL(index,type),
+					.wIndex=0,
 					.wLength=len,
 					.C=1
 			};
@@ -491,7 +491,7 @@ void XHCI_ON_COMMAND_COMPLETE(XHCI_TRB* trb){
 			if(status!=1)return;
 			XHCI_CONTEXT_GENERIC* output=(XHCI_CONTEXT_GENERIC*)(xhci_hub.dcbaa[slot]);
 			printf("\t\tSLOT[%d] STATE:\t%x\n",slot,output[0].int4>>27);
-			XHCI_GetDescriptor(endp,endp->desc,0,18);
+			XHCI_GetDescriptor(endp,endp->desc,USB_DESC_TYPE_DEVICE,0,18);
 			XHCI_DOORBELL(slot,1);
 			break;
 		case XHCI_CMD_EVALUATE_CONTEXT_CODE:
@@ -520,8 +520,16 @@ void XHCI_ON_TRANSFER_COMPLETE(XHCI_TRB* trb){
 	int status=BYTE(trb->int3,3);
 	int slot=XHCI_TRB_SLOT(trb->def);
 	int endpointid=BYTE(trb->def,2)&0x1F;
-
 	XHCI_Endpoint* endp=&xhci_hub.endpoints[slot];
+
+	if(endp->done==0){
+		XHCI_GetDescriptor(endp,endp->desc_product,USB_DESC_TYPE_STRING,endp->desc[15],200);
+		endp->done=1;
+		XHCI_DOORBELL(slot,1);
+	}else{
+		LOGVALD(U64(endp->desc_product));
+		printWStr((uint16_t*)(endp->desc_product+2),98);
+	}
 
 	//EVALUATE CONTEXT
 	XHCI_CONTEXT_GENERIC* output=(XHCI_CONTEXT_GENERIC*)(xhci_hub.dcbaa[slot]);

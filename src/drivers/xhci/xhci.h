@@ -5,6 +5,7 @@
 #include "drivers/pci.h"
 #include "utils/bit.h"
 #include "utils/fixedlist.h"
+#include "drivers/usb/usb.h"
 #define XHCI_REG_USBCMD		(0x0)
 #define XHCI_REG_USBSTS		(0x4)
 #define XHCI_REG_PAGESIZE	(0x8)
@@ -117,7 +118,6 @@
 #define XHCI_TRANSFER_CHAIN		(1<<4)
 #define XHCI_TRANSFER_ENT		(1<<1)
 
-
 #define XHCI_TRANSFER_TYPE_IN_DATA	(3)
 
 extern char* XHCI_CMD_CODE[64];
@@ -190,7 +190,8 @@ typedef struct {
 	int port;
 	XHCI_TRB* base;
 	void* contexts;
-	char* desc_product;
+	char desc_product[18];
+	int done;
 }XHCI_Endpoint;
 
 typedef struct{

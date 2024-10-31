@@ -1,5 +1,5 @@
 #pragma once
-
+#include "stdint.h"
 #define DWORD(n,i) ((n>>(32*i))&0xFFFFFFFF)
 #define WORD(n,i) ((n>>(16*i))&0xFFFF)
 #define BYTE(n,i) ((n>>(8*i))&0xFF)
@@ -35,3 +35,7 @@
 
 #define MASK(a,b)	((a)&(~(b)))
 #define VAL(a)		(a)
+
+inline void printWSTR(void* ptr){
+	uint16_t* p=(void*)ptr;
+}
