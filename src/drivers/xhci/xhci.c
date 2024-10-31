@@ -204,7 +204,7 @@ void XHCI_SLOT_INITIALIZE(int slot,int port,XHCI_TRB* transfer){
 
 	//ENDPOINT CONTEXT 0
 	XHCI_CONTEXT_ENDPOINT* endpoint0=input_context+(cz*2);
-	endpoint0->ep_type=XHCI_ENPOINT_TYPE_CONTROL;
+	endpoint0->ep_type=XHCI_ENDPOINT_CONTROL;
 	endpoint0->max_packet_size=XHCI_PORT_SPEED_PACK_SIZE_LS;
 	endpoint0->max_burst_size=0;
 	endpoint0->tr_dequeue_pointer=XHCI_DEQUEUE_PTR((uint64_t)transfer, 1);
@@ -556,7 +556,8 @@ void XHCI_ON_TRANSFER_COMPLETE(XHCI_TRB* trb){
 	}else if(endp->done==4){
 		FORI(endp->desc.numConfigs){
 			USB_CONFIG_DESCRIPTOR* conf=endp->configs[i].config;
-			LOGVALD(endp->configs[i]);
+			USB_INTERFACE_DESCRIPTOR* intf=((void*)endp->configs[i].config)+9;
+			printf("CONFIG [%d] INTERFACE [0] -> [%x][%x][%x]\n",i,intf->clazz,intf->subclazz,intf->protocol);
 		}
 	}else{
 

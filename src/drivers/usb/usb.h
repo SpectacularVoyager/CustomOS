@@ -63,7 +63,7 @@ typedef struct {
 	uint8_t type;
 	uint8_t interface_number;
 	uint8_t alternate;
-	uint8_t num_endpoitns;
+	uint8_t num_endpoints;
 	uint8_t clazz;
 	uint8_t subclazz;
 	uint8_t protocol;
