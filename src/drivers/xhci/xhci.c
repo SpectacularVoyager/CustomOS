@@ -438,44 +438,82 @@ void XHCI_ON_PORT_RESET(XHCI_TRB* trb){
 		XHCI_PORT_RESET(portid);
 	}
 }
-void XHCI_GetDescriptor(XHCI_Endpoint* endp,void* buff,int type,int index,int len){
-			XHCI_TRB_SETUP setup={0};
-			XHCI_TRB_DATA data={0};
-			XHCI_TRB_STATUS status={0};
-			setup=(XHCI_TRB_SETUP){
-					.TRBType=XHCI_TRB_SETUP_STAGE_CODE,
-					.TransferType=XHCI_TRANSFER_TYPE_IN_DATA,
-					.TRBTransferLength=8,
-					.IOC=0,
-					.IDT=1,
-					.bmRequestType=0x80,
-					.bRequest=USB_REQUEST_GET_DESCRIPTOR,
-					.wValue=USB_GET_DESC_VAL(index,type),
-					.wIndex=0,
-					.wLength=len,
-					.C=1
-			};
-			XHCI_TRANSFER(endp, (XHCI_TRB*)&setup);
-			data=(XHCI_TRB_DATA){
-					.TRBType=XHCI_TRB_DATA_CODE,
+void XHCI_GetDescriptor(XHCI_Endpoint* endp,void* buff,int type,int index,int len,int maxpack){
+	XHCI_TRB_SETUP setup={0};
+	setup=(XHCI_TRB_SETUP){
+		.TRBType=XHCI_TRB_SETUP_STAGE_CODE,
+			.TransferType=XHCI_TRANSFER_TYPE_IN_DATA,
+			.TRBTransferLength=8,
+			.IOC=0,
+			.IDT=1,
+			.bmRequestType=0x80,
+			.bRequest=USB_REQUEST_GET_DESCRIPTOR,
+			.wValue=USB_GET_DESC_VAL(index,type),
+			.wIndex=0,
+			.wLength=len,
+			.C=1
+	};
+	XHCI_TRANSFER(endp, (XHCI_TRB*)&setup);
+	XHCI_TRB_DATA data={0};
+	data=(XHCI_TRB_DATA){
+		.TRBType=XHCI_TRB_DATA_CODE,
+			.D=1,
+			.transfer_len=MIN(maxpack,len),
+			.CH=1,
+			.IOC=0,
+			.IDT=0,
+			.data_low=DWORD((uint64_t)buff,0),
+			.data_high=DWORD((uint64_t)buff,1),
+			.C=1
+	};
+	if(maxpack>=len){
+		data.CH=0;
+		XHCI_TRANSFER(endp, (XHCI_TRB*)&data);
+	}else{
+		data.CH=1;
+		XHCI_TRANSFER(endp, (XHCI_TRB*)&data);
+		len-=maxpack;
+		void* buff2=buff+8;
+		FORI((len-1)/maxpack){
+			XHCI_TRB_NORMAL normal={0};
+			normal=(XHCI_TRB_NORMAL){
+				.TRBType=XHCI_TRB_NORMAL_CODE,
+					.data_low=DWORD((uint64_t)buff2,0),
+					.data_high=DWORD((uint64_t)buff2,1),
+					.transfer_len=maxpack,
+					.tdsize=0,
 					.D=1,
-					.transfer_len=len,
-					.CH=0,
+					.CH=1,
 					.IOC=0,
 					.IDT=0,
-					.data_low=DWORD((uint64_t)buff,0),
-					.data_high=DWORD((uint64_t)buff,1),
 					.C=1
 			};
-			XHCI_TRANSFER(endp, (XHCI_TRB*)&data);
-			status=(XHCI_TRB_STATUS){
-					.TRBType=XHCI_TRB_STATUS_CODE,
-					.D=0,
-					.CH=0,
-					.IOC=1,
-					.C=1
-			};
-			XHCI_TRANSFER(endp, (XHCI_TRB*)&status);
+			XHCI_TRANSFER(endp, (XHCI_TRB*)&normal);
+			buff+=8;
+		}
+		XHCI_TRB_NORMAL normal={0};
+		normal=(XHCI_TRB_NORMAL){
+			.TRBType=XHCI_TRB_NORMAL_CODE,
+				.data_low=DWORD((uint64_t)buff2,0),
+				.data_high=DWORD((uint64_t)buff2,1),
+				.transfer_len=len%maxpack,
+				.tdsize=0,
+				.D=1,
+				.CH=0,
+				.IOC=0,
+				.IDT=0,
+				.C=1
+		};
+	}
+	XHCI_TRB_STATUS status={0};
+	status=(XHCI_TRB_STATUS){
+		.TRBType=XHCI_TRB_STATUS_CODE,
+			.D=0,
+			.CH=0,
+			.IOC=1,
+			.C=1
+	};
+	XHCI_TRANSFER(endp, (XHCI_TRB*)&status);
 }
 void XHCI_ON_COMMAND_COMPLETE(XHCI_TRB* trb){
 	XHCI_TRB* ptr=((XHCI_TRB*)(COMBINE_DWORD((uint64_t)trb->int2, trb->int1)&(~0xF)));
@@ -512,7 +550,7 @@ void XHCI_ON_COMMAND_COMPLETE(XHCI_TRB* trb){
 				return;
 			}
 			XHCI_CONTEXT_GENERIC* output=(XHCI_CONTEXT_GENERIC*)(xhci_hub.dcbaa[slot]);
-			XHCI_GetDescriptor(endp,&endp->desc,USB_DESC_TYPE_DEVICE,0,8);
+			XHCI_GetDescriptor(endp,&endp->desc,USB_DESC_TYPE_DEVICE,0,8,8);
 			XHCI_DOORBELL(slot,1);
 			break;
 		case XHCI_CMD_EVALUATE_CONTEXT_CODE:
@@ -544,60 +582,8 @@ void XHCI_ON_TRANSFER_COMPLETE(XHCI_TRB* trb){
 	int slot=XHCI_TRB_SLOT(trb->def);
 	int endpointid=BYTE(trb->def,2)&0x1F;
 	XHCI_Endpoint* endp=&xhci_hub.endpoints[slot];
+	hexdump(&endp->desc,18,1000);
 
-	if(endp->done==0){
-		void* input_context=endp->contexts;
-		XHCI_CONTEXT_CONTROL* control=input_context;
-		XHCI_CONTEXT_ENDPOINT* endp0=input_context+2*cz;
-		control->add=0b10;
-		endp0->max_packet_size=XHCI_MAX_PACKETS(endp->desc.usb_release,endp->desc.maxpackets);
-		XHCI_TRB address=XHCI_CMD_EVALUATE_CONTEXT((uint64_t)input_context, slot, 0, 1);
-		XHCI_COMMAND(xhci_hub.command_ring,&address);
-		XHCI_DOORBELL(0,0);
-		XHCI_GetDescriptor(endp,&endp->desc,USB_DESC_TYPE_DEVICE,0,18);
-		XHCI_DOORBELL(slot,1);
-		endp->done++;
-	}else if(endp->done==1){
-		printf("DESC:\t");
-		hexdump(&endp->desc,18,1000);
-		LOGVAL(endp->desc.numConfigs);
-		printf("\t FOUND DEVICE [%x][%x] -> [%x][%x]\n",endp->desc.clazz,endp->desc.subclass,endp->desc.vendorid,endp->desc.productid);
-		endp->configs=malloc(sizeof(XHCI_CONFIG)*endp->desc.numConfigs);
-		FORI(endp->desc.numConfigs){
-			endp->configs[i].config=malloc(9);
-			XHCI_GetDescriptor(endp,endp->configs[i].config,USB_DESC_TYPE_CONFIG,i,9);
-		}
-		XHCI_DOORBELL(slot,1);
-	endp->done++;
-	}else if(endp->done==2){
-		FORI(endp->desc.numConfigs){
-			USB_CONFIG_DESCRIPTOR* conf=endp->configs[i].config;
-			LOGVALD(U64(endp->configs[i].config));
-			int len=conf->total_len;
-			endp->configs[i].config=malloc(len);
-			XHCI_GetDescriptor(endp, endp->configs[i].config,USB_DESC_TYPE_CONFIG, i, len);
-		}
-		XHCI_DOORBELL(slot,1);
-		endp->done++;
-	}else{
-		FORI(endp->desc.numConfigs){
-			USB_CONFIG_DESCRIPTOR* conf=endp->configs[i].config;
-			int len=conf->total_len;
-			hexdump(conf,len,32);
-		}
-
-	}
-
-	//EVALUATE CONTEXT
-	XHCI_CONTEXT_GENERIC* output=(XHCI_CONTEXT_GENERIC*)(xhci_hub.dcbaa[slot]);
-	//if(endp->desc[7]!=8){
-	//	void* input_context=xhci_hub.endpoints[slot].contexts;
-	//	XHCI_CONTEXT_ENDPOINT* endp1=input_context+2*cz;
-	//	endp1->max_packet_size=512;
-	//	XHCI_TRB address=XHCI_CMD_EVALUATE_CONTEXT((uint64_t)input_context, slot, 0, 1);
-	//	XHCI_COMMAND(xhci_hub.command_ring,&address);
-	//	XHCI_DOORBELL(0,0);
-	//}
 }
 void XHCI_PROC_EVENT(XHCI_TRB* trb){
 	int trb_code=XHCI_TRB_TYPE(trb->def);

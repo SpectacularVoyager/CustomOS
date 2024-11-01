@@ -60,6 +60,7 @@
 #define XHCI_PORT_PLC				(1<<22)
 #define XHCI_PORT_CEC				(1<<23)
 
+#define XHCI_TRB_NORMAL_CODE			( 1)
 #define XHCI_TRB_SETUP_STAGE_CODE		( 2)
 #define XHCI_TRB_DATA_CODE				( 3)
 #define XHCI_TRB_STATUS_CODE			( 4)
@@ -348,6 +349,26 @@ typedef struct {
     uint32_t D : 1;
     uint32_t ReservedZ4 : 15;
 }__attribute__((packed)) XHCI_TRB_DATA;
+
+typedef struct {
+	uint32_t data_low;
+	uint32_t data_high;
+	uint16_t transfer_len;
+	uint16_t tdsize:5;
+	uint16_t int_target: 11;
+    uint32_t C : 1;
+    uint32_t ENT : 1;
+    uint32_t ISP : 1;
+    uint32_t NS : 1;
+    uint32_t CH : 1;
+    uint32_t IOC : 1;
+    uint32_t IDT : 1;
+    uint32_t ReservedZ3 : 2;
+    uint32_t BEI : 1;
+    uint32_t TRBType : 6;
+    uint32_t D : 1;
+    uint32_t ReservedZ4 : 15;
+}__attribute__((packed)) XHCI_TRB_NORMAL;
 
 typedef struct {
 	uint32_t res1;
