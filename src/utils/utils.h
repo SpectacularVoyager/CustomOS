@@ -20,4 +20,4 @@
 
 void printWStr(uint16_t* ptr,size_t len);
 
-inline void hexdump(void* mem,size_t size,size_t stride);
+void hexdump(void* mem,size_t size,size_t stride);

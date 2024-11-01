@@ -388,8 +388,8 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	XHCI_DOORBELL(0,0);
 	SetColor(0xffffff);
 
-	//FORI(maxports)
-	//	XHCI_PORT_RESET(i);
+	FORI(maxports)
+		XHCI_PORT_RESET(i);
 	//XHCI_PORT_RESET(0);
 	XHCI_DOORBELL(0,0);
 #ifdef XHCI_DEBUG
@@ -550,6 +550,7 @@ void XHCI_ON_TRANSFER_COMPLETE(XHCI_TRB* trb){
 		XHCI_CONTEXT_CONTROL* control=input_context;
 		XHCI_CONTEXT_ENDPOINT* endp0=input_context+2*cz;
 		control->add=0b10;
+		LOGVAL(endp->desc.usb);
 		endp0->max_packet_size=CLAMP(1<<endp->desc.maxpackets,8,512);
 		XHCI_TRB address=XHCI_CMD_EVALUATE_CONTEXT((uint64_t)input_context, slot, 0, 1);
 		XHCI_COMMAND(xhci_hub.command_ring,&address);
@@ -558,22 +559,33 @@ void XHCI_ON_TRANSFER_COMPLETE(XHCI_TRB* trb){
 		XHCI_DOORBELL(slot,1);
 		endp->done++;
 	}else if(endp->done==1){
-		endp->desc_product=malloc(8);
-		XHCI_GetDescriptor(endp,endp->desc_product,USB_DESC_TYPE_STRING,endp->desc.manufacturer_idx,8);
+		printf("DESC:\t");
+		hexdump(&endp->desc,18,1000);
+		LOGVAL(endp->desc.numConfigs);
+		printf("\t FOUND DEVICE [%x][%x] -> [%x][%x]\n",endp->desc.clazz,endp->desc.subclass,endp->desc.vendorid,endp->desc.productid);
+		endp->configs=malloc(sizeof(XHCI_CONFIG)*endp->desc.numConfigs);
+		FORI(endp->desc.numConfigs){
+			endp->configs[i].config=malloc(9);
+			XHCI_GetDescriptor(endp,endp->configs[i].config,USB_DESC_TYPE_CONFIG,i,9);
+		}
 		XHCI_DOORBELL(slot,1);
-		endp->done++;
+	endp->done++;
 	}else if(endp->done==2){
-		LOGVALD(U64(&endp->desc));
-		LOGVALD((endp->desc_product));
-		LOGVALD(U64(endp->desc_product));
-		int len=endp->desc_product[0];
-		endp->desc_product=malloc(endp->desc_product[0]);
-		XHCI_GetDescriptor(endp,endp->desc_product,USB_DESC_TYPE_STRING,endp->desc.manufacturer_idx,len);
+		FORI(endp->desc.numConfigs){
+			USB_CONFIG_DESCRIPTOR* conf=endp->configs[i].config;
+			LOGVALD(U64(endp->configs[i].config));
+			int len=conf->total_len;
+			endp->configs[i].config=malloc(len);
+			XHCI_GetDescriptor(endp, endp->configs[i].config,USB_DESC_TYPE_CONFIG, i, len);
+		}
 		XHCI_DOORBELL(slot,1);
 		endp->done++;
-	}else if(endp->done==3){
-		printWStr((uint16_t*)(&endp->desc_product[2]),endp->desc_product[0]/2);
 	}else{
+		FORI(endp->desc.numConfigs){
+			USB_CONFIG_DESCRIPTOR* conf=endp->configs[i].config;
+			int len=conf->total_len;
+			hexdump(conf,len,32);
+		}
 
 	}
 

@@ -128,6 +128,12 @@
 
 #define XHCI_TRANSFER_TYPE_IN_DATA	(3)
 
+inline int XHCI_MAX_PACKETS(unsigned int version,unsigned int val){
+	if((version>>8)==2){
+		return val;
+	}
+	return 1<<val;
+}
 
 extern char* XHCI_CMD_CODE[64];
 typedef struct{
