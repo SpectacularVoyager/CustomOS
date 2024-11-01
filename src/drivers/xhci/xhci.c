@@ -229,16 +229,17 @@ void __attribute__((optimize("O0"))) XHCI_LOAD_CRCR(volatile void* crcr,unsigned
 }
 XHCI_TRB* XHCI_getTransferTRBs(){
 	XHCI_TRB* trb=mallocAB(64*1024,64*1024,64*1024);
+	//memset(trb,0,64*1024);
 	FORI(128){
 		trb[i].int1=0;
 		trb[i].int2=0;
 		trb[i].int3=0;
 		trb[i].def =0;
 	}
-	trb[127].int1=DWORD((uint64_t)&xhci_hub.command_ring[0],0)&(~0xF);
-	trb[127].int2=DWORD((uint64_t)&xhci_hub.command_ring[0],1);
-	trb[127].int3=0|(0<<22);//IGNORED FOR CMD TRB
-	trb[127].def=(6<<10)|(1<<5)|1;
+	//trb[127].int1=DWORD((uint64_t)&xhci_hub.command_ring[0],0)&(~0xF);
+	//trb[127].int2=DWORD((uint64_t)&xhci_hub.command_ring[0],1);
+	//trb[127].int3=0|(0<<22);//IGNORED FOR CMD TRB
+	//trb[127].def=(6<<10)|(1<<5)|1;
 	return trb;
 }
 int XHCI_INIT(PCI_device* device,void* pcibase){
@@ -358,12 +359,14 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	xhci_hub.doorbell=doorbell,
 	xhci_hub.flag=0,
 	xhci_hub.event_ring=NULL;
-	void* transfer=calloc(sizeof(void*)*maxslots);
+	void* transfer=malloc(sizeof(void*)*maxslots);
+	memset(transfer,0,sizeof(void*)*maxslots);
 	xhci_hub.transfer_trb=(fixedlist){.n=maxslots,.data=transfer};
 	xhci_hub.pagesize=pagesize;
 	XHCI_Endpoint* endpoints=malloc(sizeof(XHCI_Endpoint)*maxslots);
-	FORI(maxslots)
-		endpoints[i]=(XHCI_Endpoint){0};
+	FORI(maxslots){
+		memset(&endpoints[i],0,sizeof(XHCI_Endpoint));
+	}
 	xhci_hub.endpoints=endpoints;
 
 
@@ -494,16 +497,13 @@ void XHCI_ON_COMMAND_COMPLETE(XHCI_TRB* trb){
 			printf("\tADDRESSED SLOT[%x]\tWITH STATUS:\t%x\n",slot,status);
 			if(status!=1)return;
 			XHCI_CONTEXT_GENERIC* output=(XHCI_CONTEXT_GENERIC*)(xhci_hub.dcbaa[slot]);
-			//printf("\t\tSLOT[%d] STATE:\t%x\n",slot,output[0].int4>>27);
-			XHCI_GetDescriptor(endp,&endp->desc,USB_DESC_TYPE_DEVICE,0,18);
+			XHCI_GetDescriptor(endp,&endp->desc,USB_DESC_TYPE_DEVICE,0,8);
 			XHCI_DOORBELL(slot,1);
 			break;
 		case XHCI_CMD_EVALUATE_CONTEXT_CODE:
 			printf("\tEVALUATED SLOT[%x]\tWITH STATUS:\t%x\n",slot,status);
 			if(status!=1)return;
 			printf("\t\tSLOT[%d] STATE:\t%x\n",slot,output[0].int4>>27);
-			//XHCI_GetDescriptor(endp,endp->desc,18);
-			//XHCI_DOORBELL(slot,1);
 			break;
 		default:
 			printf("\tCOMMAND COMPLETE[%x]\t%x->%s\tSTATUS:\t%x\n",
@@ -515,53 +515,53 @@ void XHCI_ON_COMMAND_COMPLETE(XHCI_TRB* trb){
 			break;
 	}
 }
+//EVALUATE CONTEXT BASED ON SPEED AS WELL MULTI LINK TRB
 void XHCI_ON_TRANSFER_COMPLETE(XHCI_TRB* trb){
-	//printf("\tTRANSFER COMPLETE\n");
 	XHCI_TRB* ptr=(void*)((uint64_t)trb->int1|((uint64_t)trb->int2<<32));
 
 	int cz=32<<XHCI_CONTEXT_SIZE(xhci_hub.config);
 
 	int status=BYTE(trb->int3,3);
+	printf("\tTRANSFER COMPLETE WITH STATUS %x\n",status);
 	int slot=XHCI_TRB_SLOT(trb->def);
 	int endpointid=BYTE(trb->def,2)&0x1F;
 	XHCI_Endpoint* endp=&xhci_hub.endpoints[slot];
+//	if(endp->done==0){
+//		XHCI_GetDescriptor(endp,endp->desc_product,USB_DESC_TYPE_STRING,endp->desc.product_idx,18);
+//		endp->done=1;
+//		XHCI_DOORBELL(slot,1);
+//	}else if(endp->done==1){
+//		XHCI_GetDescriptor(endp,endp->desc_product,USB_DESC_TYPE_STRING,endp->desc.product_idx,endp->desc_product[0]);
+//		endp->done=2;
+//		XHCI_DOORBELL(slot,1);
+	//if(endp->done==0){
+	//	printf("\t FOUND DEVICE [%x][%x] -> [%x][%x]\t",endp->desc.clazz,endp->desc.subclass,endp->desc.vendorid,endp->desc.productid);
+	//	printWStr((uint16_t*)(endp->desc_product+2),endp->desc_product[0]);
+	//	endp->configs=malloc(sizeof(XHCI_CONFIG)*endp->desc.numConfigs);
+	//	FORI(endp->desc.numConfigs){
+	//		endp->configs[i].config=malloc(9);
+	//		XHCI_GetDescriptor(endp,endp->configs[i].config,USB_DESC_TYPE_CONFIG,i,9);
+	//	}
+	//	XHCI_DOORBELL(slot,1);
+	//	endp->done++;
+	//}else if(endp->done==1){
+	//	FORI(endp->desc.numConfigs){
+	//		USB_CONFIG_DESCRIPTOR* conf=endp->configs[i].config;
+	//		int len=conf->total_len;
+	//		endp->configs[i].config=malloc(len);
+	//		XHCI_GetDescriptor(endp, endp->configs[i].config,USB_DESC_TYPE_CONFIG, i, len);
+	//	}
+	//	XHCI_DOORBELL(slot,1);
+	//	endp->done++;
+	//}else if(endp->done==2){
+	//	FORI(endp->desc.numConfigs){
+	//		USB_CONFIG_DESCRIPTOR* conf=endp->configs[i].config;
+	//		USB_INTERFACE_DESCRIPTOR* intf=((void*)endp->configs[i].config)+9;
+	//		printf("CONFIG [%d] INTERFACE [0] -> [%x][%x][%x]\n",i,intf->clazz,intf->subclazz,intf->protocol);
+	//	}
+	//}else{
 
-	if(endp->done==0){
-		XHCI_GetDescriptor(endp,endp->desc_product,USB_DESC_TYPE_STRING,endp->desc.product_idx,18);
-		endp->done=1;
-		XHCI_DOORBELL(slot,1);
-	}else if(endp->done==1){
-		XHCI_GetDescriptor(endp,endp->desc_product,USB_DESC_TYPE_STRING,endp->desc.product_idx,endp->desc_product[0]);
-		endp->done=2;
-		XHCI_DOORBELL(slot,1);
-	}else if(endp->done==2){
-		printf("\t FOUND DEVICE [%x][%x] -> [%x][%x]\t",endp->desc.clazz,endp->desc.subclass,endp->desc.vendorid,endp->desc.productid);
-		printWStr((uint16_t*)(endp->desc_product+2),endp->desc_product[0]);
-		endp->configs=malloc(sizeof(XHCI_CONFIG)*endp->desc.numConfigs);
-		FORI(endp->desc.numConfigs){
-			endp->configs[i].config=malloc(9);
-			XHCI_GetDescriptor(endp,endp->configs[i].config,USB_DESC_TYPE_CONFIG,i,9);
-		}
-		XHCI_DOORBELL(slot,1);
-		endp->done++;
-	}else if(endp->done==3){
-		FORI(endp->desc.numConfigs){
-			USB_CONFIG_DESCRIPTOR* conf=endp->configs[i].config;
-			int len=conf->total_len;
-			endp->configs[i].config=malloc(len);
-			XHCI_GetDescriptor(endp, endp->configs[i].config,USB_DESC_TYPE_CONFIG, i, len);
-		}
-		XHCI_DOORBELL(slot,1);
-		endp->done++;
-	}else if(endp->done==4){
-		FORI(endp->desc.numConfigs){
-			USB_CONFIG_DESCRIPTOR* conf=endp->configs[i].config;
-			USB_INTERFACE_DESCRIPTOR* intf=((void*)endp->configs[i].config)+9;
-			printf("CONFIG [%d] INTERFACE [0] -> [%x][%x][%x]\n",i,intf->clazz,intf->subclazz,intf->protocol);
-		}
-	}else{
-
-	}
+	//}
 
 	//EVALUATE CONTEXT
 	XHCI_CONTEXT_GENERIC* output=(XHCI_CONTEXT_GENERIC*)(xhci_hub.dcbaa[slot]);
