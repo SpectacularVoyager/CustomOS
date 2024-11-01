@@ -388,8 +388,8 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	XHCI_DOORBELL(0,0);
 	SetColor(0xffffff);
 
-	FORI(maxports)
-		XHCI_PORT_RESET(i);
+	//FORI(maxports)
+	//	XHCI_PORT_RESET(i);
 	//XHCI_PORT_RESET(0);
 	XHCI_DOORBELL(0,0);
 #ifdef XHCI_DEBUG
