@@ -43,10 +43,11 @@
 #define XHCI_TRB_SLOT(x)			BYTE(x,3)
 #define XHCI_TRB_CYCLE(x)			((x)&0x1)
 
-#define XHCI_PORT_CONNECTED(PORTSC)	BIT(PORTSC,0)
-#define XHCI_PORT_ENABLED(PORTSC)	BIT(PORTSC,1)
-#define XHCI_PORT_STATE(PORTSC)		(BYTE(PORTSC,0)>>5)
-#define XHCI_PORT_SPEED(PORTSC)		(((PORTSC)>>10)&0xF)
+#define XHCI_PORT_CONNECTED(PORTSC)				BIT(PORTSC,0)
+#define XHCI_PORT_ENABLED(PORTSC)				BIT(PORTSC,1)
+#define XHCI_PORT_STATE(PORTSC)					(BYTE(PORTSC,0)>>5)
+#define XHCI_PORT_SPEED(PORTSC)					(((PORTSC)>>10)&0xF)
+#define XHCI_PORT_PORT_RESET_CHANGE(PORTSC)		(((PORTSC)>>21)&0x1)
 
 #define XHCI_PORT_CCS				(1<<0)
 #define XHCI_PORT_PED				(1<<1)
@@ -127,6 +128,7 @@
 
 #define XHCI_TRANSFER_TYPE_IN_DATA	(3)
 
+
 extern char* XHCI_CMD_CODE[64];
 typedef struct{
 	uint32_t IMAN;
@@ -201,7 +203,7 @@ typedef struct {
 	int port;
 	XHCI_TRB* base;
 	void* contexts;
-	char desc_product[100];
+	char* desc_product;
 	int done;
 	XHCI_CONFIG* configs;
 }XHCI_Endpoint;
