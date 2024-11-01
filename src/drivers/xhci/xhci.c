@@ -388,8 +388,8 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	XHCI_DOORBELL(0,0);
 	SetColor(0xffffff);
 
-	FORI(maxports)
-		XHCI_PORT_RESET(i);
+	//FORI(maxports)
+	//	XHCI_PORT_RESET(i);
 	//XHCI_PORT_RESET(0);
 	XHCI_DOORBELL(0,0);
 #ifdef XHCI_DEBUG
@@ -458,7 +458,7 @@ void XHCI_GetDescriptor(XHCI_Endpoint* endp,void* buff,int type,int index,int le
 	data=(XHCI_TRB_DATA){
 		.TRBType=XHCI_TRB_DATA_CODE,
 			.D=1,
-			.transfer_len=MIN(maxpack,len),
+			.transfer_len=MIN(len,maxpack),
 			.CH=1,
 			.IOC=0,
 			.IDT=0,
@@ -466,44 +466,24 @@ void XHCI_GetDescriptor(XHCI_Endpoint* endp,void* buff,int type,int index,int le
 			.data_high=DWORD((uint64_t)buff,1),
 			.C=1
 	};
-	if(maxpack>=len){
-		data.CH=0;
+	if(len<=maxpack){
+		data.transfer_len=len;
+		data.CH=1;
 		XHCI_TRANSFER(endp, (XHCI_TRB*)&data);
 	}else{
+		data.transfer_len=maxpack;
 		data.CH=1;
 		XHCI_TRANSFER(endp, (XHCI_TRB*)&data);
 		len-=maxpack;
-		void* buff2=buff+8;
-		FORI((len-1)/maxpack){
-			XHCI_TRB_NORMAL normal={0};
-			normal=(XHCI_TRB_NORMAL){
-				.TRBType=XHCI_TRB_NORMAL_CODE,
-					.data_low=DWORD((uint64_t)buff2,0),
-					.data_high=DWORD((uint64_t)buff2,1),
-					.transfer_len=maxpack,
-					.tdsize=0,
-					.D=1,
-					.CH=1,
-					.IOC=0,
-					.IDT=0,
-					.C=1
-			};
-			XHCI_TRANSFER(endp, (XHCI_TRB*)&normal);
-			buff+=8;
-		}
+		buff+=maxpack;
 		XHCI_TRB_NORMAL normal={0};
-		normal=(XHCI_TRB_NORMAL){
-			.TRBType=XHCI_TRB_NORMAL_CODE,
-				.data_low=DWORD((uint64_t)buff2,0),
-				.data_high=DWORD((uint64_t)buff2,1),
-				.transfer_len=len%maxpack,
-				.tdsize=0,
-				.D=1,
-				.CH=0,
-				.IOC=0,
-				.IDT=0,
-				.C=1
-		};
+		FORI((len-1)/maxpack){
+			normal=XHCI_TRB_NORMAL(buff,maxpack,1,1);
+			XHCI_TRANSFER(endp,(XHCI_TRB*)&normal);
+			buff+=maxpack;
+		}
+		normal=XHCI_TRB_NORMAL(buff,((len-1)%maxpack+1),0,1);
+		XHCI_TRANSFER(endp,(XHCI_TRB*)&normal);
 	}
 	XHCI_TRB_STATUS status={0};
 	status=(XHCI_TRB_STATUS){
@@ -550,7 +530,7 @@ void XHCI_ON_COMMAND_COMPLETE(XHCI_TRB* trb){
 				return;
 			}
 			XHCI_CONTEXT_GENERIC* output=(XHCI_CONTEXT_GENERIC*)(xhci_hub.dcbaa[slot]);
-			XHCI_GetDescriptor(endp,&endp->desc,USB_DESC_TYPE_DEVICE,0,8,8);
+			XHCI_GetDescriptor(endp,&endp->desc,USB_DESC_TYPE_DEVICE,0,18,8);
 			XHCI_DOORBELL(slot,1);
 			break;
 		case XHCI_CMD_EVALUATE_CONTEXT_CODE:
@@ -582,7 +562,7 @@ void XHCI_ON_TRANSFER_COMPLETE(XHCI_TRB* trb){
 	int slot=XHCI_TRB_SLOT(trb->def);
 	int endpointid=BYTE(trb->def,2)&0x1F;
 	XHCI_Endpoint* endp=&xhci_hub.endpoints[slot];
-	hexdump(&endp->desc,18,1000);
+	hexdump(&endp->desc,8,8);
 
 }
 void XHCI_PROC_EVENT(XHCI_TRB* trb){

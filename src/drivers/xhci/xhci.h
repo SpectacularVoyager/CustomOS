@@ -96,6 +96,19 @@
 		.int2=DWORD(ptr,1),.int3=0,\
 		.def=(((slot)&0xFF)<<24)|(XHCI_CMD_CONFIGURE_CODE<<10)|(((bsr)&0x1)<<9)|((C)&0x1)})
 
+#define XHCI_TRB_NORMAL(data,len,ch,c) (XHCI_TRB_NORMAL){\
+			.TRBType=XHCI_TRB_NORMAL_CODE,	\
+			.data_low=DWORD((uint64_t)data,0),	\
+			.data_high=DWORD((uint64_t)data,1),	\
+			.transfer_len=len,	\
+			.tdsize=0,	\
+			.D=1,	\
+			.CH=ch,	\
+			.IOC=0,	\
+			.IDT=0,	\
+			.C=c	\
+	}
+
 #define XHCI_TRB_NOOP(C,target) ((XHCI_TRB){.int1=0,.int2=0,.int3=target<<22,.def=XHCI_CMD_NOOP_CODE<<10|((C)&0x1)})
 
 #define XHCI_TRB_CODE_TRANSFER_COMPLETED	(0x20)
