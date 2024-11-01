@@ -33,6 +33,12 @@
 typedef struct {
 	uint8_t len;
 	uint8_t type;
+	uint16_t str;
+}__attribute__((packed)) USB_STRING_DESC_VAL;
+
+typedef struct {
+	uint8_t len;
+	uint8_t type;
 	uint16_t usb_release;
 	uint8_t clazz;
 	uint8_t subclass;
@@ -69,3 +75,4 @@ typedef struct {
 	uint8_t protocol;
 	uint8_t interface_index;
 }__attribute__((packed)) USB_INTERFACE_DESCRIPTOR;
+

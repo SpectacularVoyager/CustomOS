@@ -429,9 +429,9 @@ void XHCI_ON_PORT_RESET(XHCI_TRB* trb){
 			en,
 			XHCI_PORT_STATE(reg->PORTSC)
 		  );
+	if(XHCI_PORT_PORT_RESET_CHANGE(reg->PORTSC)==1){
 	*portptr=portid;
 	portptr++;
-	if(XHCI_PORT_PORT_RESET_CHANGE(reg->PORTSC)==1){
 		XHCI_TRB slot_en=XHCI_CMD_ENABLE_SLOT(0,1);
 		XHCI_COMMAND(xhci_hub.command_ring,&slot_en);
 	}else{
@@ -499,7 +499,7 @@ void XHCI_ON_COMMAND_COMPLETE(XHCI_TRB* trb){
 			int port=*--portptr;
 			printf("PORT STUFF\t\t");
 			XHCI_PRINT_PORT(port,&xhci_hub.ports[port-1]);
-			printf("PORTSC:\t%x\n",xhci_hub.ports[port-1]);
+			//printf("PORTSC:\t%x\n",xhci_hub.ports[port-1]);
 			XHCI_SLOT_INITIALIZE(slot,port,trbs);
 			xhci_hub.endpoints[slot].c=0;
 			xhci_hub.endpoints[slot].sz=128;
@@ -560,7 +560,6 @@ void XHCI_ON_TRANSFER_COMPLETE(XHCI_TRB* trb){
 	}else if(endp->done==1){
 		printf("DESC:\t");
 		hexdump(&endp->desc,18,1000);
-		LOGVAL(endp->desc.numConfigs);
 		printf("\t FOUND DEVICE [%x][%x] -> [%x][%x]\n",endp->desc.clazz,endp->desc.subclass,endp->desc.vendorid,endp->desc.productid);
 		endp->configs=malloc(sizeof(XHCI_CONFIG)*endp->desc.numConfigs);
 		FORI(endp->desc.numConfigs){
@@ -572,20 +571,31 @@ void XHCI_ON_TRANSFER_COMPLETE(XHCI_TRB* trb){
 	}else if(endp->done==2){
 		FORI(endp->desc.numConfigs){
 			USB_CONFIG_DESCRIPTOR* conf=endp->configs[i].config;
-			LOGVALD(U64(endp->configs[i].config));
 			int len=conf->total_len;
 			endp->configs[i].config=malloc(len);
 			XHCI_GetDescriptor(endp, endp->configs[i].config,USB_DESC_TYPE_CONFIG, i, len);
 		}
 		XHCI_DOORBELL(slot,1);
 		endp->done++;
-	}else{
+	}else if(endp->done==3){
 		FORI(endp->desc.numConfigs){
 			USB_CONFIG_DESCRIPTOR* conf=endp->configs[i].config;
 			int len=conf->total_len;
 			hexdump(conf,len,32);
 		}
-
+		endp->desc_product=malloc(8);
+		XHCI_GetDescriptor(endp,endp->desc_product,USB_DESC_TYPE_STRING,endp->desc.product_idx,8);
+		XHCI_DOORBELL(slot,1);
+		endp->done++;
+	}else if(endp->done==4){
+		int len=endp->desc_product->len;
+		endp->desc_product=malloc(len);
+		XHCI_GetDescriptor(endp,endp->desc_product,USB_DESC_TYPE_STRING,endp->desc.product_idx,len);
+		XHCI_DOORBELL(slot,1);
+		endp->done++;
+	}else if(endp->done==5){
+		printWStr((uint16_t*)&endp->desc_product->str, endp->desc_product->len/2-1);
+	}else{
 	}
 
 	//EVALUATE CONTEXT

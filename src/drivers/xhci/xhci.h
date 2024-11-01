@@ -209,7 +209,7 @@ typedef struct {
 	int port;
 	XHCI_TRB* base;
 	void* contexts;
-	char* desc_product;
+	USB_STRING_DESC_VAL* desc_product;
 	int done;
 	XHCI_CONFIG* configs;
 }XHCI_Endpoint;
