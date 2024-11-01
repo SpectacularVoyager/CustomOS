@@ -455,6 +455,7 @@ void XHCI_GetDescriptor(XHCI_Endpoint* endp,void* buff,int type,int index,int le
 					.wLength=len,
 					.C=1
 			};
+			XHCI_TRANSFER(endp, (XHCI_TRB*)&setup);
 			data=(XHCI_TRB_DATA){
 					.TRBType=XHCI_TRB_DATA_CODE,
 					.D=1,
@@ -466,6 +467,7 @@ void XHCI_GetDescriptor(XHCI_Endpoint* endp,void* buff,int type,int index,int le
 					.data_high=DWORD((uint64_t)buff,1),
 					.C=1
 			};
+			XHCI_TRANSFER(endp, (XHCI_TRB*)&data);
 			status=(XHCI_TRB_STATUS){
 					.TRBType=XHCI_TRB_STATUS_CODE,
 					.D=0,
@@ -473,8 +475,6 @@ void XHCI_GetDescriptor(XHCI_Endpoint* endp,void* buff,int type,int index,int le
 					.IOC=1,
 					.C=1
 			};
-			XHCI_TRANSFER(endp, (XHCI_TRB*)&setup);
-			XHCI_TRANSFER(endp, (XHCI_TRB*)&data);
 			XHCI_TRANSFER(endp, (XHCI_TRB*)&status);
 }
 void XHCI_ON_COMMAND_COMPLETE(XHCI_TRB* trb){
@@ -550,8 +550,7 @@ void XHCI_ON_TRANSFER_COMPLETE(XHCI_TRB* trb){
 		XHCI_CONTEXT_CONTROL* control=input_context;
 		XHCI_CONTEXT_ENDPOINT* endp0=input_context+2*cz;
 		control->add=0b10;
-		LOGVAL(endp->desc.usb);
-		endp0->max_packet_size=CLAMP(1<<endp->desc.maxpackets,8,512);
+		endp0->max_packet_size=XHCI_MAX_PACKETS(endp->desc.usb_release,endp->desc.maxpackets);
 		XHCI_TRB address=XHCI_CMD_EVALUATE_CONTEXT((uint64_t)input_context, slot, 0, 1);
 		XHCI_COMMAND(xhci_hub.command_ring,&address);
 		XHCI_DOORBELL(0,0);

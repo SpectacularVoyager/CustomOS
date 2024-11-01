@@ -33,7 +33,7 @@
 typedef struct {
 	uint8_t len;
 	uint8_t type;
-	uint16_t usb;
+	uint16_t usb_release;
 	uint8_t clazz;
 	uint8_t subclass;
 	uint8_t protocol;
