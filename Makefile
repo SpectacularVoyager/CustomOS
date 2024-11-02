@@ -17,6 +17,7 @@ USB?=3
 
 USB_MEDIA=/media/ankush/USBBoot
 
+IMAGE=iso.iso
 #QEMU_FLAGS:= $(QEMU_FLAGS) -device usb-storage,drive=fat32
 ifeq ($(USB),3)
 	QEMU_FLAGS:=$(QEMU_FLAGS) \
@@ -56,34 +57,34 @@ link:
 	@$(CC) -T linker.ld -o $(ISO) -ffreestanding -O2 -nostdlib $(shell find -name '*.o') -lgcc
 
 build:
-	@grub-mkrescue -o iso.iso ISO
+	@grub-mkrescue -o $(IMAGE) ISO
 
 isMultiBoot:
 	@./scripts/isMultiBoot.sh $(ISO)
 run: all
 	if [ -f disks/fat.img ]; then \
-		$(QEMU) $(QEMU_FLAGS) -hda iso.iso -hdb disks/fat.img; \
+		$(QEMU) $(QEMU_FLAGS) -hda $(IMAGE) -hdb disks/fat.img; \
 	else \
-		$(QEMU) $(QEMU_FLAGS) -hda iso.iso; \
+		$(QEMU) $(QEMU_FLAGS) -hda $(IMAGE); \
 	fi
 
 run_cfg: build isMultiBoot
-	@sudo $(QEMU) $(QEMU_FLAGS) -hda iso.iso
+	@sudo $(QEMU) $(QEMU_FLAGS) -hda $(IMAGE)
 
 part:
 	@$(QEMU) $(QEMU_FLAGS) -bios /usr/share/ovmf/OVMF.fd /dev/sdc
 
 # INSPECT MEM x/128b 0xfee00000
 debug: all
-	@$(QEMU) $(QEMU_FLAGS) -hda iso.iso -hdb disks/fat.img -monitor stdio
+	@$(QEMU) $(QEMU_FLAGS) -hda $(IMAGE) -hdb disks/fat.img -monitor stdio
 gdb: all
-	@$(QEMU) -s -S -net nic,model=e1000 -hda iso.iso
+	@$(QEMU) -s -S -net nic,model=e1000 -hda $(IMAGE)
 	# TO RUN
 	# make gdb
 	# gdb ISO/boot/os.bin
 	# In GDB: target remote :1234
 drive:
-	dd if=iso.iso of=/dev/sda status=progress
+	dd if=$(IMAGE) of=/dev/sda status=progress
 
 log:
 	@truncate -s 0 logs/serial.log
