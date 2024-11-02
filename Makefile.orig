@@ -57,12 +57,21 @@ link:
 	@$(CC) -T linker.ld -o $(ISO) -ffreestanding -O2 -nostdlib $(shell find -name '*.o') -lgcc
 
 build:
-	@grub-mkrescue -o iso.iso ISO
+	@grub-mkrescue -o $(IMAGE) ISO
 
 isMultiBoot:
 	@./scripts/isMultiBoot.sh $(ISO)
 run: all
 	if [ -f disks/fat.img ]; then \
+<<<<<<< HEAD
+		$(QEMU) $(QEMU_FLAGS) -hda iso.iso -hdb disks/fat.img; \
+	else \
+		$(QEMU) $(QEMU_FLAGS) -hda iso.iso; \
+	fi
+
+run_cfg: build isMultiBoot
+	@sudo $(QEMU) $(QEMU_FLAGS) -hda iso.iso
+=======
 		$(QEMU) $(QEMU_FLAGS) -hda $(IMAGE) -hdb disks/fat.img; \
 	else \
 		$(QEMU) $(QEMU_FLAGS) -hda $(IMAGE); \
@@ -70,6 +79,7 @@ run: all
 
 run_cfg: build isMultiBoot
 	@sudo $(QEMU) $(QEMU_FLAGS) -hda $(IMAGE)
+>>>>>>> refs/remotes/origin/long
 
 part:
 	@$(QEMU) $(QEMU_FLAGS) -bios /usr/share/ovmf/OVMF.fd /dev/sdc
