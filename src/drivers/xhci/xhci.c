@@ -388,8 +388,8 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	XHCI_DOORBELL(0,0);
 	SetColor(0xffffff);
 
-	//FORI(maxports)
-	//	XHCI_PORT_RESET(i);
+	FORI(maxports)
+		XHCI_PORT_RESET(i);
 	//XHCI_PORT_RESET(0);
 	XHCI_DOORBELL(0,0);
 #ifdef XHCI_DEBUG
@@ -558,10 +558,11 @@ void XHCI_ON_TRANSFER_COMPLETE(XHCI_TRB* trb){
 		XHCI_DOORBELL(slot,1);
 		endp->done++;
 	}else if(endp->done==1){
-		printf("DESC:\t");
-		hexdump(&endp->desc,18,1000);
-		printf("\t FOUND DEVICE [%x][%x] -> [%x][%x]\n",endp->desc.clazz,endp->desc.subclass,endp->desc.vendorid,endp->desc.productid);
+		//printf("DESC:\t");
+		//hexdump(&endp->desc,18,1000);
+		printf("\tFOUND DEVICE [%x][%x] -> [%x][%x]\n",endp->desc.clazz,endp->desc.subclass,endp->desc.vendorid,endp->desc.productid);
 		endp->configs=malloc(sizeof(XHCI_CONFIG)*endp->desc.numConfigs);
+		endp->confs=malloc(sizeof(USB_DEVICE_CONFIGURATION)*endp->desc.numConfigs);
 		FORI(endp->desc.numConfigs){
 			endp->configs[i].config=malloc(9);
 			XHCI_GetDescriptor(endp,endp->configs[i].config,USB_DESC_TYPE_CONFIG,i,9);
@@ -578,10 +579,11 @@ void XHCI_ON_TRANSFER_COMPLETE(XHCI_TRB* trb){
 		XHCI_DOORBELL(slot,1);
 		endp->done++;
 	}else if(endp->done==3){
-		FORI(endp->desc.numConfigs){
+		FORI(1){
 			USB_CONFIG_DESCRIPTOR* conf=endp->configs[i].config;
 			int len=conf->total_len;
-			hexdump(conf,len,32);
+			//hexdump(conf,len,32);
+			USB_PARSE_CONFIG(&endp->confs[i], conf);
 		}
 		endp->desc_product=malloc(8);
 		XHCI_GetDescriptor(endp,endp->desc_product,USB_DESC_TYPE_STRING,endp->desc.product_idx,8);
@@ -594,6 +596,21 @@ void XHCI_ON_TRANSFER_COMPLETE(XHCI_TRB* trb){
 		XHCI_DOORBELL(slot,1);
 		endp->done++;
 	}else if(endp->done==5){
+		USB_CONFIGURATION_INTERFACE* interface=&endp->confs[0].interfaces[0];
+		USB_INTERFACE_DESCRIPTOR* intf=endp->confs[0].interfaces[0].interface;
+		printf("INTERFACE [0]\t->\t[%x][%x][%x]\n",intf->clazz,intf->subclazz,intf->protocol);
+		printf("\tENDPOINT [%x] ->[%x][%x][%x]\n",
+				interface->endpoints->endpoint_address,
+				interface->endpoints->attributes,
+				interface->endpoints->max_packet_size,
+				interface->endpoints->interval
+			  );
+		//printf("\tENDPOINT [%d] ->[%x][%x][%x]\n",
+		//		interface->endpoints->type,
+		//		interface->endpoints->len,
+		//		interface->endpoints->max_packet_size,
+		//		interface->endpoints->interval
+		//	  );
 		printWStr((uint16_t*)&endp->desc_product->str, endp->desc_product->len/2-1);
 	}else{
 	}

@@ -13,6 +13,7 @@
 #define USB_DESC_TYPE_CONFIG	(0x2)
 #define USB_DESC_TYPE_STRING	(0x3)
 #define USB_DESC_TYPE_INTERFACE	(0x4)
+#define USB_DESC_TYPE_ENDPOINT	(0x5)
 
 #define USB_REQUEST_GET_STATUS				(0 )
 #define USB_REQUEST_CLEAR_FEATURE			(1 )
@@ -34,7 +35,7 @@ typedef struct {
 	uint8_t len;
 	uint8_t type;
 	uint16_t str;
-}__attribute__((packed)) USB_STRING_DESC_VAL;
+}__attribute__((packed)) USB_STRING_DESCRIPTOR;
 
 typedef struct {
 	uint8_t len;
@@ -76,3 +77,35 @@ typedef struct {
 	uint8_t interface_index;
 }__attribute__((packed)) USB_INTERFACE_DESCRIPTOR;
 
+typedef struct {
+	uint8_t len;
+	uint8_t type;
+	uint8_t endpoint_address;
+	uint8_t attributes;
+	uint16_t max_packet_size;
+	uint8_t interval;
+}__attribute__((packed)) USB_ENDPOINT_DESCRIPTOR;
+
+typedef struct {
+	uint8_t len;
+	uint8_t type;
+}__attribute__((packed)) USB_BASE_DESCRIPTOR;
+typedef union{
+	USB_BASE_DESCRIPTOR base;
+	USB_INTERFACE_DESCRIPTOR interface;
+	USB_CONFIG_DESCRIPTOR config;
+	USB_DEVICE_DESCRIPTOR device;
+	USB_STRING_DESCRIPTOR string;
+} __attribute((packed)) USB_DESCRIPTOR;
+
+typedef struct{
+	USB_INTERFACE_DESCRIPTOR* interface;
+	USB_ENDPOINT_DESCRIPTOR* endpoints;
+} USB_CONFIGURATION_INTERFACE;
+
+typedef struct{
+	USB_CONFIG_DESCRIPTOR* config;
+	USB_CONFIGURATION_INTERFACE* interfaces;
+} USB_DEVICE_CONFIGURATION;
+
+void USB_PARSE_CONFIG(USB_DEVICE_CONFIGURATION* config,void* data);
