@@ -42,6 +42,8 @@ all: clean boot $(objects) link build isMultiBoot
 clean:
 	@rm -rf $(OUT)
 	mkdir -p $(OUT)
+	mkdir -p logs
+	touch logs/serial.log
 boot:
 	@nasm -g -felf64 $(SOURCE)/boot.asm -o $(OUT)/boot.o
 
@@ -59,10 +61,14 @@ build:
 isMultiBoot:
 	@./scripts/isMultiBoot.sh $(ISO)
 run: all
-	@$(QEMU) $(QEMU_FLAGS) -hda iso.iso -hdb disks/fat.img
+	if [ -f disks/fat.img ]; then \
+		$(QEMU) $(QEMU_FLAGS) -hda iso.iso -hdb disks/fat.img; \
+	else \
+		$(QEMU) $(QEMU_FLAGS) -hda iso.iso; \
+	fi
 
 run_cfg: build isMultiBoot
-	@sudo $(QEMU) $(QEMU_FLAGS) -hda iso.iso -hdb /dev/sda
+	@sudo $(QEMU) $(QEMU_FLAGS) -hda iso.iso
 
 part:
 	@$(QEMU) $(QEMU_FLAGS) -bios /usr/share/ovmf/OVMF.fd /dev/sdc
