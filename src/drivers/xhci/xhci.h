@@ -60,22 +60,23 @@
 #define XHCI_PORT_PLC				(1<<22)
 #define XHCI_PORT_CEC				(1<<23)
 
-#define XHCI_TRB_SETUP_STAGE_CODE		( 2)
-#define XHCI_TRB_DATA_CODE				( 3)
-#define XHCI_TRB_STATUS_CODE			( 4)
-#define XHCI_CMD_ENABLE_SLOT_CODE		( 9)
-#define XHCI_CMD_ADDRESS_DEVICE_CODE	(11)
-#define XHCI_CMD_CONFIGURE_CODE			(12)
-#define XHCI_CMD_EVALUATE_CONTEXT_CODE	(13)
-#define XHCI_CMD_NOOP_CODE				(23)
+#define XHCI_TRB_SETUP_STAGE_CODE			( 2)
+#define XHCI_TRB_DATA_CODE					( 3)
+#define XHCI_TRB_STATUS_CODE				( 4)
+#define XHCI_CMD_ENABLE_SLOT_CODE			( 9)
+#define XHCI_CMD_ADDRESS_DEVICE_CODE		(11)
+#define XHCI_CMD_CONFIGURE_ENDPOINT_CODE	(12)
+#define XHCI_CMD_EVALUATE_CONTEXT_CODE		(13)
+#define XHCI_CMD_NOOP_CODE					(23)
 
-#define XHCI_ENDPOINT_ISOCH_OUT			(1)
-#define XHCI_ENDPOINT_BULK_OUT			(2)
-#define XHCI_ENDPOINT_INT_OUT			(3)
-#define XHCI_ENDPOINT_CONTROL			(4)
-#define XHCI_ENDPOINT_ISOCH_IN			(5)
-#define XHCI_ENDPOINT_BULK_IN			(6)
-#define XHCI_ENDPOINT_INT_IN			(7)
+#define XHCI_ENDPOINT_ISOCH_OUT				(1)
+#define XHCI_ENDPOINT_BULK_OUT				(2)
+#define XHCI_ENDPOINT_INT_OUT				(3)
+#define XHCI_ENDPOINT_CONTROL				(4)
+#define XHCI_ENDPOINT_ISOCH_IN				(5)
+#define XHCI_ENDPOINT_BULK_IN				(6)
+#define XHCI_ENDPOINT_INT_IN				(7)
+
 
 #define XHCI_CMD_NOOP(C) ((XHCI_TRB){.int1=0,.int2=0,.int3=0,.def=XHCI_CMD_NOOP_CODE<<10|((C)&0x1)})
 #define XHCI_CMD_ENABLE_SLOT(type,C) ((XHCI_TRB){.int1=0,.int2=0,.int3=0,.def=XHCI_CMD_ENABLE_SLOT_CODE<<10|type<<16|((C)&0x1)})
@@ -90,10 +91,11 @@
 		.int2=DWORD(ptr,1),.int3=0,\
 		.def=(((slot)&0xFF)<<24)|(XHCI_CMD_EVALUATE_CONTEXT_CODE<<10)|(((bsr)&0x1)<<9)|((C)&0x1)})
 
-#define XHCI_CMD_CONFIGURE_CONTEXT(ptr,slot,bsr,C) ((XHCI_TRB){\
+#define XHCI_CMD_CONFIGURE_CONTEXT(ptr,slot,DC,C) ((XHCI_TRB){\
 		.int1=(DWORD(ptr,0)&(~0xF)),\
 		.int2=DWORD(ptr,1),.int3=0,\
-		.def=(((slot)&0xFF)<<24)|(XHCI_CMD_CONFIGURE_CODE<<10)|(((bsr)&0x1)<<9)|((C)&0x1)})
+		.def=(((slot)&0xFF)<<24)|(XHCI_CMD_CONFIGURE_ENDPOINT_CODE<<10)|(((DC)&0x1)<<9)|((C)&0x1)})
+
 
 #define XHCI_TRB_NOOP(C,target) ((XHCI_TRB){.int1=0,.int2=0,.int3=target<<22,.def=XHCI_CMD_NOOP_CODE<<10|((C)&0x1)})
 
