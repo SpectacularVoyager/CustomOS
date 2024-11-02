@@ -4,17 +4,23 @@
 
 void USB_PARSE_CONFIG(USB_DEVICE_CONFIGURATION* config,void* data){
 	config->config=data;
-	config->interfaces=malloc(sizeof(USB_CONFIGURATION_INTERFACE*)*config->config->num_interfaces);
+	if(config->config->num_interfaces!=1)printf("DO NOT SUPPORT NUM INTERFACE APART FROM 1 FOUND 0x%x",config->config->num_interfaces);
 	data+=config->config->len;
-	config->interfaces[0].interface=data;
-	int n_endp=config->interfaces[0].interface->num_endpoints;
-	config->interfaces[0].endpoints=malloc(sizeof(void*)*n_endp);
-	data+=config->interfaces->interface->len;
-	USB_ENDPOINT_DESCRIPTOR* desc;
+	config->intf=malloc(sizeof(USB_CONFIGURATION_INTERFACE));
+	config->intf->interface=data;
+	data+=config->intf->interface->len;
+	config->intf->descriptors=data;
+	config->intf->endpoint=malloc(sizeof(void**)*config->intf[0].interface->num_endpoints);
 	int i=0;
-	while((desc=data)->type!=USB_DESC_TYPE_ENDPOINT){
-		data+=desc->len;
+	while(i<config->intf[0].interface->num_endpoints){
+		while(1){
+			USB_BASE_DESCRIPTOR* desc=data;
+			if(desc->type==USB_DESC_TYPE_ENDPOINT)break;
+			data+=desc->len;
+		}
+		config->intf->endpoint[i]=data;
+		data+=((USB_BASE_DESCRIPTOR*)data)->len;
+		i++;
 	}
 
-	config->interfaces[0].endpoints=data;
 }

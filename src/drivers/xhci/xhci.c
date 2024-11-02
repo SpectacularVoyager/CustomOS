@@ -558,9 +558,9 @@ void XHCI_ON_TRANSFER_COMPLETE(XHCI_TRB* trb){
 		XHCI_DOORBELL(slot,1);
 		endp->done++;
 	}else if(endp->done==1){
-		printf("DESC:\t");
-		hexdump(&endp->desc,18,1000);
-		printf("\t FOUND DEVICE [%x][%x] -> [%x][%x]\n",endp->desc.clazz,endp->desc.subclass,endp->desc.vendorid,endp->desc.productid);
+		//printf("DESC:\t");
+		//hexdump(&endp->desc,18,1000);
+		//printf("\t FOUND DEVICE [%x][%x] -> [%x][%x]\n",endp->desc.clazz,endp->desc.subclass,endp->desc.vendorid,endp->desc.productid);
 		endp->configs=malloc(sizeof(XHCI_CONFIG)*endp->desc.numConfigs);
 		FORI(endp->desc.numConfigs){
 			endp->configs[i].config=malloc(9);
@@ -581,7 +581,7 @@ void XHCI_ON_TRANSFER_COMPLETE(XHCI_TRB* trb){
 		FORI(endp->desc.numConfigs){
 			USB_CONFIG_DESCRIPTOR* conf=endp->configs[i].config;
 			int len=conf->total_len;
-			hexdump(conf,len,32);
+			//hexdump(conf,len,32);
 		}
 		endp->desc_product=malloc(8);
 		XHCI_GetDescriptor(endp,endp->desc_product,USB_DESC_TYPE_STRING,endp->desc.product_idx,8);
@@ -595,6 +595,27 @@ void XHCI_ON_TRANSFER_COMPLETE(XHCI_TRB* trb){
 		endp->done++;
 	}else if(endp->done==5){
 		printWStr((uint16_t*)&endp->desc_product->str, endp->desc_product->len/2-1);
+		USB_DEVICE_CONFIGURATION device;
+		FORI(endp->desc.numConfigs){
+			USB_PARSE_CONFIG(&device,endp->configs[i].config);
+			hexdump(endp->configs[i].config,endp->configs->config->total_len,32);
+			USB_INTERFACE_DESCRIPTOR* intf=device.intf->interface;
+			printf("INTERFACE [0] -> [%x][%x][%x]\n",
+					intf->clazz,
+					intf->subclazz,
+					intf->protocol
+					);
+			FORI(device.intf->interface->num_endpoints){
+			USB_ENDPOINT_DESCRIPTOR* endpoint=device.intf->endpoint[i];
+				printf("\tENDPOINT [%x] -> [%x][%x][%x]\n",
+						endpoint->endpoint_address,
+						endpoint->attributes,
+						endpoint->max_packet_size,
+						endpoint->interval
+					  );
+			}
+			
+		}
 	}else{
 	}
 
