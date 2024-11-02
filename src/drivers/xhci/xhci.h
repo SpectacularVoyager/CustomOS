@@ -128,6 +128,7 @@
 #define XHCI_TRANSFER_CHAIN		(1<<4)
 #define XHCI_TRANSFER_ENT		(1<<1)
 
+#define XHCI_TRANSFER_TYPE_NO_DATA	(0)
 #define XHCI_TRANSFER_TYPE_IN_DATA	(3)
 
 inline int XHCI_MAX_PACKETS(unsigned int version,unsigned int val){
@@ -233,6 +234,7 @@ typedef struct{
 	unsigned long pagesize;
 	fixedlist SupportedProtocols;
 	XHCI_Endpoint* endpoints;
+	USB_DEVICE_CONFIGURATION* conf_device;
 }XHCI_HUB;
 
 typedef union {
