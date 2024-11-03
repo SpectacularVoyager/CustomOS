@@ -565,11 +565,11 @@ void XHCI_CONFIGURE_ENDPOINT0(XHCI_Endpoint* endp,int slot,int conf){
 	XHCI_CONTEXT_LOAD((XHCI_CONTEXT_GENERIC*)slot_endp,input_context_readonly+cz);
 	endp->contexts=input_context;
 
-	XHCI_TRB* trbs= XHCI_getTransferTRBs();
+	endp->endpoints[2].trbs= XHCI_getTransferTRBs();
 	endp_int->ep_type=XHCI_ENDPOINT_INT_IN;
 	endp_int->max_packet_size=endpoint->max_packet_size;
 	endp_int->max_burst_size=0;
-	endp_int->tr_dequeue_pointer=XHCI_DEQUEUE_PTR((uint64_t)trbs, 1);
+	endp_int->tr_dequeue_pointer=XHCI_DEQUEUE_PTR((uint64_t)endp->endpoints[2].trbs, 1);
 	endp_int->interval=endpoint->interval;
 	endp_int->max_p_streams=0;
 	endp_int->mult=0;
@@ -650,7 +650,6 @@ void XHCI_ON_COMMAND_COMPLETE(XHCI_TRB* trb){
 		case XHCI_CMD_ENABLE_SLOT_CODE:
 			printf("\tENABLED SLOT[%x]\tWITH STATUS:\t%x\n",slot,status);
 			//INIT PORT
-			//((XHCI_TRB**)xhci_hub.transfer_trb.data)[slot]=trbs;
 			int port=*--portptr;
 			printf("PORT STUFF\t\t");
 			XHCI_PRINT_PORT(port,&xhci_hub.ports[port-1]);
@@ -658,7 +657,6 @@ void XHCI_ON_COMMAND_COMPLETE(XHCI_TRB* trb){
 			xhci_hub.endpoints[slot].c=0;
 			xhci_hub.endpoints[slot].sz=128;
 			xhci_hub.endpoints[slot].port=port;
-			//xhci_hub.endpoints[slot].base=trbs;
 			xhci_hub.endpoints[slot].endpoints=malloc(sizeof(XHCI_Endpoint_Data)*32);
 			XHCI_SLOT_INITIALIZE(slot,port);
 			break;
@@ -796,7 +794,6 @@ void XHCI_ON_TRANSFER_COMPLETE(XHCI_TRB* trb){
 		endp->done++;
 	}else if(endp->done==6){
 		printf("SLOT[%x] STATE %x\n",slot,output->int4>>27);
-		XHCI_TRB* trbs= XHCI_getTransferTRBs();
 		//XHCI_DEVICE_INIT(slot,xhci_hub.conf_device,trbs);
 	}else{
 		printf("EYYYYYYY\n");
