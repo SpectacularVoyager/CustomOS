@@ -138,11 +138,11 @@ XHCI_TRB* XHCI_getTransferTRBs(){
 	return trb;
 }
 inline void XHCI_TRANSFER(XHCI_Endpoint* endp,int num,XHCI_TRB* ptr){
-	endp->endpoints[num].trbs[endp->c].int1=ptr->int1;
-	endp->endpoints[num].trbs[endp->c].int2=ptr->int2;
-	endp->endpoints[num].trbs[endp->c].int3=ptr->int3;
-	endp->endpoints[num].trbs[endp->c].def =ptr->def;
-	endp->c++;
+	endp->endpoints[num].trbs[endp->endpoints[num].c].int1=ptr->int1;
+	endp->endpoints[num].trbs[endp->endpoints[num].c].int2=ptr->int2;
+	endp->endpoints[num].trbs[endp->endpoints[num].c].int3=ptr->int3;
+	endp->endpoints[num].trbs[endp->endpoints[num].c].def =ptr->def;
+	endp->endpoints[num].c++;
 }
 void XHCI_HANDLE_EXTENDED_CAPABILITIES(XHCI_HUB* xhci_hub,void* data){
 	void* supportedprotocols[10];	
@@ -654,10 +654,12 @@ void XHCI_ON_COMMAND_COMPLETE(XHCI_TRB* trb){
 			printf("PORT STUFF\t\t");
 			XHCI_PRINT_PORT(port,&xhci_hub.ports[port-1]);
 			//printf("PORTSC:\t%x\n",xhci_hub.ports[port-1]);
-			xhci_hub.endpoints[slot].c=0;
-			xhci_hub.endpoints[slot].sz=128;
 			xhci_hub.endpoints[slot].port=port;
 			xhci_hub.endpoints[slot].endpoints=malloc(sizeof(XHCI_Endpoint_Data)*32);
+			FORI(32){
+				xhci_hub.endpoints[slot].endpoints[i].c=0;
+				xhci_hub.endpoints[slot].endpoints[i].sz=128;
+			}
 			XHCI_SLOT_INITIALIZE(slot,port);
 			break;
 		case XHCI_CMD_ADDRESS_DEVICE_CODE:

@@ -209,13 +209,13 @@ typedef struct{
 
 typedef struct{
 	XHCI_TRB* trbs;
+	int c;
+	int sz;
 }  XHCI_Endpoint_Data;
 
 typedef struct {
 	USB_DEVICE_DESCRIPTOR desc;
 	int mutex;
-	int c;
-	int sz;
 	int port;
 	void* contexts;
 	USB_STRING_DESCRIPTOR* desc_product;
