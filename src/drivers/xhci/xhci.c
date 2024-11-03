@@ -686,9 +686,38 @@ void XHCI_ON_COMMAND_COMPLETE(XHCI_TRB* trb){
 			//printf("\tEVALUATED SLOT[%x]\tWITH STATUS:\t%x\n",slot,status);
 			//
 			//if(status==1)return;
-			printf("ENDPOINT STATUSES:\t");
-			FORI(4)printf("%x ",U8(((void*)output)+0x20*i));
-			printf("\n");
+			if(endp->done>=6){
+
+				printf("ENDPOINT STATUSES:\t");
+				FORI(4)printf("%x ",U8(((void*)output)+0x20*i));
+				printf("\n");
+
+				XHCI_TRB_SETUP setup={0};
+				XHCI_TRB_STATUS status={0};
+				setup=(XHCI_TRB_SETUP){
+					.TRBType=XHCI_TRB_SETUP_STAGE_CODE,
+						.TransferType=XHCI_TRANSFER_TYPE_NO_DATA,
+						.TRBTransferLength=8,
+						.IOC=0,
+						.IDT=1,
+						.bmRequestType=0x21,
+						.bRequest=0xA,
+						.wValue=0x0,
+						.wIndex=0,
+						.wLength=0,
+						.C=1
+				};
+				status=(XHCI_TRB_STATUS){
+					.TRBType=XHCI_TRB_STATUS_CODE,
+						.D=0,
+						.CH=0,
+						.IOC=1,
+						.C=1
+				};
+				XHCI_TRANSFER(endp,2,(XHCI_TRB*)&setup);
+				XHCI_TRANSFER(endp,2,(XHCI_TRB*)&status);
+				XHCI_DOORBELL(slot, 3);
+			}	
 			break;
 		default:
 			printf("\tCOMMAND COMPLETE[%x]\t%x->%s\tSTATUS:\t%x\n",
@@ -795,6 +824,7 @@ void XHCI_ON_TRANSFER_COMPLETE(XHCI_TRB* trb){
 	}else if(endp->done==6){
 		printf("SLOT[%x] STATE %x\n",slot,output->int4>>27);
 		//XHCI_DEVICE_INIT(slot,xhci_hub.conf_device,trbs);
+		endp->done++;
 	}else{
 		printf("EYYYYYYY\n");
 	}
