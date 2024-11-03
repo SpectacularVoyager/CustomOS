@@ -206,6 +206,11 @@ typedef struct{
 	USB_CONFIG_DESCRIPTOR* config;
 	void** interfaces;
 }  XHCI_CONFIG;
+
+typedef struct{
+	XHCI_TRB* trb;
+}  XHCI_Endpoint_Data;
+
 typedef struct {
 	USB_DEVICE_DESCRIPTOR desc;
 	int mutex;
@@ -217,7 +222,6 @@ typedef struct {
 	USB_STRING_DESCRIPTOR* desc_product;
 	int done;
 	XHCI_CONFIG* configs;
-	USB_DEVICE_CONFIGURATION* confs;
 	USB_DEVICE_CONFIGURATION* conf_device;
 }XHCI_Endpoint;
 
