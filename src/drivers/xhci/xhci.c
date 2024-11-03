@@ -122,6 +122,21 @@ void XHCI_HANDLE_CAPABILITIES(void* data,PCIGeneralDevice* device,unsigned int m
 	}
 }
 
+XHCI_TRB* XHCI_getTransferTRBs(){
+	XHCI_TRB* trb=mallocAB(64*1024,64*1024,64*1024);
+	//memset(trb,0,64*1024);
+	FORI(128){
+		trb[i].int1=0;
+		trb[i].int2=0;
+		trb[i].int3=0;
+		trb[i].def =0;
+	}
+	//trb[127].int1=DWORD((uint64_t)&xhci_hub.command_ring[0],0)&(~0xF);
+	//trb[127].int2=DWORD((uint64_t)&xhci_hub.command_ring[0],1);
+	//trb[127].int3=0|(0<<22);//IGNORED FOR CMD TRB
+	//trb[127].def=(6<<10)|(1<<5)|1;
+	return trb;
+}
 inline void XHCI_TRANSFER(XHCI_Endpoint* endp,int num,XHCI_TRB* ptr){
 	endp->endpoints[num].trbs[endp->c].int1=ptr->int1;
 	endp->endpoints[num].trbs[endp->c].int2=ptr->int2;
@@ -194,7 +209,10 @@ inline void* XHCI_GetEndpoint(void* base,int n){
 	int cz=32<<XHCI_CONTEXT_SIZE(xhci_hub.config);
 	return base+cz*n;
 }
-void XHCI_SLOT_INITIALIZE(int slot,int port,XHCI_TRB* transfer){
+void XHCI_SLOT_INITIALIZE(int slot,int port){
+	XHCI_Endpoint* endp=&xhci_hub.endpoints[slot];
+	endp->endpoints[USB_ENDPOINT0].trbs=XHCI_getTransferTRBs();
+	XHCI_TRB* transfer=endp->endpoints[USB_ENDPOINT0].trbs;
 	int cz=32<<XHCI_CONTEXT_SIZE(xhci_hub.config);
 
 	//DO INPUT CONTEXT STUFF
@@ -245,21 +263,6 @@ void XHCI_SLOT_INITIALIZE(int slot,int port,XHCI_TRB* transfer){
 void __attribute__((optimize("O0"))) XHCI_LOAD_CRCR(volatile void* crcr,unsigned int flags){
 	*XHCI_OP(XHCI_REG_CRCR)=DWORD(((uint64_t)crcr&(~0x3F))|flags,0);
 	*XHCI_OP(XHCI_REG_CRCR+0x4)=DWORD((uint64_t)crcr,1);
-}
-XHCI_TRB* XHCI_getTransferTRBs(){
-	XHCI_TRB* trb=mallocAB(64*1024,64*1024,64*1024);
-	//memset(trb,0,64*1024);
-	FORI(128){
-		trb[i].int1=0;
-		trb[i].int2=0;
-		trb[i].int3=0;
-		trb[i].def =0;
-	}
-	//trb[127].int1=DWORD((uint64_t)&xhci_hub.command_ring[0],0)&(~0xF);
-	//trb[127].int2=DWORD((uint64_t)&xhci_hub.command_ring[0],1);
-	//trb[127].int3=0|(0<<22);//IGNORED FOR CMD TRB
-	//trb[127].def=(6<<10)|(1<<5)|1;
-	return trb;
 }
 int XHCI_INIT(PCI_device* device,void* pcibase){
 
@@ -647,19 +650,17 @@ void XHCI_ON_COMMAND_COMPLETE(XHCI_TRB* trb){
 		case XHCI_CMD_ENABLE_SLOT_CODE:
 			printf("\tENABLED SLOT[%x]\tWITH STATUS:\t%x\n",slot,status);
 			//INIT PORT
-			XHCI_TRB* trbs= XHCI_getTransferTRBs();
 			//((XHCI_TRB**)xhci_hub.transfer_trb.data)[slot]=trbs;
 			int port=*--portptr;
 			printf("PORT STUFF\t\t");
 			XHCI_PRINT_PORT(port,&xhci_hub.ports[port-1]);
 			//printf("PORTSC:\t%x\n",xhci_hub.ports[port-1]);
-			XHCI_SLOT_INITIALIZE(slot,port,trbs);
 			xhci_hub.endpoints[slot].c=0;
 			xhci_hub.endpoints[slot].sz=128;
 			xhci_hub.endpoints[slot].port=port;
 			//xhci_hub.endpoints[slot].base=trbs;
 			xhci_hub.endpoints[slot].endpoints=malloc(sizeof(XHCI_Endpoint_Data)*32);
-			xhci_hub.endpoints[slot].endpoints[USB_ENDPOINT0].trbs=trbs;
+			XHCI_SLOT_INITIALIZE(slot,port);
 			break;
 		case XHCI_CMD_ADDRESS_DEVICE_CODE:
 			if(status!=1){
