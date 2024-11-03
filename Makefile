@@ -100,6 +100,8 @@ usb:
 
 losetup:
 	@sudo losetup -Pf disks/fat.img
+errors:
+	make 2>&1 >/dev/null | grep -i 'error'
 
 ##### TO MAKE USB BOOTABLE #####
 ##		sudo mkfs.vfat -F 32 -n USBBoot -I /dev/sda

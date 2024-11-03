@@ -6,6 +6,8 @@
 
 #define USB_GET_DESC_VAL(index,type) ((index)|((type)<<8))
 
+#define USB_ENDPOINT0	0
+
 #define USB_DIRECTION_H2D	(0)
 #define USB_DIRECTION_D2H	(1)
 

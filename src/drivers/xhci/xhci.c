@@ -122,7 +122,7 @@ void XHCI_HANDLE_CAPABILITIES(void* data,PCIGeneralDevice* device,unsigned int m
 	}
 }
 
-inline void XHCI_TRANSFER(XHCI_Endpoint* endp,XHCI_TRB* ptr){
+inline void XHCI_TRANSFER(XHCI_Endpoint* endp,int num,XHCI_TRB* ptr){
 	endp->base[endp->c].int1=ptr->int1;
 	endp->base[endp->c].int2=ptr->int2;
 	endp->base[endp->c].int3=ptr->int3;
@@ -475,7 +475,7 @@ void XHCI_GetDescriptor(XHCI_Endpoint* endp,void* buff,int type,int index,int le
 					.wLength=len,
 					.C=1
 			};
-			XHCI_TRANSFER(endp, (XHCI_TRB*)&setup);
+			XHCI_TRANSFER(endp,USB_ENDPOINT0, (XHCI_TRB*)&setup);
 			data=(XHCI_TRB_DATA){
 					.TRBType=XHCI_TRB_DATA_CODE,
 					.D=1,
@@ -487,7 +487,7 @@ void XHCI_GetDescriptor(XHCI_Endpoint* endp,void* buff,int type,int index,int le
 					.data_high=DWORD((uint64_t)buff,1),
 					.C=1
 			};
-			XHCI_TRANSFER(endp, (XHCI_TRB*)&data);
+			XHCI_TRANSFER(endp,USB_ENDPOINT0, (XHCI_TRB*)&data);
 			status=(XHCI_TRB_STATUS){
 					.TRBType=XHCI_TRB_STATUS_CODE,
 					.D=0,
@@ -495,7 +495,7 @@ void XHCI_GetDescriptor(XHCI_Endpoint* endp,void* buff,int type,int index,int le
 					.IOC=1,
 					.C=1
 			};
-			XHCI_TRANSFER(endp, (XHCI_TRB*)&status);
+			XHCI_TRANSFER(endp,USB_ENDPOINT0, (XHCI_TRB*)&status);
 }
 void XHCI_CONTEXT_LOAD(XHCI_CONTEXT_GENERIC* dest,XHCI_CONTEXT_GENERIC* src){
 	dest->int1=src->int1;
@@ -538,8 +538,8 @@ void XHCI_CONFIGURE_ENDPOINT0(XHCI_Endpoint* endp,int slot,int conf){
 			.C=1
 	};
 
-	XHCI_TRANSFER(endp,(XHCI_TRB*)&setup);
-	XHCI_TRANSFER(endp, (XHCI_TRB*)&status);
+	XHCI_TRANSFER(endp,USB_ENDPOINT0,(XHCI_TRB*)&setup);
+	XHCI_TRANSFER(endp,USB_ENDPOINT0, (XHCI_TRB*)&status);
 	char buf[8];
 	//XHCI_GetDescriptor(endp,buf,USB_DESC_TYPE_DEVICE,0,8);
 	XHCI_DOORBELL(slot,1);
