@@ -381,7 +381,6 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	xhci_hub.event_ring=NULL;
 	void* transfer=malloc(sizeof(void*)*maxslots);
 	memset(transfer,0,sizeof(void*)*maxslots);
-	xhci_hub.transfer_trb=(fixedlist){.n=maxslots,.data=transfer};
 	xhci_hub.pagesize=pagesize;
 	XHCI_Endpoint* endpoints=malloc(sizeof(XHCI_Endpoint)*maxslots);
 	FORI(maxslots){
@@ -649,7 +648,7 @@ void XHCI_ON_COMMAND_COMPLETE(XHCI_TRB* trb){
 			printf("\tENABLED SLOT[%x]\tWITH STATUS:\t%x\n",slot,status);
 			//INIT PORT
 			XHCI_TRB* trbs= XHCI_getTransferTRBs();
-			((XHCI_TRB**)xhci_hub.transfer_trb.data)[slot]=trbs;
+			//((XHCI_TRB**)xhci_hub.transfer_trb.data)[slot]=trbs;
 			int port=*--portptr;
 			printf("PORT STUFF\t\t");
 			XHCI_PRINT_PORT(port,&xhci_hub.ports[port-1]);

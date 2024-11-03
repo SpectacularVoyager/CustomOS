@@ -233,7 +233,6 @@ typedef struct{
 	uint32_t flag;
 	volatile XHCI_TRB* command_ring;
 	volatile uint64_t* event_ring;
-	fixedlist transfer_trb;
 	unsigned long pagesize;
 	fixedlist SupportedProtocols;
 	XHCI_Endpoint* endpoints;
