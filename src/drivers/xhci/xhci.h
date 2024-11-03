@@ -208,7 +208,7 @@ typedef struct{
 }  XHCI_CONFIG;
 
 typedef struct{
-	XHCI_TRB* trb;
+	XHCI_TRB* trbs;
 }  XHCI_Endpoint_Data;
 
 typedef struct {
@@ -217,12 +217,12 @@ typedef struct {
 	int c;
 	int sz;
 	int port;
-	XHCI_TRB* base;
 	void* contexts;
 	USB_STRING_DESCRIPTOR* desc_product;
 	int done;
 	XHCI_CONFIG* configs;
 	USB_DEVICE_CONFIGURATION* conf_device;
+	XHCI_Endpoint_Data* endpoints;
 }XHCI_Endpoint;
 
 typedef struct{

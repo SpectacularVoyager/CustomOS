@@ -123,10 +123,10 @@ void XHCI_HANDLE_CAPABILITIES(void* data,PCIGeneralDevice* device,unsigned int m
 }
 
 inline void XHCI_TRANSFER(XHCI_Endpoint* endp,int num,XHCI_TRB* ptr){
-	endp->base[endp->c].int1=ptr->int1;
-	endp->base[endp->c].int2=ptr->int2;
-	endp->base[endp->c].int3=ptr->int3;
-	endp->base[endp->c].def =ptr->def;
+	endp->endpoints[num].trbs[endp->c].int1=ptr->int1;
+	endp->endpoints[num].trbs[endp->c].int2=ptr->int2;
+	endp->endpoints[num].trbs[endp->c].int3=ptr->int3;
+	endp->endpoints[num].trbs[endp->c].def =ptr->def;
 	endp->c++;
 }
 void XHCI_HANDLE_EXTENDED_CAPABILITIES(XHCI_HUB* xhci_hub,void* data){
@@ -657,7 +657,9 @@ void XHCI_ON_COMMAND_COMPLETE(XHCI_TRB* trb){
 			xhci_hub.endpoints[slot].c=0;
 			xhci_hub.endpoints[slot].sz=128;
 			xhci_hub.endpoints[slot].port=port;
-			xhci_hub.endpoints[slot].base=trbs;
+			//xhci_hub.endpoints[slot].base=trbs;
+			xhci_hub.endpoints[slot].endpoints=malloc(sizeof(XHCI_Endpoint_Data)*32);
+			xhci_hub.endpoints[slot].endpoints[USB_ENDPOINT0].trbs=trbs;
 			break;
 		case XHCI_CMD_ADDRESS_DEVICE_CODE:
 			if(status!=1){
