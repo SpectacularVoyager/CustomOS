@@ -106,6 +106,7 @@
 #define XHCI_NO_INT (0x1000)
 #define WAIT_FOR_INT(xhci_hub) xhci_hub.flag=XHCI_NO_INT;\
 							while(xhci_hub.flag!=XHCI_NO_INT);
+#define XHCI_CAP_LEGACY_SUPPORT			(0x1)
 #define XHCI_CAP_SUPPORTED_PROTOCOL		(0x2)
 
 #define XHCI_SUPPORTED_PROTOCOL_VERSION(proto)		WORD((proto->int1),1)
@@ -117,6 +118,7 @@
 #define XHCI_CONTEXT_SLOT_ENTRIES(ent)		((((ent)&(0x1F))<<27))
 #define XHCI_CONTEXT_SLOT_PORT(port)		(((port)&(0xFF))<<16)
 #define XHCI_CONTEXT_SLOT_ROUTE_STR(str)	((((str)&(0xFFFFF))<<0))
+#define XHCI_CONTEXT_SLOT_SPEED(speed)		((((speed)&(0xF))<<20))
 
 #define XHCI_PORT_SPEED_PACK_SIZE_LS	(8)
 #define XHCI_PORT_SPEED_PACK_SIZE_HS	(64)

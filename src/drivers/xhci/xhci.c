@@ -147,6 +147,10 @@ void XHCI_HANDLE_EXTENDED_CAPABILITIES(XHCI_HUB* xhci_hub,void* data){
 			XHCI_SUPPORTED_PROTOCOL* proto=data;
 			printf("SLOT:\t%x\n",XHCI_SUPPORTED_PROTOCOL_SLOT_TYPE(proto));
 			// DO STUFF
+		}if(BYTE(d,0)==XHCI_CAP_LEGACY_SUPPORT){
+			//REQUEST OWNERSHIP FROM BIOS
+			U32(data)|=1<<24;
+			//WAIT...
 		}else{
 			printf("UNRECOGNIZED EXTENDED CAPABILITY [%x]\n",BYTE(d,0));
 		}
@@ -202,8 +206,10 @@ void XHCI_SLOT_INITIALIZE(int slot,int port,XHCI_TRB* transfer){
 	input_control_context->add=0x3;
 	
 	//SLOT CONTEXT
+	int speed=XHCI_PORT_SPEED(xhci_hub.ports[port-1].PORTSC);
 	XHCI_CONTEXT_SLOT* input_slot_context=(void*)input_context+cz;
-	input_slot_context->int1=XHCI_CONTEXT_SLOT_ENTRIES(1)|XHCI_CONTEXT_SLOT_ROUTE_STR(0);
+	input_slot_context->int1=XHCI_CONTEXT_SLOT_ENTRIES(1)|XHCI_CONTEXT_SLOT_ROUTE_STR(0)|XHCI_CONTEXT_SLOT_SPEED(speed);
+	//input_slot_context->int1=XHCI_CONTEXT_SLOT_ENTRIES(1)|XHCI_CONTEXT_SLOT_ROUTE_STR(0);
 	input_slot_context->int2=XHCI_CONTEXT_SLOT_PORT(port);
 
 	//ENDPOINT CONTEXT 0
@@ -351,6 +357,7 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	void* extended_cap=(void*)((usb.BAR[0]&(~0xF))+(XHCI_EXTENDED_CAP_PTR(&config)<<2));
 	XHCI_HANDLE_CAPABILITIES(mmio,&usb,maxintrs);
 	XHCI_HANDLE_EXTENDED_CAPABILITIES(&xhci_hub,extended_cap);
+	LOGVALD(extended_cap);
 	
 	volatile XHCI_SUPPORTED_PROTOCOL* proto=0;
 	proto=((XHCI_SUPPORTED_PROTOCOL**)xhci_hub.SupportedProtocols.data)[0];
@@ -423,12 +430,14 @@ void XHCI_ON_PORT_RESET(XHCI_TRB* trb){
 	int en =XHCI_PORT_ENABLED(reg->PORTSC);
 	con=XHCI_PORT_CONNECTED(reg->PORTSC);
 	en =XHCI_PORT_ENABLED(reg->PORTSC);
+	int speed =XHCI_PORT_SPEED(reg->PORTSC);
 	if(en){
-	printf("\tPORTSC CHANGED[%x]\tCON:%d\tEN:%d\tST:%d\n",
+	printf("\tPORTSC CHANGED[%x]\tCON:%d\tEN:%d\tST:%d\tSPEED:%x\n",
 			portid,
 			con,
 			en,
-			XHCI_PORT_STATE(reg->PORTSC)
+			XHCI_PORT_STATE(reg->PORTSC),
+			speed
 		  );
 	}
 	if(XHCI_PORT_PORT_RESET_CHANGE(reg->PORTSC)==1){
@@ -533,23 +542,23 @@ void XHCI_DEVICE_INIT(int slot,USB_DEVICE_CONFIGURATION* device,XHCI_TRB* transf
 	void* input_context=endp->contexts;
 	XHCI_CONTEXT_CONTROL* control=input_context;
 
-	((XHCI_CONTEXT_GENERIC*)endpoint)->int1=0;
-	((XHCI_CONTEXT_GENERIC*)endpoint)->int2=0;
-	((XHCI_CONTEXT_GENERIC*)endpoint)->int3=0;
-	((XHCI_CONTEXT_GENERIC*)endpoint)->int4=0;
-	((XHCI_CONTEXT_GENERIC*)endpoint)->int5=0;
-	((XHCI_CONTEXT_GENERIC*)endpoint)->int6=0;
-	((XHCI_CONTEXT_GENERIC*)endpoint)->int7=0;
-	((XHCI_CONTEXT_GENERIC*)endpoint)->int8=0;
 
 	//XHCI_CONTEXT_GENERIC* outputcontext_endp0=XHCI_GetEndpoint((void*)xhci_hub.dcbaa[slot],1);
 	
-	XHCI_CONTEXT_ENDPOINT* endpoint0=input_context+(cz*2);
-	endpoint0->ep_type=XHCI_ENDPOINT_CONTROL;
+	XHCI_CONTEXT_ENDPOINT* endpoint0=input_context+(cz*(idx-1));
+
+	((XHCI_CONTEXT_GENERIC*)endpoint0)->int1=0;
+	((XHCI_CONTEXT_GENERIC*)endpoint0)->int2=0;
+	((XHCI_CONTEXT_GENERIC*)endpoint0)->int3=0;
+	((XHCI_CONTEXT_GENERIC*)endpoint0)->int4=0;
+	((XHCI_CONTEXT_GENERIC*)endpoint0)->int5=0;
+	((XHCI_CONTEXT_GENERIC*)endpoint0)->int6=0;
+	((XHCI_CONTEXT_GENERIC*)endpoint0)->int7=0;
+	((XHCI_CONTEXT_GENERIC*)endpoint0)->int8=0;
+	endpoint0->ep_type=XHCI_ENDPOINT_INT_IN;
 	endpoint0->max_packet_size=endpoint->max_packet_size;
 	endpoint0->max_burst_size=0;
 	endpoint0->tr_dequeue_pointer=XHCI_DEQUEUE_PTR((uint64_t)transfer, 1);
-	endpoint0->ep_type=(endpoint->attributes&0x3)|(input_output_bit<<2);
 	endpoint0->interval=endpoint->interval;
 	endpoint0->max_p_streams=0;
 	endpoint0->mult=0;
@@ -597,7 +606,7 @@ void XHCI_ON_COMMAND_COMPLETE(XHCI_TRB* trb){
 				printf("\tADDRESSING SLOT[%x] FAILED\tWITH STATUS:\t%x\n",slot,status);
 				return;
 			}
-			XHCI_CONTEXT_GENERIC* output=(XHCI_CONTEXT_GENERIC*)(xhci_hub.dcbaa[slot]);
+			output=(XHCI_CONTEXT_GENERIC*)(xhci_hub.dcbaa[slot]);
 			XHCI_CONFIGURE_SLOT(endp,slot);
 			XHCI_GetDescriptor(endp,&endp->desc,USB_DESC_TYPE_DEVICE,0,8);
 			XHCI_DOORBELL(slot,1);
@@ -607,6 +616,18 @@ void XHCI_ON_COMMAND_COMPLETE(XHCI_TRB* trb){
 			if(status!=1)return;
 			XHCI_CONTEXT_GENERIC* outputcontext_endp0=XHCI_GetEndpoint((void*)xhci_hub.dcbaa[slot],1);
 			printf("\tSLOT[%x] CHANGED MAX PACKETS TO %x\n",slot,WORD(outputcontext_endp0->int2,1));
+			break;
+		case XHCI_CMD_CONFIGURE_ENDPOINT_CODE:
+			printf("\tCOMMAND COMPLETE[%x]\t%x->%s\tSTATUS:\t%x\n",
+					XHCI_TRB_TYPE(trb->def),
+					trb_code,
+					XHCI_CMD_CODE[XHCI_TRB_TYPE(ptr->def)],
+					status
+				  );
+			//printf("\tEVALUATED SLOT[%x]\tWITH STATUS:\t%x\n",slot,status);
+			//
+			if(status==1)return;
+			//hexdump(output,0x80, 0x20);
 			break;
 		default:
 			printf("\tCOMMAND COMPLETE[%x]\t%x->%s\tSTATUS:\t%x\n",
