@@ -218,6 +218,7 @@ typedef struct {
 	int done;
 	XHCI_CONFIG* configs;
 	USB_DEVICE_CONFIGURATION* confs;
+	USB_DEVICE_CONFIGURATION* conf_device;
 }XHCI_Endpoint;
 
 typedef struct{
@@ -236,7 +237,6 @@ typedef struct{
 	unsigned long pagesize;
 	fixedlist SupportedProtocols;
 	XHCI_Endpoint* endpoints;
-	USB_DEVICE_CONFIGURATION* conf_device;
 }XHCI_HUB;
 
 typedef union {
@@ -266,11 +266,30 @@ typedef struct{
 	uint32_t int16;
 }__attribute__((packed)) XHCI_CONTEXT_GENERIC;
 
+//typedef struct{
+//	uint32_t int1;
+//	uint32_t int2;
+//	uint32_t int3;
+//	uint32_t int4;
+//}__attribute__((packed)) XHCI_CONTEXT_SLOT;
 typedef struct{
-	uint32_t int1;
-	uint32_t int2;
-	uint32_t int3;
-	uint32_t int4;
+    uint32_t route_string : 20;
+    uint32_t speed : 4;
+    uint32_t reserved1 : 1;
+    uint32_t multi_tt : 1;
+    uint32_t hub : 1;
+    uint32_t context_entries : 5;
+    uint32_t max_exit_latency : 16;
+    uint32_t root_hub_port_number : 8;
+    uint32_t number_of_ports : 8;
+    uint32_t parent_hub_slot_id : 8;
+    uint32_t parent_port_number : 8;
+    uint32_t tt_think_time : 2;
+    uint32_t reserved2 : 4;
+    uint32_t interrupter_target : 10;
+    uint32_t usb_device_address : 8;
+    uint32_t reserved3 : 19;
+    uint32_t slot_state : 5;
 }__attribute__((packed)) XHCI_CONTEXT_SLOT;
 
 typedef struct{
