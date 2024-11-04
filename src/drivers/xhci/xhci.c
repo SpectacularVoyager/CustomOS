@@ -609,7 +609,7 @@ void XHCI_CONFIGURE_ENDPOINT0(XHCI_Endpoint* endp,int slot,int conf){
 	XHCI_CONTEXT_ENDPOINT* endp_int=input_context+(cz*(4));
 
 	XHCI_TRB address=XHCI_CMD_CONFIGURE_CONTEXT((uint64_t)input_context, slot, 0, 1);
-	control->add=0b0001;
+	control->add=0b1;
 	slot_endp->context_entries=1;
 
 	XHCI_CONTEXT_LOAD((XHCI_CONTEXT_GENERIC*)slot_endp,input_context_readonly+cz);
@@ -618,6 +618,7 @@ void XHCI_CONFIGURE_ENDPOINT0(XHCI_Endpoint* endp,int slot,int conf){
 		USB_ENDPOINT_DESCRIPTOR* endpoint=device->intf[0].endpoint[i];
 		int ind=XHCI_GET_INDEX_DESC(endpoint);
 		int type=XHCI_GET_TYPE_DESC(endpoint);
+		int esit=endpoint->max_packet_size;;
 		endp->endpoints[ind].trbs= XHCI_getTransferTRBs();
 		endp_int->ep_type=type;
 		endp_int->max_packet_size=endpoint->max_packet_size;
@@ -627,6 +628,9 @@ void XHCI_CONFIGURE_ENDPOINT0(XHCI_Endpoint* endp,int slot,int conf){
 		endp_int->max_p_streams=0;
 		endp_int->mult=0;
 		endp_int->c_err=3;
+		endp_int->avg_trb_length=8;
+		endp_int->max_esit_payload_hi=BYTE(esit,1);
+		endp_int->max_esit_payload_lo=BYTE(esit,0);
 		slot_endp->context_entries++;
 		control->add|=1<<(ind+1);
 	}
@@ -848,7 +852,8 @@ void XHCI_ON_TRANSFER_COMPLETE(XHCI_TRB* trb){
 			}
 			
 		}
-		XHCI_CONFIGURE_ENDPOINT0(endp,slot,device->config->config_val);
+		if(device->intf[0].interface->protocol==2)
+			XHCI_CONFIGURE_ENDPOINT0(endp,slot,device->config->config_val);
 		endp->done++;
 	}else if(endp->done==6){
 		printf("SLOT[%x] STATE %x\n",slot,output->int4>>27);
@@ -856,6 +861,7 @@ void XHCI_ON_TRANSFER_COMPLETE(XHCI_TRB* trb){
 		endp->done++;
 	}else{
 		printf("EYYYYYYY\n");
+		XHCI_SETIDLE(slot,2);
 	}
 
 	//EVALUATE CONTEXT
@@ -888,6 +894,7 @@ void XHCI_PROC_EVENT(XHCI_TRB* trb){
 
 // ERROR: FIX BUFFER OVERFLOW IN ERDP
 void XHCI_INT(registers* _r){
+	printf("INT ");
 	XHCI_TRB* trb=(void*)(COMBINE_DWORD(xhci_hub.ints[0].ERDP_high, xhci_hub.ints[0].ERDP_low)&(~0xF));
 	int trb_code=XHCI_TRB_TYPE(trb->def);
 	kprintf("INT RECV[%x]\n",trb_code);
