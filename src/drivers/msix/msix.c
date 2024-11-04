@@ -46,7 +46,7 @@ void MSIX_HANDLE_CAPABILITY(void* data,PCIGeneralDevice* device,unsigned int max
 }
 void MSI_HANDLE_CAPABILITY(void* data,PCIGeneralDevice* device,unsigned int maxintrs){
 	U32(data)&=(~(0b1110001<<16));
-	int vecs=0b00;
+	int vecs=0b01;
 	U32(data)|=MSI_CONTROL(vecs, 1)<<16;
 	int bit64=MSI_64_BIT(WORD(U32(data),1));
 	int masking=MSI_PER_VECTOR_MASKING(WORD(U32(data),1));
@@ -55,7 +55,7 @@ void MSI_HANDLE_CAPABILITY(void* data,PCIGeneralDevice* device,unsigned int maxi
 	if(bit64){
 		dataptr+=0x1;
 	}
-	uint64_t address=arch_msi_address(dataptr, 0x2B, 0,1,0);
+	uint64_t address=arch_msi_address(dataptr, 0x2A, 0,1,0);
 	U32(data+0x4)=DWORD(address, 0);
 	if(bit64) U32(data+0x8)=DWORD(address,1);
 	

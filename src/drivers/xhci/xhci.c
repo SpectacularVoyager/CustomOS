@@ -17,6 +17,10 @@ void* xhci_operation_registers;
 #define XHCI_RT(of)	((uint32_t*)((xhci_hub.config.RTSOFF+of)))
 #define XHCI_EVENT_RING_SIZE	128
 
+inline void* XHCI_GET_TRB_PTR(XHCI_TRB* trb){
+	return (void*)(COMBINE_DWORD((uint64_t)trb->int2, trb->int1)&(~0xF));
+}
+
 void XHCI_READ_CAP(XHCI_CAP_REG* cap,void* address){
 	uint32_t* cf=address;
 	uint32_t line=cf[0];
@@ -349,20 +353,20 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 
 	//-------------//
 	//FORI(maxintrs){
-	FORI(1){
-	uint64_t* event_ring_table=mallocAB(4096,4096,4096);
-	void* event_ring_addr=malloc(16*XHCI_EVENT_RING_SIZE);
-	memset(event_ring_addr,0,16*XHCI_EVENT_RING_SIZE);
+	FORI(2){
+		uint64_t* event_ring_table=mallocAB(4096,4096,4096);
+		void* event_ring_addr=malloc(16*XHCI_EVENT_RING_SIZE);
+		memset(event_ring_addr,0,16*XHCI_EVENT_RING_SIZE);
 
-	event_ring_table[0]=(uint64_t)event_ring_addr;
-	event_ring_table[1]=4096;
-	//reg_int[0].IMAN=1<<1|1<<0;
-	reg_int[i].IMAN=XHCI_IMAN_INTE;
-	reg_int[i].IMOD=4000;
-	reg_int[i].ERSTSZ=1;
-	reg_int[i].ERSTBA_low=(DWORD((uint64_t)event_ring_table,0)&(~0x3F))|1<<3;
-	reg_int[i].ERSTBA_high=DWORD((uint64_t)event_ring_table,1);
-	XHCI_WRITE_ERDP(&reg_int[i],(uint64_t)event_ring_addr,0);
+		event_ring_table[0]=(uint64_t)event_ring_addr;
+		event_ring_table[1]=4096;
+		//reg_int[0].IMAN=1<<1|1<<0;
+		reg_int[i].IMAN=XHCI_IMAN_INTE;
+		reg_int[i].IMOD=4000;
+		reg_int[i].ERSTSZ=1;
+		reg_int[i].ERSTBA_low=(DWORD((uint64_t)event_ring_table,0)&(~0x3F))|1<<3;
+		reg_int[i].ERSTBA_high=DWORD((uint64_t)event_ring_table,1);
+		XHCI_WRITE_ERDP(&reg_int[i],(uint64_t)event_ring_addr,0);
 	}
 	//-------------//
 	void* mmio=PCI_GetMMIO(device,pcibase)+usb.capabilities_pointer;
@@ -392,8 +396,8 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	xhci_hub.endpoints=endpoints;
 
 
-	IRQ_RegisterHandler(0xB,XHCI_INT);
-	IRQ_RegisterHandler(0x8,XHCI_IRQ8);
+	IRQ_RegisterHandler(0xA,XHCI_INT);
+	IRQ_RegisterHandler(0xB,XHCI_IRQ8);
 	
 	*XHCI_OP(XHCI_REG_DNCTRL)=0xFFFF;
 	*XHCI_OP(XHCI_REG_USBSTS)|=1<<3;
@@ -421,8 +425,56 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 
 	return 1;
 }
+void XHCI_SETIDLE(int slot,int num){
+	XHCI_Endpoint* endp=&xhci_hub.endpoints[slot];
+	XHCI_TRB_SETUP setup={0};
+	XHCI_TRB_STATUS status={0};
+	setup=(XHCI_TRB_SETUP){
+		.TRBType=XHCI_TRB_SETUP_STAGE_CODE,
+			.TransferType=XHCI_TRANSFER_TYPE_NO_DATA,
+			.TRBTransferLength=8,
+			.IOC=0,
+			.IDT=1,
+			.bmRequestType=0x21,
+			.bRequest=0xA,
+			.wValue=0x0,
+			.wIndex=0,
+			.wLength=0,
+			.C=1,
+			.InterrupterTarget=2
+	};
+	status=(XHCI_TRB_STATUS){
+		.TRBType=XHCI_TRB_STATUS_CODE,
+			.D=0,
+			.CH=0,
+			.IOC=1,
+			.C=1,
+			.int_target=2
+	};
+	XHCI_TRANSFER(endp,num,(XHCI_TRB*)&setup);
+	XHCI_TRANSFER(endp,num,(XHCI_TRB*)&status);
+	XHCI_DOORBELL(slot, num+1);
+}
 void XHCI_IRQ8(registers* _r){
-	XHCI_INT(_r);
+	//XHCI_INT(_r);
+	XHCI_TRB* trb=(void*)(COMBINE_DWORD(xhci_hub.ints[1].ERDP_high, xhci_hub.ints[1].ERDP_low)&(~0xF));
+	int trb_code=XHCI_TRB_TYPE(trb->def);
+	while(XHCI_TRB_TYPE(trb->def)!=0&&XHCI_TRB_CYCLE(trb->def)==1){
+		if(trb_code!=XHCI_TRB_CODE_TRANSFER_COMPLETED){
+			printf("UNRECOGNISED TRB IN INTERRUPTER 2\n");
+		}
+		XHCI_TRB* ptr=XHCI_GET_TRB_PTR(trb);
+		int st=BYTE(trb->int3,3);
+		int slot=BYTE(trb->def,3);
+		int endpoint=BYTE(trb->def,2)&0x1F;
+		XHCI_Endpoint* endp=&xhci_hub.endpoints[slot];
+		printf("DEVICE [%x][%x] INT RECV WITH STATUS %x\n",slot,endpoint,st);
+		printf("EVENT[%x]\n",XHCI_TRB_TYPE(ptr->def));
+		
+		kprintf("INT RECV[%x]\n",trb_code);
+		trb++;
+	}
+	XHCI_WRITE_ERDP(&xhci_hub.ints[1],(uint64_t)(trb),1<<3);
 }
 void XHCI_PRINT_PORT(int i,XHCI_PORT_REG* reg){
 	printf("PORT[%d]  CON:%d  EN:%d  ST:%d\n",i,
@@ -689,36 +741,7 @@ void XHCI_ON_COMMAND_COMPLETE(XHCI_TRB* trb){
 			//
 			//if(status==1)return;
 			if(endp->done>=6){
-
-				printf("ENDPOINT STATUSES:\t");
-				FORI(4)printf("%x ",U8(((void*)output)+0x20*i));
-				printf("\n");
-
-				XHCI_TRB_SETUP setup={0};
-				XHCI_TRB_STATUS status={0};
-				setup=(XHCI_TRB_SETUP){
-					.TRBType=XHCI_TRB_SETUP_STAGE_CODE,
-						.TransferType=XHCI_TRANSFER_TYPE_NO_DATA,
-						.TRBTransferLength=8,
-						.IOC=0,
-						.IDT=1,
-						.bmRequestType=0x21,
-						.bRequest=0xA,
-						.wValue=0x0,
-						.wIndex=0,
-						.wLength=0,
-						.C=1
-				};
-				status=(XHCI_TRB_STATUS){
-					.TRBType=XHCI_TRB_STATUS_CODE,
-						.D=0,
-						.CH=0,
-						.IOC=1,
-						.C=1
-				};
-				XHCI_TRANSFER(endp,2,(XHCI_TRB*)&setup);
-				XHCI_TRANSFER(endp,2,(XHCI_TRB*)&status);
-				XHCI_DOORBELL(slot, 3);
+				XHCI_SETIDLE(slot,2);
 			}	
 			break;
 		default:
