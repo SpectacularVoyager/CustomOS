@@ -6,6 +6,7 @@
 #include "utils/bit.h"
 #include "utils/fixedlist.h"
 #include "drivers/usb/usb.h"
+#include "utils/utils.h"
 #define XHCI_REG_USBCMD		(0x0)
 #define XHCI_REG_USBSTS		(0x4)
 #define XHCI_REG_PAGESIZE	(0x8)
@@ -138,6 +139,15 @@ inline int XHCI_MAX_PACKETS(unsigned int version,unsigned int val){
 		return val;
 	}
 	return 1<<val;
+}
+inline int XHCI_GET_TYPE_DESC(USB_ENDPOINT_DESCRIPTOR* desc){
+	LOGVAL(desc->endpoint_address);
+	LOGVAL(BIT(desc->endpoint_address,7));
+	if(desc==0)return XHCI_ENDPOINT_CONTROL;
+	return (desc->attributes&0x3)|(BIT(desc->endpoint_address,7)<<2);
+}
+inline int XHCI_GET_INDEX_DESC(USB_ENDPOINT_DESCRIPTOR* desc){
+	return (((desc->endpoint_address&0xF)<<1)|BIT(desc->endpoint_address,7))-1;
 }
 
 extern char* XHCI_CMD_CODE[64];

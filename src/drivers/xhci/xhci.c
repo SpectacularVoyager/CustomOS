@@ -441,7 +441,6 @@ void XHCI_SETIDLE(int slot,int num){
 			.wIndex=0,
 			.wLength=0,
 			.C=1,
-			.InterrupterTarget=2
 	};
 	status=(XHCI_TRB_STATUS){
 		.TRBType=XHCI_TRB_STATUS_CODE,
@@ -449,7 +448,7 @@ void XHCI_SETIDLE(int slot,int num){
 			.CH=0,
 			.IOC=1,
 			.C=1,
-			.int_target=2
+			.int_target=1
 	};
 	XHCI_TRANSFER(endp,num,(XHCI_TRB*)&setup);
 	XHCI_TRANSFER(endp,num,(XHCI_TRB*)&status);
@@ -470,7 +469,7 @@ void XHCI_IRQ8(registers* _r){
 		XHCI_Endpoint* endp=&xhci_hub.endpoints[slot];
 		printf("DEVICE [%x][%x] INT RECV WITH STATUS %x\n",slot,endpoint,st);
 		printf("EVENT[%x]\n",XHCI_TRB_TYPE(ptr->def));
-		
+		LOGVALD(endp->endpoints[2].trbs);
 		kprintf("INT RECV[%x]\n",trb_code);
 		trb++;
 	}
@@ -610,22 +609,27 @@ void XHCI_CONFIGURE_ENDPOINT0(XHCI_Endpoint* endp,int slot,int conf){
 	XHCI_CONTEXT_ENDPOINT* endp_int=input_context+(cz*(4));
 
 	XHCI_TRB address=XHCI_CMD_CONFIGURE_CONTEXT((uint64_t)input_context, slot, 0, 1);
-	control->add=0b1001;
-	slot_endp->context_entries=2;
-	USB_ENDPOINT_DESCRIPTOR* endpoint=device->intf[0].endpoint[0];
+	control->add=0b0001;
+	slot_endp->context_entries=1;
 
 	XHCI_CONTEXT_LOAD((XHCI_CONTEXT_GENERIC*)slot_endp,input_context_readonly+cz);
 	endp->contexts=input_context;
-
-	endp->endpoints[2].trbs= XHCI_getTransferTRBs();
-	endp_int->ep_type=XHCI_ENDPOINT_INT_IN;
-	endp_int->max_packet_size=endpoint->max_packet_size;
-	endp_int->max_burst_size=0;
-	endp_int->tr_dequeue_pointer=XHCI_DEQUEUE_PTR((uint64_t)endp->endpoints[2].trbs, 1);
-	endp_int->interval=endpoint->interval;
-	endp_int->max_p_streams=0;
-	endp_int->mult=0;
-	endp_int->c_err=3;
+	FORI(device->intf->interface->num_endpoints){
+		USB_ENDPOINT_DESCRIPTOR* endpoint=device->intf[0].endpoint[i];
+		int ind=XHCI_GET_INDEX_DESC(endpoint);
+		int type=XHCI_GET_TYPE_DESC(endpoint);
+		endp->endpoints[ind].trbs= XHCI_getTransferTRBs();
+		endp_int->ep_type=type;
+		endp_int->max_packet_size=endpoint->max_packet_size;
+		endp_int->max_burst_size=0;
+		endp_int->tr_dequeue_pointer=XHCI_DEQUEUE_PTR((uint64_t)endp->endpoints[ind].trbs, 1);
+		endp_int->interval=endpoint->interval;
+		endp_int->max_p_streams=0;
+		endp_int->mult=0;
+		endp_int->c_err=3;
+		slot_endp->context_entries++;
+		control->add|=1<<(ind+1);
+	}
 	
 	XHCI_COMMAND(xhci_hub.command_ring,&address);
 	XHCI_DOORBELL(0,0);
