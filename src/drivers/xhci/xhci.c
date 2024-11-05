@@ -436,7 +436,7 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 
 	return 1;
 }
-void XHCI_SETIDLE(int slot,int num){
+void XHCI_SETIDLE(int slot,int num,int target_int){
 	XHCI_Endpoint* endp=&xhci_hub.endpoints[slot];
 	XHCI_TRB_SETUP setup={0};
 	XHCI_TRB_STATUS status={0};
@@ -459,7 +459,7 @@ void XHCI_SETIDLE(int slot,int num){
 			.CH=0,
 			.IOC=1,
 			.C=1,
-			.int_target=2
+			.int_target=target_int
 	};
 	XHCI_TRANSFER(endp,num,(XHCI_TRB*)&setup);
 	XHCI_TRANSFER(endp,num,(XHCI_TRB*)&status);
@@ -476,7 +476,7 @@ char fromScanCode(char x){
 	return 0;
 }
 void XHCI_IRQ8(registers* _r){
-	kprintf("IRQ8[%x]\n",irq8++);
+	printf("IRQ RECV LESS GO\n");
 	FORI(6){
 		if(keyboard.keys[i]!=0){
 			printf("%c",fromScanCode(keyboard.keys[i]));
@@ -682,12 +682,13 @@ void XHCI_CONFIGURE_ENDPOINT0(XHCI_Endpoint* endp,int slot,int conf){
 		//endp_int->avg_trb_length=2*endpoint->max_packet_size;
 		endp_int->max_esit_payload_hi=BYTE(esit,1);
 		endp_int->max_esit_payload_lo=BYTE(esit,0);
-		slot_endp->context_entries=2;
-		printf("IDX:\t%x\t%x\n",ind,device->intf[0].interface->num_endpoints);
+		slot_endp->context_entries=MAX(slot_endp->context_entries,ind+1);
+		printf("IDX:\t%x\n",ind);
 		//XHCIprintContext(endp_int);
 		control->add|=1<<(ind+1);
 	}
 	XHCI_CONTEXT_LOAD((XHCI_CONTEXT_GENERIC*)slot_endp,input_context_readonly+cz);
+	//TO DO REMOVE HARD CODING
 	slot_endp->context_entries=3;
 	endp->contexts=input_context;
 	
@@ -810,8 +811,9 @@ void XHCI_ON_COMMAND_COMPLETE(XHCI_TRB* trb){
 			//
 			//if(status==1)return;
 			if(endp->done>=6){
-				//hexdump(output,0x80,0x20);
-				XHCI_SETIDLE(slot,0);
+				printf("SLOT[%x] STATE %x\n",slot,output->int4>>27);
+				hexdump(output,0x80,0x20);
+				XHCI_SETIDLE(slot,0,2);
 				XHCI_DOORBELL(slot,1);
 
 			}	
@@ -928,13 +930,10 @@ void XHCI_ON_TRANSFER_COMPLETE(XHCI_TRB* trb){
 		}
 		if(device->intf[0].interface->protocol==1){
 			printf("SLOT[%x] STATE %x\n",slot,output->int4>>27);
-			printf("CONFIGURING ENDP\n");
 			XHCI_CONFIGURE_ENDPOINT0(endp,slot,device->config->config_val);
 		}
 		endp->done++;
 	}else if(endp->done==6){
-		printf("SLOT[%x] STATE %x\n",slot,output->int4>>27);
-		//XHCI_SETIDLE(slot,3);
 		endp->done++;
 	}else{
 		printf("EYYYYYYY\n");
