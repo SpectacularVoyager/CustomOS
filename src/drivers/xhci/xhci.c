@@ -210,7 +210,8 @@ inline void XHCIprintTRB(XHCI_TRB* trb){
 	LOGVAL(trb->int3);
 	LOGVAL(trb->def);
 }
-inline void XHCIprintContext(XHCI_CONTEXT_GENERIC* gen){
+inline void XHCIprintContext(void* g){
+	XHCI_CONTEXT_GENERIC* gen=g;
 	LOGVAL(gen->int1);
 	LOGVAL(gen->int2);
 	LOGVAL(gen->int3);
@@ -420,8 +421,8 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	XHCI_DOORBELL(0,0);
 	SetColor(0xffffff);
 
-	FORI(maxports)
-		XHCI_PORT_RESET(i);
+	//FORI(maxports)
+	//	XHCI_PORT_RESET(i);
 	XHCI_PORT_RESET(0);
 	XHCI_DOORBELL(0,0);
 #ifdef XHCI_DEBUG
@@ -640,20 +641,20 @@ void XHCI_CONFIGURE_ENDPOINT0(XHCI_Endpoint* endp,int slot,int conf){
 
 
 	int cz=32<<XHCI_CONTEXT_SIZE(xhci_hub.config);
-	//void* input_context=mallocAB(cz*33,64,xhci_hub.pagesize);
-	void* input_context=endp->contexts;
-	//memset(input_context,0,cz*33);
+	void* input_context=mallocAB(cz*33,64,xhci_hub.pagesize);
+	void* input_context_readonly=endp->contexts;
+	memset(input_context,0,33*cz);
 	XHCI_CONTEXT_CONTROL* control=input_context;
 	XHCI_CONTEXT_SLOT* slot_endp=input_context+(cz*(1));
 	XHCI_CONTEXT_SLOT* endp0=input_context+(cz*(2));
 	XHCI_CONTEXT_ENDPOINT* endp_int=input_context+(cz*(4));
+	control->drop=0;
+	control->conf=0;
 
 	XHCI_TRB address=XHCI_CMD_CONFIGURE_CONTEXT((uint64_t)input_context, slot, 0, 1);
 	control->add=0b01;
 	slot_endp->context_entries=1;
 
-	//XHCI_CONTEXT_LOAD((XHCI_CONTEXT_GENERIC*)slot_endp,input_context_readonly+cz);
-	//endp->contexts=input_context;
 	FORI(device->intf->interface->num_endpoints){
 		USB_ENDPOINT_DESCRIPTOR* endpoint=device->intf[0].endpoint[i];
 		int ind=XHCI_GET_INDEX_DESC(endpoint);
@@ -668,12 +669,15 @@ void XHCI_CONFIGURE_ENDPOINT0(XHCI_Endpoint* endp,int slot,int conf){
 		endp_int->max_p_streams=0;
 		endp_int->mult=0;
 		endp_int->c_err=3;
-		endp_int->avg_trb_length=8;
+		endp_int->avg_trb_length=1024;
+		//endp_int->avg_trb_length=2*endpoint->max_packet_size;
 		endp_int->max_esit_payload_hi=BYTE(esit,1);
 		endp_int->max_esit_payload_lo=BYTE(esit,0);
 		slot_endp->context_entries++;
 		control->add|=1<<(ind+1);
 	}
+	XHCI_CONTEXT_LOAD((XHCI_CONTEXT_GENERIC*)slot_endp,input_context_readonly+cz);
+	endp->contexts=input_context;
 	
 	XHCI_COMMAND(xhci_hub.command_ring,&address);
 	XHCI_DOORBELL(0,0);
@@ -908,6 +912,7 @@ void XHCI_ON_TRANSFER_COMPLETE(XHCI_TRB* trb){
 			
 		}
 		if(device->intf[0].interface->protocol==1){
+			printf("SLOT[%x] STATE %x\n",slot,output->int4>>27);
 			printf("CONFIGURING ENDP\n");
 			XHCI_CONFIGURE_ENDPOINT0(endp,slot,device->config->config_val);
 		}
