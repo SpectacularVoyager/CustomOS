@@ -129,23 +129,29 @@ void XHCI_HANDLE_CAPABILITIES(void* data,PCIGeneralDevice* device,unsigned int m
 XHCI_TRB* XHCI_getTransferTRBs(){
 	XHCI_TRB* trb=mallocAB(64*1024,64*1024,64*1024);
 	//memset(trb,0,64*1024);
-	FORI(127){
+	FORI(256){
 		trb[i].int1=0;
 		trb[i].int2=0;
 		trb[i].int3=0;
 		trb[i].def =0;
 	}
-	trb[127].int1=DWORD((uint64_t)trb,0);
-	trb[127].int2=DWORD((uint64_t)trb,1);
-	trb[127].int3=0|(0<<22);//IGNORED FOR CMD TRB
-	trb[127].def=(6<<10)|1|1<<1;
+
+	//trb[63].int1=DWORD((uint64_t)&trb[64],0);
+	//trb[63].int2=DWORD((uint64_t)&trb[64],1);
+	//trb[63].int3=0|(2<<22);//IGNORED FOR CMD TRB
+	//trb[63].def=(6<<10)|1|2;
+	trb[127].int1=DWORD((uint64_t)&trb[0],0);
+	trb[127].int2=DWORD((uint64_t)&trb[0],1);
+	trb[127].int3=0|(2<<22);//IGNORED FOR CMD TRB
+	trb[127].def=(6<<10)|1;
 	return trb;
 }
 inline void XHCI_TRANSFER(XHCI_Endpoint* endp,int num,XHCI_TRB* ptr){
 	XHCI_Endpoint_Data* data=&endp->endpoints[num];
-	if(data->c>=127){
+	if(data->c==127){
+		//data->CY^=1;
 		data->c=0;
-		data->CY=0;
+		//endp->endpoints[num].trbs[127].def^=1;
 	}
 	data->trbs[data->c].int1=ptr->int1;
 	data->trbs[data->c].int2=ptr->int2;
@@ -416,7 +422,7 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 
 	FORI(maxports)
 		XHCI_PORT_RESET(i);
-	//XHCI_PORT_RESET(0);
+	XHCI_PORT_RESET(0);
 	XHCI_DOORBELL(0,0);
 #ifdef XHCI_DEBUG
 	for(int i=0;i<maxports;i++){
@@ -462,28 +468,32 @@ USB_MOUSE_REPORT mouse;
 USB_KEYBOARD_REPORT keyboard;
 int irq8=1;
 void XHCI_IRQ8(registers* _r){
-	printf("IRQ8");
-	kprintf("IRQ8:\t%x\t",irq8++);
+	kprintf("IRQ8[%x]\n",irq8++);
+	FORI(6){
+		if(keyboard.keys[i]!=0){
+			printf("%c",'A'+keyboard.keys[i]-4);
+		}
+	}
 	//XHCI_INT(_r);
 	XHCI_TRB* trb=(void*)(COMBINE_DWORD(xhci_hub.ints[1].ERDP_high, xhci_hub.ints[1].ERDP_low)&(~0xF));
 	int trb_code=XHCI_TRB_TYPE(trb->def);
 	while(XHCI_TRB_TYPE(trb->def)!=0&&XHCI_TRB_CYCLE(trb->def)==1){
-	//	if(trb_code!=XHCI_TRB_CODE_TRANSFER_COMPLETED){
-	//		printf("UNRECOGNISED TRB IN INTERRUPTER 2\n");
-	//	}
+		//	if(trb_code!=XHCI_TRB_CODE_TRANSFER_COMPLETED){
+		//		printf("UNRECOGNISED TRB IN INTERRUPTER 2\n");
+		//	}
 		int slot=BYTE(trb->def,3);
 		XHCI_Endpoint* endp=&xhci_hub.endpoints[slot];
 		trb++;
 		//kprintf("DEVICE LMB:%x\tRMB:%x\tX:%d\tY:%d\n",mouse.button1,mouse.button2,mouse.X,mouse.Y);
-		kprintf("DEVICE [%x]->[%x][%x][%x][%x][%x][%x]\n",
-				keyboard.modifiers,
-				keyboard.key1,
-				keyboard.key2,
-				keyboard.key3,
-				keyboard.key4,
-				keyboard.key5,
-				keyboard.key6
-				);
+		//kprintf("DEVICE [%x]->[%x][%x][%x][%x][%x][%x]\n",
+		//		keyboard.modifiers,
+		//		keyboard.key1,
+		//		keyboard.key2,
+		//		keyboard.key3,
+		//		keyboard.key4,
+		//		keyboard.key5,
+		//		keyboard.key6
+		//		);
 		XHCI_TRB_NORMAL normal={
 			.data_low=DWORD((uint64_t)&keyboard,0),
 			.data_high=DWORD((uint64_t)&keyboard,1),
@@ -491,7 +501,7 @@ void XHCI_IRQ8(registers* _r){
 			.TDSize=0,
 			.InterrupterTarget=2,
 			.TRBType=XHCI_TRB_NORMAL_CODE,
-			.IOC=1,
+			.IOC=0,
 			.C=1
 		};
 		XHCI_TRB_STATUS status=(XHCI_TRB_STATUS){
@@ -784,7 +794,7 @@ void XHCI_ON_COMMAND_COMPLETE(XHCI_TRB* trb){
 			//
 			//if(status==1)return;
 			if(endp->done>=6){
-				XHCI_SETIDLE(slot,2);
+				XHCI_SETIDLE(slot,0);
 			}	
 			break;
 		default:
@@ -804,10 +814,20 @@ void XHCI_ON_TRANSFER_COMPLETE(XHCI_TRB* trb){
 	int cz=32<<XHCI_CONTEXT_SIZE(xhci_hub.config);
 
 	int status=BYTE(trb->int3,3);
-	if(status!=1)
-		printf("\tTRANSFER FAILED WITH STATUS %x\n",status);
 	int slot=XHCI_TRB_SLOT(trb->def);
 	int endpointid=BYTE(trb->def,2)&0x1F;
+
+	if(status!=1){
+		printf("\tTRANSFER FAILED WITH STATUS %x\n",status);
+		if(status==0xB){
+			printf("SLOT [%x] NOT ENABLED\n",slot);
+		}
+		if(status==0xC){
+			printf("SLOT [%x] ENDPOINT[%d] NOT ENABLED\n",slot,endpointid);
+		}
+		return;
+	}
+
 	XHCI_Endpoint* endp=&xhci_hub.endpoints[slot];
 	XHCI_CONTEXT_GENERIC* output=(XHCI_CONTEXT_GENERIC*)(xhci_hub.dcbaa[slot]);
 
@@ -893,10 +913,10 @@ void XHCI_ON_TRANSFER_COMPLETE(XHCI_TRB* trb){
 	}else if(endp->done==6){
 		printf("SLOT[%x] STATE %x\n",slot,output->int4>>27);
 		//XHCI_DEVICE_INIT(slot,xhci_hub.conf_device,trbs);
+		XHCI_SETIDLE(slot,2);
 		endp->done++;
 	}else{
 		printf("EYYYYYYY\n");
-		XHCI_SETIDLE(slot,2);
 	}
 
 	//EVALUATE CONTEXT
@@ -929,7 +949,6 @@ void XHCI_PROC_EVENT(XHCI_TRB* trb){
 
 // ERROR: FIX BUFFER OVERFLOW IN ERDP
 void XHCI_INT(registers* _r){
-	printf("INT ");
 	XHCI_TRB* trb=(void*)(COMBINE_DWORD(xhci_hub.ints[0].ERDP_high, xhci_hub.ints[0].ERDP_low)&(~0xF));
 	int trb_code=XHCI_TRB_TYPE(trb->def);
 	kprintf("INT RECV[%x]\n",trb_code);

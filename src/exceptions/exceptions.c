@@ -37,7 +37,16 @@ void InvalidOpcodeException(registers* r){
 	printf("THE Previous Bytes Are %02X %02X %02X %02X\n",inst[-1],inst[-2],inst[-3],inst[-4]);
 	__asm__ volatile("cli;hlt");
 }
+void GeneralProtectionFault(registers* r){
+	//SetColor(0xFF00000);
+	printf(ERROR "GENERAL PROTECTION FAULT\n");
+	uint8_t* inst=((uint8_t*)r->rip);
+	printf("THE EXCEPTION OCCURED AT %p\n",r->rip);
+	printf("THE ERROR CODE IS ??\n");
+	__asm__ volatile("cli;hlt");
+}
 void ExceptionInit(){
-	ISR_addHandler(14,PageFaultHandler);
 	ISR_addHandler(6,InvalidOpcodeException);
+	ISR_addHandler(13,GeneralProtectionFault);
+	ISR_addHandler(14,PageFaultHandler);
 }
