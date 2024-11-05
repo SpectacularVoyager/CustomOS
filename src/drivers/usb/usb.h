@@ -112,3 +112,23 @@ typedef struct{
 } USB_DEVICE_CONFIGURATION;
 
 void USB_PARSE_CONFIG(USB_DEVICE_CONFIGURATION* config,void* data);
+typedef struct {
+	uint8_t button1:1;
+	uint8_t button2:1;
+	uint8_t button3:1;
+	uint8_t res:5;
+	char X;
+	char Y;
+	char Z;
+}__attribute__((packed)) USB_MOUSE_REPORT;
+
+typedef struct {
+	uint8_t modifiers;
+	uint8_t res;
+	uint8_t key1;
+	uint8_t key2;
+	uint8_t key3;
+	uint8_t key4;
+	uint8_t key5;
+	uint8_t key6;
+}__attribute__((packed)) USB_KEYBOARD_REPORT;

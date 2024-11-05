@@ -129,24 +129,29 @@ void XHCI_HANDLE_CAPABILITIES(void* data,PCIGeneralDevice* device,unsigned int m
 XHCI_TRB* XHCI_getTransferTRBs(){
 	XHCI_TRB* trb=mallocAB(64*1024,64*1024,64*1024);
 	//memset(trb,0,64*1024);
-	FORI(128){
+	FORI(127){
 		trb[i].int1=0;
 		trb[i].int2=0;
 		trb[i].int3=0;
 		trb[i].def =0;
 	}
-	//trb[127].int1=DWORD((uint64_t)&xhci_hub.command_ring[0],0)&(~0xF);
-	//trb[127].int2=DWORD((uint64_t)&xhci_hub.command_ring[0],1);
-	//trb[127].int3=0|(0<<22);//IGNORED FOR CMD TRB
-	//trb[127].def=(6<<10)|(1<<5)|1;
+	trb[127].int1=DWORD((uint64_t)trb,0);
+	trb[127].int2=DWORD((uint64_t)trb,1);
+	trb[127].int3=0|(0<<22);//IGNORED FOR CMD TRB
+	trb[127].def=(6<<10)|1|1<<1;
 	return trb;
 }
 inline void XHCI_TRANSFER(XHCI_Endpoint* endp,int num,XHCI_TRB* ptr){
-	endp->endpoints[num].trbs[endp->endpoints[num].c].int1=ptr->int1;
-	endp->endpoints[num].trbs[endp->endpoints[num].c].int2=ptr->int2;
-	endp->endpoints[num].trbs[endp->endpoints[num].c].int3=ptr->int3;
-	endp->endpoints[num].trbs[endp->endpoints[num].c].def =ptr->def;
-	endp->endpoints[num].c++;
+	XHCI_Endpoint_Data* data=&endp->endpoints[num];
+	if(data->c>=127){
+		data->c=0;
+		data->CY=0;
+	}
+	data->trbs[data->c].int1=ptr->int1;
+	data->trbs[data->c].int2=ptr->int2;
+	data->trbs[data->c].int3=ptr->int3;
+	data->trbs[data->c].def =(ptr->def&(~1))|data->CY;
+	data->c++;
 }
 void XHCI_HANDLE_EXTENDED_CAPABILITIES(XHCI_HUB* xhci_hub,void* data){
 	void* supportedprotocols[10];	
@@ -373,7 +378,6 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	void* extended_cap=(void*)((usb.BAR[0]&(~0xF))+(XHCI_EXTENDED_CAP_PTR(&config)<<2));
 	XHCI_HANDLE_CAPABILITIES(mmio,&usb,maxintrs);
 	XHCI_HANDLE_EXTENDED_CAPABILITIES(&xhci_hub,extended_cap);
-	LOGVALD(extended_cap);
 	
 	volatile XHCI_SUPPORTED_PROTOCOL* proto=0;
 	proto=((XHCI_SUPPORTED_PROTOCOL**)xhci_hub.SupportedProtocols.data)[0];
@@ -448,30 +452,60 @@ void XHCI_SETIDLE(int slot,int num){
 			.CH=0,
 			.IOC=1,
 			.C=1,
-			.int_target=1
+			.int_target=2
 	};
 	XHCI_TRANSFER(endp,num,(XHCI_TRB*)&setup);
 	XHCI_TRANSFER(endp,num,(XHCI_TRB*)&status);
 	XHCI_DOORBELL(slot, num+1);
 }
+USB_MOUSE_REPORT mouse;
+USB_KEYBOARD_REPORT keyboard;
+int irq8=1;
 void XHCI_IRQ8(registers* _r){
+	printf("IRQ8");
+	kprintf("IRQ8:\t%x\t",irq8++);
 	//XHCI_INT(_r);
 	XHCI_TRB* trb=(void*)(COMBINE_DWORD(xhci_hub.ints[1].ERDP_high, xhci_hub.ints[1].ERDP_low)&(~0xF));
 	int trb_code=XHCI_TRB_TYPE(trb->def);
 	while(XHCI_TRB_TYPE(trb->def)!=0&&XHCI_TRB_CYCLE(trb->def)==1){
-		if(trb_code!=XHCI_TRB_CODE_TRANSFER_COMPLETED){
-			printf("UNRECOGNISED TRB IN INTERRUPTER 2\n");
-		}
-		XHCI_TRB* ptr=XHCI_GET_TRB_PTR(trb);
-		int st=BYTE(trb->int3,3);
+	//	if(trb_code!=XHCI_TRB_CODE_TRANSFER_COMPLETED){
+	//		printf("UNRECOGNISED TRB IN INTERRUPTER 2\n");
+	//	}
 		int slot=BYTE(trb->def,3);
-		int endpoint=BYTE(trb->def,2)&0x1F;
 		XHCI_Endpoint* endp=&xhci_hub.endpoints[slot];
-		printf("DEVICE [%x][%x] INT RECV WITH STATUS %x\n",slot,endpoint,st);
-		printf("EVENT[%x]\n",XHCI_TRB_TYPE(ptr->def));
-		LOGVALD(endp->endpoints[2].trbs);
-		kprintf("INT RECV[%x]\n",trb_code);
 		trb++;
+		//kprintf("DEVICE LMB:%x\tRMB:%x\tX:%d\tY:%d\n",mouse.button1,mouse.button2,mouse.X,mouse.Y);
+		kprintf("DEVICE [%x]->[%x][%x][%x][%x][%x][%x]\n",
+				keyboard.modifiers,
+				keyboard.key1,
+				keyboard.key2,
+				keyboard.key3,
+				keyboard.key4,
+				keyboard.key5,
+				keyboard.key6
+				);
+		XHCI_TRB_NORMAL normal={
+			.data_low=DWORD((uint64_t)&keyboard,0),
+			.data_high=DWORD((uint64_t)&keyboard,1),
+			.TRBTransferLength=8,
+			.TDSize=0,
+			.InterrupterTarget=2,
+			.TRBType=XHCI_TRB_NORMAL_CODE,
+			.IOC=1,
+			.C=1
+		};
+		XHCI_TRB_STATUS status=(XHCI_TRB_STATUS){
+			.TRBType=XHCI_TRB_STATUS_CODE,
+				.D=0,
+				.CH=0,
+				.IOC=1,
+				.C=1,
+				.int_target=2
+		};
+		XHCI_TRANSFER(endp,2,(XHCI_TRB*)&normal);
+		XHCI_TRANSFER(endp,2,(XHCI_TRB*)&status);
+		XHCI_DOORBELL(slot,3);
+		//XHCI_SETIDLE(slot,2);
 	}
 	XHCI_WRITE_ERDP(&xhci_hub.ints[1],(uint64_t)(trb),1<<3);
 }
@@ -719,6 +753,7 @@ void XHCI_ON_COMMAND_COMPLETE(XHCI_TRB* trb){
 			FORI(32){
 				xhci_hub.endpoints[slot].endpoints[i].c=0;
 				xhci_hub.endpoints[slot].endpoints[i].sz=128;
+				xhci_hub.endpoints[slot].endpoints[i].CY=1;
 			}
 			XHCI_SLOT_INITIALIZE(slot,port);
 			break;
@@ -852,7 +887,7 @@ void XHCI_ON_TRANSFER_COMPLETE(XHCI_TRB* trb){
 			}
 			
 		}
-		if(device->intf[0].interface->protocol==2)
+		if(device->intf[0].interface->protocol==1)
 			XHCI_CONFIGURE_ENDPOINT0(endp,slot,device->config->config_val);
 		endp->done++;
 	}else if(endp->done==6){

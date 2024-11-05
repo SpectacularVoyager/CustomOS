@@ -61,6 +61,7 @@
 #define XHCI_PORT_PLC				(1<<22)
 #define XHCI_PORT_CEC				(1<<23)
 
+#define XHCI_TRB_NORMAL_CODE				( 1)
 #define XHCI_TRB_SETUP_STAGE_CODE			( 2)
 #define XHCI_TRB_DATA_CODE					( 3)
 #define XHCI_TRB_STATUS_CODE				( 4)
@@ -141,8 +142,6 @@ inline int XHCI_MAX_PACKETS(unsigned int version,unsigned int val){
 	return 1<<val;
 }
 inline int XHCI_GET_TYPE_DESC(USB_ENDPOINT_DESCRIPTOR* desc){
-	LOGVAL(desc->endpoint_address);
-	LOGVAL(BIT(desc->endpoint_address,7));
 	if(desc==0)return XHCI_ENDPOINT_CONTROL;
 	return (desc->attributes&0x3)|(BIT(desc->endpoint_address,7)<<2);
 }
@@ -221,6 +220,7 @@ typedef struct{
 	XHCI_TRB* trbs;
 	int c;
 	int sz;
+	int CY;
 }  XHCI_Endpoint_Data;
 
 typedef struct {
@@ -349,6 +349,25 @@ typedef struct{
 	uint32_t rsvdZ5;
 	uint32_t rsvdZ6;
 }__attribute__((packed)) XHCI_CONTEXT_ENDPOINT;
+
+typedef struct {
+	uint32_t data_low;
+	uint32_t data_high;
+    uint32_t TRBTransferLength :17;
+    uint32_t TDSize : 5;
+    uint32_t InterrupterTarget : 10;
+    uint32_t C : 1;
+    uint32_t ENT : 1;
+    uint32_t ISP : 1;
+    uint32_t NS : 1;
+    uint32_t CH : 1;
+    uint32_t IOC : 1;
+    uint32_t IDT : 1;
+    uint32_t ReservedZ3 : 2;
+    uint32_t BEI : 1;
+    uint32_t TRBType : 6;
+    uint32_t ReservedZ4 : 16;
+}__attribute__((packed)) XHCI_TRB_NORMAL;
 
 typedef struct {
     uint8_t bmRequestType;
