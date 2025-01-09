@@ -479,7 +479,7 @@ void XHCI_IRQ8(registers* _r){
 	printf("IRQ RECV LESS GO\n");
 	FORI(6){
 		if(keyboard.keys[i]!=0){
-			printf("%c",fromScanCode(keyboard.keys[i]));
+			printf("%c\n",fromScanCode(keyboard.keys[i]));
 			break;
 		}
 	}
@@ -508,7 +508,6 @@ void XHCI_IRQ8(registers* _r){
 			.data_high=DWORD((uint64_t)&keyboard,1),
 			.TRBTransferLength=8,
 			.TDSize=0,
-			.InterrupterTarget=2,
 			.TRBType=XHCI_TRB_NORMAL_CODE,
 			.IOC=0,
 			.C=1
@@ -674,16 +673,17 @@ void XHCI_CONFIGURE_ENDPOINT0(XHCI_Endpoint* endp,int slot,int conf){
 		endp_int->max_packet_size=endpoint->max_packet_size;
 		endp_int->max_burst_size=0;
 		endp_int->tr_dequeue_pointer=XHCI_DEQUEUE_PTR((uint64_t)endp->endpoints[ind].trbs, 1);
-		endp_int->interval=endpoint->interval;
+		endp_int->interval=0;
 		endp_int->max_p_streams=0;
 		endp_int->mult=0;
 		endp_int->c_err=3;
-		endp_int->avg_trb_length=1024;
-		//endp_int->avg_trb_length=2*endpoint->max_packet_size;
+		endp_int->ep_state=0;
+		endp_int->lsa=0;
 		endp_int->max_esit_payload_hi=BYTE(esit,1);
 		endp_int->max_esit_payload_lo=BYTE(esit,0);
+		endp_int->avg_trb_length=2*endpoint->max_packet_size;
+
 		slot_endp->context_entries=MAX(slot_endp->context_entries,ind+1);
-		printf("IDX:\t%x\n",ind);
 		//XHCIprintContext(endp_int);
 		control->add|=1<<(ind+1);
 	}
@@ -780,6 +780,7 @@ void XHCI_ON_COMMAND_COMPLETE(XHCI_TRB* trb){
 				xhci_hub.endpoints[slot].endpoints[i].c=0;
 				xhci_hub.endpoints[slot].endpoints[i].sz=128;
 				xhci_hub.endpoints[slot].endpoints[i].CY=1;
+
 			}
 			XHCI_SLOT_INITIALIZE(slot,port);
 			break;
@@ -813,8 +814,28 @@ void XHCI_ON_COMMAND_COMPLETE(XHCI_TRB* trb){
 			if(endp->done>=6){
 				printf("SLOT[%x] STATE %x\n",slot,output->int4>>27);
 				hexdump(output,0x80,0x20);
-				XHCI_SETIDLE(slot,0,2);
-				XHCI_DOORBELL(slot,1);
+				//XHCI_SETIDLE(slot,0,2);
+				//XHCI_DOORBELL(slot,1);
+				XHCI_TRB_NORMAL normal={
+					.data_low=DWORD((uint64_t)&keyboard,0),
+					.data_high=DWORD((uint64_t)&keyboard,1),
+					.TRBTransferLength=8,
+					.TDSize=0,
+					.TRBType=XHCI_TRB_NORMAL_CODE,
+					.IOC=0,
+					.C=1
+				};
+				XHCI_TRB_STATUS status=(XHCI_TRB_STATUS){
+					.TRBType=XHCI_TRB_STATUS_CODE,
+						.D=0,
+						.CH=0,
+						.IOC=1,
+						.C=1,
+						.int_target=2
+				};
+				XHCI_TRANSFER(endp,2,(XHCI_TRB*)&normal);
+				XHCI_TRANSFER(endp,2,(XHCI_TRB*)&status);
+				XHCI_DOORBELL(slot,3);
 
 			}	
 			break;
