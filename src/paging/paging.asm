@@ -3,6 +3,18 @@ global p3_table
 global p2_table
 ;global p2_table2
 
+; BASE LIMIT ACCESS FLAGS
+%macro GDT_ENTRY 4
+	dw	(%2)&0xFFFF
+	dw	(%1)&0xFFFF
+	db	(%2>>8)&0xFF
+	db	(%3)&0xFF
+	db	(((%4)&0xF)<<4)|((%1>>16)&0xF)
+	db	(%2>>24)&0xFF
+	dd	(%2<<32)&0xFFFFFFFF
+	dd	0
+%endmacro
+
 section .bss
 align 4096
 p4_table:
@@ -15,17 +27,30 @@ p2_table:
 ;p2_table2:
 ;  resb 4096
 
+
 section .rodata
+global gdt64
+TSS:
+	db 0x68
 gdt64:
-    dq 0 ; zero entry
+	GDT_ENTRY 0,0,0,0
 .code: equ $ - gdt64 ; new
-    ;dq (1<<43) | (1<<44) | (1<<47) | (1<<53) ; code segment
-	dq (0xA)<<52 | (0x9A)<<40 
+	GDT_ENTRY 0,0,0x9A,0xA
+	;dq (0xA)<<52 | (0x9A)<<40 
 .data: equ $ - gdt64 ; new
-    ;dq (1<<43) | (1<<44) | (1<<47) | (1<<53) ; code segment
-	dq (0xC)<<52 | (0x92)<<40
+	GDT_ENTRY 0,0,0x92,0xC
+	;dq (0xC)<<52 | (0x92)<<40
+.usercode: equ $ - gdt64 ; new
+	GDT_ENTRY 0,0,0xFA,0xA
+	;dq (0xA)<<52 | (0xFA)<<40 
+.userdata: equ $ - gdt64 ; new
+	GDT_ENTRY 0,0,0xF2,0xC
+	;dq (0xC)<<52 | (0xF2)<<40
 .tss: equ $-gdt64
-	dq (0x0)<<52 | (0x89)<<40 | (gdt64.tss)<<16 | 8
+	dd 0
+.tss1: equ $-gdt64
+	dd 0
+	dq 0
 .pointer:
   dw $ - gdt64 - 1
   dq gdt64

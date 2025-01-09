@@ -25,6 +25,6 @@ long_mode_start:
 	xor rax,rax
 	mov ax,cs
 	mov rdx,rax
-	;mov rdx,gdt64.code
+	mov r8,gdt64
 	call kernel_main
 	hlt

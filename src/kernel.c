@@ -42,6 +42,8 @@
 #include "drivers/networking/rtl8168/rtl8168.h"
 #include "drivers/networking/rtl8169/rtl8169.h"
 #include "utils/list/list.h"
+
+#include "core/user.h"
 void Debug();
 extern char* cpuid_flags[62];
 //#define PRINT_CPUID
@@ -86,7 +88,8 @@ void MTRStuff(){
 //#define NOUSB
 
 
-void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long cpuid)
+extern uint64_t gdt64;
+void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long cpuid,uint64_t* gdt)
 {
 	FPUEnable();
 	kprintf(INFO "BOOTING OS[%x]\n",magic);
@@ -111,6 +114,11 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 
 
 	printf("HELLO WORLD\n");
+	LOGVALD(gdt)
+	LOGVALD(gdt64)
+	for(int i=0;i<12;i++){
+		printf("VAL[%d]\t%p\n",i,(gdt[i]));
+	}
 	IDT_Initialize(cs);
 	IRQ_Initialize();
 	IRQ_RegisterHandler(14, ATAPIO_HANDLE_IRQ);
@@ -119,6 +127,9 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 	KeyboardInstall();
 
 	SetColor(0xFF0000);
+	//LOAD TSS
+	TSS_load(80);
+	USERMODE_ENTER();
 
 	struct multiboot_tag_new_acpi *acpi=(struct multiboot_tag_new_acpi*)headers.acpi;
 	RSDP_t* l=(RSDP_t*)acpi->rsdp;
@@ -172,7 +183,12 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 	}
 	SetColor(0xFFFFFF);
 
-	APIC_TIMER_INIT(0x2000000);
+	//APIC_TIMER_INIT(0x2000000);
+	//for(int i=0;i<100;i++){
+	//	printf(".");
+	//	APIC_SLEEP_MICRO(1000000);
+	//}
+	//printf("\n");
 #ifndef NOUSB
 	PCI_device* usb=PCI_GetFromType(0xC,0x3);
 	if(usb!=NULL){
