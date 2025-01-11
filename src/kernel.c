@@ -175,11 +175,13 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 
 	APIC_TIMER_INIT(0x2000000);
 
-	FORI(10){
-		printf(".");
-		APIC_SLEEP_MICRO(1000*1000);
-	}
-	printf("\n");
+	// FORI(10){
+	// 	FORJ(10){
+	// 		printf(".");
+	// 		APIC_SLEEP_MICRO(1000*1000);
+	// 	}
+	// printf("\n");
+	// }
 #ifndef NOUSB
 	PCI_device* usb=PCI_GetFromType(0xC,0x3);
 	if(usb!=NULL){

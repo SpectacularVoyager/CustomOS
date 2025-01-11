@@ -421,7 +421,7 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	XHCI_DOORBELL(0,0);
 	SetColor(0xffffff);
 
-	FORI(maxports)	XHCI_PORT_RESET(i);
+	// FORI(maxports)	XHCI_PORT_RESET(i);
 	XHCI_PORT_RESET(0);
 	XHCI_DOORBELL(0,0);
 #ifdef XHCI_DEBUG
@@ -475,7 +475,7 @@ char fromScanCode(char x){
 	return 0;
 }
 void XHCI_IRQ8(registers* _r){
-	// printf("IRQ RECV LESS GO\n");
+	//printf("IRQ RECV LESS GO\n");
 	FORI(6){
 		if(keyboard.keys[i]!=0){
 			printf("%c",fromScanCode(keyboard.keys[i]));
@@ -485,12 +485,12 @@ void XHCI_IRQ8(registers* _r){
 	//XHCI_INT(_r);
 	XHCI_TRB* trb=(void*)(COMBINE_DWORD(xhci_hub.ints[1].ERDP_high, xhci_hub.ints[1].ERDP_low)&(~0xF));
 	int trb_code=XHCI_TRB_TYPE(trb->def);
+	int slot=BYTE(trb->def,3);
+	XHCI_Endpoint* endp=&xhci_hub.endpoints[slot];
 	while(XHCI_TRB_TYPE(trb->def)!=0&&XHCI_TRB_CYCLE(trb->def)==1){
-		//	if(trb_code!=XHCI_TRB_CODE_TRANSFER_COMPLETED){
-		//		printf("UNRECOGNISED TRB IN INTERRUPTER 2\n");
-		//	}
-		int slot=BYTE(trb->def,3);
-		XHCI_Endpoint* endp=&xhci_hub.endpoints[slot];
+			if(trb_code!=XHCI_TRB_CODE_TRANSFER_COMPLETED){
+				printf("UNRECOGNISED TRB IN INTERRUPTER 2\n");
+			}
 		trb++;
 		//kprintf("DEVICE LMB:%x\tRMB:%x\tX:%d\tY:%d\n",mouse.button1,mouse.button2,mouse.X,mouse.Y);
 		//kprintf("DEVICE [%x]->[%x][%x][%x][%x][%x][%x]\n",
@@ -524,6 +524,28 @@ void XHCI_IRQ8(registers* _r){
 		XHCI_TRANSFER(endp,2,(XHCI_TRB*)&status);
 		XHCI_DOORBELL(slot,3);
 	}
+		XHCI_TRB_NORMAL normal={
+			.data_low=DWORD((uint64_t)&keyboard,0),
+			.data_high=DWORD((uint64_t)&keyboard,1),
+			.TRBTransferLength=8,
+			.TDSize=0,
+			.InterrupterTarget=2,
+			.TRBType=XHCI_TRB_NORMAL_CODE,
+			.IOC=0,
+			.C=1
+		};
+		XHCI_TRB_STATUS status=(XHCI_TRB_STATUS){
+			.TRBType=XHCI_TRB_STATUS_CODE,
+				.D=0,
+				.CH=0,
+				.IOC=1,
+				.C=1,
+				.int_target=2
+		};
+		
+		XHCI_TRANSFER(endp,0,(XHCI_TRB*)&normal);
+		XHCI_TRANSFER(endp,0,(XHCI_TRB*)&status);
+		XHCI_DOORBELL(slot,1);
 	XHCI_WRITE_ERDP(&xhci_hub.ints[1],(uint64_t)(trb),1<<3);
 }
 void XHCI_PRINT_PORT(int i,XHCI_PORT_REG* reg){
@@ -812,8 +834,8 @@ void XHCI_ON_COMMAND_COMPLETE(XHCI_TRB* trb){
 			if(endp->done>=6){
 				printf("SLOT[%x] STATE %x\n",slot,output->int4>>27);
 				hexdump(output,0x80,0x20);
-				XHCI_SETIDLE(slot,0,2);
-				XHCI_DOORBELL(slot,1);
+				//XHCI_SETIDLE(slot,0,2);
+				//XHCI_DOORBELL(slot,1);
 
 			}	
 			break;

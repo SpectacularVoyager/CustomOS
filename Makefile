@@ -15,7 +15,7 @@ QEMU_FLAGS= -cpu qemu64,+ssse3,+fpu
 QEMU_FLAGS:= $(QEMU_FLAGS)-M q35
 USB?=3
 
-USB_MEDIA=/media/ankush/USBBoot
+USB_MEDIA=/media/ankush/USBBoot1
 
 IMAGE=iso.iso
 #QEMU_FLAGS:= $(QEMU_FLAGS) -device usb-storage,drive=fat32
