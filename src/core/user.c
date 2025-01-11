@@ -11,6 +11,7 @@ void TSS_load(int r) {
     );
 }
 void func(){
+	printf("ENTERED USER MODE\n");
 	while(1);
 }
 void USERMODE_ENTER(){

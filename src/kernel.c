@@ -52,15 +52,16 @@ void graphicsStuff(MULTIBOOT_HEADERS headers){
 	unsigned long addr=fb->common.framebuffer_addr;
 	unsigned long page=addr/PAGE_WIDTH;
 
-	AllocatePage(page,page*PAGE_WIDTH,0x10);
-	AllocatePage(1,1L*PAGE_WIDTH,0x10);
-	AllocatePage(2,2L*PAGE_WIDTH,0x10);
-	AllocatePage(3,3L*PAGE_WIDTH,0x10);
-	AllocatePage(4,4L*PAGE_WIDTH,0x10);
-	AllocatePage(5,5L*PAGE_WIDTH,0x10);
-	AllocatePage(6,6L*PAGE_WIDTH,0x10);
-	AllocatePage(7,7L*PAGE_WIDTH,0x10);
-	AllocatePage(8,8L*PAGE_WIDTH,0x10);
+	int flag=1<<8|0x10;
+	AllocatePage(page,page*PAGE_WIDTH,flag);
+	AllocatePage(1,1L*PAGE_WIDTH,flag);
+	AllocatePage(2,2L*PAGE_WIDTH,flag);
+	AllocatePage(3,3L*PAGE_WIDTH,flag);
+	AllocatePage(4,4L*PAGE_WIDTH,flag);
+	AllocatePage(5,5L*PAGE_WIDTH,flag);
+	AllocatePage(6,6L*PAGE_WIDTH,flag);
+	AllocatePage(7,7L*PAGE_WIDTH,flag);
+	AllocatePage(8,8L*PAGE_WIDTH,flag);
 	GraphicsInit(
 			addr,
 			fb->common.framebuffer_width,
