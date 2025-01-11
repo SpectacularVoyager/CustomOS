@@ -421,7 +421,7 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	XHCI_DOORBELL(0,0);
 	SetColor(0xffffff);
 
-	// FORI(maxports)	XHCI_PORT_RESET(i);
+	FORI(maxports)	XHCI_PORT_RESET(i);
 	XHCI_PORT_RESET(0);
 	XHCI_DOORBELL(0,0);
 #ifdef XHCI_DEBUG
@@ -475,7 +475,7 @@ char fromScanCode(char x){
 	return 0;
 }
 void XHCI_IRQ8(registers* _r){
-	//printf("IRQ RECV LESS GO\n");
+	printf("IRQ RECV LESS GO\n");
 	FORI(6){
 		if(keyboard.keys[i]!=0){
 			printf("%c",fromScanCode(keyboard.keys[i]));
@@ -543,9 +543,9 @@ void XHCI_IRQ8(registers* _r){
 				.int_target=2
 		};
 		
-		XHCI_TRANSFER(endp,0,(XHCI_TRB*)&normal);
-		XHCI_TRANSFER(endp,0,(XHCI_TRB*)&status);
-		XHCI_DOORBELL(slot,1);
+		//XHCI_TRANSFER(endp,2,(XHCI_TRB*)&normal);
+		//XHCI_TRANSFER(endp,2,(XHCI_TRB*)&status);
+		//XHCI_DOORBELL(slot,3);
 	XHCI_WRITE_ERDP(&xhci_hub.ints[1],(uint64_t)(trb),1<<3);
 }
 void XHCI_PRINT_PORT(int i,XHCI_PORT_REG* reg){
@@ -834,8 +834,8 @@ void XHCI_ON_COMMAND_COMPLETE(XHCI_TRB* trb){
 			if(endp->done>=6){
 				printf("SLOT[%x] STATE %x\n",slot,output->int4>>27);
 				hexdump(output,0x80,0x20);
-				//XHCI_SETIDLE(slot,0,2);
-				//XHCI_DOORBELL(slot,1);
+				XHCI_SETIDLE(slot,2,2);
+				XHCI_DOORBELL(slot,3);
 
 			}	
 			break;
