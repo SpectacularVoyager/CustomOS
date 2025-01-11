@@ -141,6 +141,7 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 	SetColor(0xFF0000);
 	AHCI_DATA data=AHCI_INIT(PCI_GetFromType(0x1,0x6));
 
+
 	SetColor(0xFF0000);
 	//FORI(data.n_ata){
 	//	GPT_DATA gpt;
@@ -173,6 +174,12 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 	SetColor(0xFFFFFF);
 
 	APIC_TIMER_INIT(0x2000000);
+
+	FORI(10){
+		printf(".");
+		APIC_SLEEP_MICRO(1000*1000);
+	}
+	printf("\n");
 #ifndef NOUSB
 	PCI_device* usb=PCI_GetFromType(0xC,0x3);
 	if(usb!=NULL){
@@ -195,7 +202,7 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 	//if((nic=PCI_GetFromID(0x10EC,0x8139))){
 	//	//RTL8139_INIT(nic,pcibase);
 	//}
-	Debug();
+	//Debug();
 
 	while(1);
 }

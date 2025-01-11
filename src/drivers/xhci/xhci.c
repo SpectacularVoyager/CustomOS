@@ -421,8 +421,7 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	XHCI_DOORBELL(0,0);
 	SetColor(0xffffff);
 
-	//FORI(maxports)
-	//	XHCI_PORT_RESET(i);
+	FORI(maxports)	XHCI_PORT_RESET(i);
 	XHCI_PORT_RESET(0);
 	XHCI_DOORBELL(0,0);
 #ifdef XHCI_DEBUG
@@ -476,7 +475,7 @@ char fromScanCode(char x){
 	return 0;
 }
 void XHCI_IRQ8(registers* _r){
-	printf("IRQ RECV LESS GO\n");
+	// printf("IRQ RECV LESS GO\n");
 	FORI(6){
 		if(keyboard.keys[i]!=0){
 			printf("%c",fromScanCode(keyboard.keys[i]));
