@@ -1,6 +1,7 @@
 #include "xhci.h"
 #include "drivers/pci.h"
 #include "drivers/usb/usb.h"
+#include "drivers/usb/utils.h"
 #include "stdlib/stdio.h"
 #include "stdlib/stdlib.h"
 #include "stdlib/string.h"
@@ -92,18 +93,12 @@ void XHCI_HANDLE_CAPABILITIES(void* data,PCIGeneralDevice* device,unsigned int m
 			return;
 		}
 		if(BYTE(d,0)==MSI_X_CAP_SIG){
-#ifdef XHCI_DEBUG
-			printf("MSI-X DETECTED\t ENABLED=%x\n",BIT(WORD(d,1),MSI_X_ENABLED));
-#endif
 			//MSIX_HANDLE_CAPABILITY(data,device,maxintrs);
 			msix=data;
 			int off=BYTE(d,1);
 			data=(void*)(((uint64_t)data&(~0xFF))|off);
 			if(off==0x0)break;
 		}else if(BYTE(d,0)==MSI_CAP_SIG){
-#ifdef XHCI_DEBUG
-			printf("MSI DETECTED\t ENABLED=%x\n",BIT(WORD(d,1),MSI_ENABLED));
-#endif
 			msi=data;
 			int off=BYTE(d,1);
 			data=(void*)(((uint64_t)data&(~0xFF))|off);
@@ -306,20 +301,6 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	reg_int=address+XHCI_RTSOFF(&config)+0x20;
 	ports=xhci_operation_registers+XHCI_PORT_OFF;
 	uint32_t* doorbell=address+config.DBOFF;
-#ifdef XHCI_DEBUG
-	printf(INFO"XHCI DETECTED\n");
-	printf("ADDRESS ->%x\n",address);
-	printf("STATUS ->%x\n",usb.capabilities_pointer);
-	printf("CAPLENGTH:\t%x\n",config.CAPLENGTH);
-	printf("VERSION:\t%x\n",config.HCIVersion);
-	printf("HCSPARAMS1:\t%x\n",config.HCSParams1);
-	printf("HCSPARAMS2:\t%x\n",config.HCSParams2);
-	printf("HCSPARAMS3:\t%x\n",config.HCSParams3);
-	printf("HCCPARAMS1:\t%x\n",config.HCCParams1);
-	printf("RTSOFF:\t%x\n",config.RTSOFF);
-	printf("DBOFF:\t%x\n",config.DBOFF);
-	printf("CONFIG:\t%x\n", XHCI_OP(XHCI_REG_CONFIG));
-#endif
 	printf("HCCPARAMS1:\t%x\n",config.HCCParams1);
 	printf("VERSION:\t%x\n",config.HCIVersion);
 	printf("CONFIG:\t%x\n", *XHCI_OP(XHCI_REG_CONFIG));
@@ -421,17 +402,9 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	XHCI_DOORBELL(0,0);
 	SetColor(0xffffff);
 
-	FORI(maxports)	XHCI_PORT_RESET(i);
+	// FORI(maxports)	XHCI_PORT_RESET(i);
 	XHCI_PORT_RESET(0);
 	XHCI_DOORBELL(0,0);
-#ifdef XHCI_DEBUG
-	for(int i=0;i<maxports;i++){
-		if(i%4==0)printf("\n");
-		XHCI_PRINT_PORT(i,&ports[i]);
-		printf("  ");
-	}
-	printf("\n");
-#endif
 
 	return 1;
 }
@@ -520,32 +493,10 @@ void XHCI_IRQ8(registers* _r){
 				.C=1,
 				.int_target=2
 		};
-		XHCI_TRANSFER(endp,2,(XHCI_TRB*)&normal);
-		XHCI_TRANSFER(endp,2,(XHCI_TRB*)&status);
-		XHCI_DOORBELL(slot,3);
-	}
-		XHCI_TRB_NORMAL normal={
-			.data_low=DWORD((uint64_t)&keyboard,0),
-			.data_high=DWORD((uint64_t)&keyboard,1),
-			.TRBTransferLength=8,
-			.TDSize=0,
-			.InterrupterTarget=2,
-			.TRBType=XHCI_TRB_NORMAL_CODE,
-			.IOC=0,
-			.C=1
-		};
-		XHCI_TRB_STATUS status=(XHCI_TRB_STATUS){
-			.TRBType=XHCI_TRB_STATUS_CODE,
-				.D=0,
-				.CH=0,
-				.IOC=1,
-				.C=1,
-				.int_target=2
-		};
-		
 		//XHCI_TRANSFER(endp,2,(XHCI_TRB*)&normal);
 		//XHCI_TRANSFER(endp,2,(XHCI_TRB*)&status);
 		//XHCI_DOORBELL(slot,3);
+	}
 	XHCI_WRITE_ERDP(&xhci_hub.ints[1],(uint64_t)(trb),1<<3);
 }
 void XHCI_PRINT_PORT(int i,XHCI_PORT_REG* reg){
@@ -624,6 +575,45 @@ void XHCI_GetDescriptor(XHCI_Endpoint* endp,void* buff,int type,int index,int le
 			};
 			XHCI_TRANSFER(endp,USB_ENDPOINT0, (XHCI_TRB*)&status);
 }
+void XHCI_GetReport(XHCI_Endpoint* endp,void* buff){
+			XHCI_TRB_SETUP setup={0};
+			XHCI_TRB_DATA data={0};
+			XHCI_TRB_STATUS status={0};
+			setup=(XHCI_TRB_SETUP){
+					.TRBType=XHCI_TRB_SETUP_STAGE_CODE,
+					.TransferType=XHCI_TRANSFER_TYPE_IN_DATA,
+					.TRBTransferLength=8,
+					.IOC=0,
+					.IDT=1,
+					.bmRequestType=0xA1,
+					.bRequest=0x1,
+					.wValue=0x100,
+					.wIndex=0,
+					.wLength=8,
+					.C=1
+			};
+			XHCI_TRANSFER(endp,USB_ENDPOINT0, (XHCI_TRB*)&setup);
+			data=(XHCI_TRB_DATA){
+					.TRBType=XHCI_TRB_DATA_CODE,
+					.D=1,
+					.transfer_len=8,
+					.CH=0,
+					.IOC=0,
+					.IDT=0,
+					.data_low=DWORD((uint64_t)buff,0),
+					.data_high=DWORD((uint64_t)buff,1),
+					.C=1
+			};
+			XHCI_TRANSFER(endp,USB_ENDPOINT0, (XHCI_TRB*)&data);
+			status=(XHCI_TRB_STATUS){
+					.TRBType=XHCI_TRB_STATUS_CODE,
+					.D=0,
+					.CH=0,
+					.IOC=1,
+					.C=1
+			};
+			XHCI_TRANSFER(endp,USB_ENDPOINT0, (XHCI_TRB*)&status);
+}
 void XHCI_CONTEXT_LOAD(XHCI_CONTEXT_GENERIC* dest,XHCI_CONTEXT_GENERIC* src){
 	dest->int1=src->int1;
 	dest->int2=src->int2;
@@ -665,9 +655,6 @@ void XHCI_CONFIGURE_ENDPOINT0(XHCI_Endpoint* endp,int slot,int conf){
 			.C=1
 	};
 
-	XHCI_TRANSFER(endp,USB_ENDPOINT0,(XHCI_TRB*)&setup);
-	XHCI_TRANSFER(endp,USB_ENDPOINT0, (XHCI_TRB*)&status);
-	XHCI_DOORBELL(slot,1);
 
 
 	int cz=32<<XHCI_CONTEXT_SIZE(xhci_hub.config);
@@ -714,6 +701,12 @@ void XHCI_CONFIGURE_ENDPOINT0(XHCI_Endpoint* endp,int slot,int conf){
 	endp->contexts=input_context;
 	
 	XHCI_TRB address=XHCI_CMD_CONFIGURE_CONTEXT((uint64_t)input_context, slot, 0, 1);
+
+
+	XHCI_TRANSFER(endp,USB_ENDPOINT0,(XHCI_TRB*)&setup);
+	XHCI_TRANSFER(endp,USB_ENDPOINT0, (XHCI_TRB*)&status);
+	XHCI_DOORBELL(slot,1);
+
 	XHCI_COMMAND(xhci_hub.command_ring,&address);
 	XHCI_DOORBELL(0,0);
 }
@@ -774,6 +767,7 @@ void XHCI_DEVICE_INIT(int slot,USB_DEVICE_CONFIGURATION* device,XHCI_TRB* transf
 
 }
 */
+char ___buffer[8];
 void XHCI_ON_COMMAND_COMPLETE(XHCI_TRB* trb){
 	XHCI_TRB* ptr=((XHCI_TRB*)(COMBINE_DWORD((uint64_t)trb->int2, trb->int1)&(~0xF)));
 	int trb_code=XHCI_TRB_TYPE(ptr->def);
@@ -833,9 +827,17 @@ void XHCI_ON_COMMAND_COMPLETE(XHCI_TRB* trb){
 			//if(status==1)return;
 			if(endp->done>=6){
 				printf("SLOT[%x] STATE %x\n",slot,output->int4>>27);
-				hexdump(output,0x80,0x20);
+				hexdump(output,0x20,0x20);
+				kprintf("ENDPOINT 0\n");
+				USB_PrintEndpoint((XHCI_CONTEXT_ENDPOINT*)((void*)output+0x20));
+				kprintf("INTERRUPT IN\n");
+				USB_PrintEndpoint((XHCI_CONTEXT_ENDPOINT*)((void*)output+0x60));
 				XHCI_SETIDLE(slot,2,2);
 				XHCI_DOORBELL(slot,3);
+
+				XHCI_Endpoint* endp=&xhci_hub.endpoints[slot];
+				XHCI_GetReport(endp,___buffer);
+				XHCI_DOORBELL(slot,1);
 
 			}	
 			break;
@@ -957,7 +959,11 @@ void XHCI_ON_TRANSFER_COMPLETE(XHCI_TRB* trb){
 	}else if(endp->done==6){
 		endp->done++;
 	}else{
+		hexdump(___buffer,8 ,8);
+		kprintf("BUF:\t%p\n",U64(___buffer));
 		printf("EYYYYYYY\n");
+		//XHCI_GetReport(endp,___buffer);
+		//XHCI_DOORBELL(slot,1);
 	}
 
 	//EVALUATE CONTEXT
