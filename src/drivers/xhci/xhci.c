@@ -499,6 +499,7 @@ void XHCI_IRQ8(registers* _r){
 	}
 	XHCI_WRITE_ERDP(&xhci_hub.ints[1],(uint64_t)(trb),1<<3);
 }
+
 void XHCI_PRINT_PORT(int i,XHCI_PORT_REG* reg){
 	printf("PORT[%d]  CON:%d  EN:%d  ST:%d\n",i,
 			XHCI_PORT_CONNECTED(reg->PORTSC),
@@ -767,7 +768,24 @@ void XHCI_DEVICE_INIT(int slot,USB_DEVICE_CONFIGURATION* device,XHCI_TRB* transf
 
 }
 */
+XHCI_Endpoint* keyboard_endpoint={0};
 USB_KEYBOARD_REPORT ___buffer;
+void XHCI_KEYBOARD_LOOP(registers* _r){
+	hexdump(&___buffer,8,8);
+	XHCI_GetReport(keyboard_endpoint,&___buffer);
+	XHCI_DOORBELL(USB_ENDPOINT0,1);
+	//FORI(6){
+	//	if(___buffer.keys[i]!=0){
+	//		printf("%c",fromScanCode(___buffer.keys[i]));
+	//		break;
+	//	}
+	//}
+	// 	//hexdump(&___buffer,8 ,8);
+	// 	kprintf("BUF:\t%p\n",U64(&___buffer));
+	// 	XHCI_GetReport(endp,&___buffer);
+	// 	XHCI_DOORBELL(slot,1);
+	
+}
 void XHCI_ON_COMMAND_COMPLETE(XHCI_TRB* trb){
 	XHCI_TRB* ptr=((XHCI_TRB*)(COMBINE_DWORD((uint64_t)trb->int2, trb->int1)&(~0xF)));
 	int trb_code=XHCI_TRB_TYPE(ptr->def);
@@ -836,8 +854,8 @@ void XHCI_ON_COMMAND_COMPLETE(XHCI_TRB* trb){
 				XHCI_DOORBELL(slot,3);
 
 				XHCI_Endpoint* endp=&xhci_hub.endpoints[slot];
-				XHCI_GetReport(endp,&___buffer);
-				XHCI_DOORBELL(slot,1);
+				keyboard_endpoint=endp;
+				APIC_TIMER_LOOP(100*1000L,XHCI_KEYBOARD_LOOP);
 
 			}	
 			break;
@@ -959,17 +977,17 @@ void XHCI_ON_TRANSFER_COMPLETE(XHCI_TRB* trb){
 	}else if(endp->done==6){
 		endp->done++;
 	}else{
-	FORI(6){
-		if(___buffer.keys[i]!=0){
-			printf("%c",fromScanCode(___buffer.keys[i]));
-			break;
-		}
-	}
-		//hexdump(&___buffer,8 ,8);
-		kprintf("BUF:\t%p\n",U64(&___buffer));
-		APIC_SLEEP_MICRO(1000*100);
-		XHCI_GetReport(endp,&___buffer);
-		XHCI_DOORBELL(slot,1);
+		printf("EYYYYYYYYYYYY\n");
+	// FORI(6){
+	// 	if(___buffer.keys[i]!=0){
+	// 		printf("%c",fromScanCode(___buffer.keys[i]));
+	// 		break;
+	// 	}
+	// }
+	// 	//hexdump(&___buffer,8 ,8);
+	// 	kprintf("BUF:\t%p\n",U64(&___buffer));
+	// 	XHCI_GetReport(endp,&___buffer);
+	// 	XHCI_DOORBELL(slot,1);
 	}
 
 	//EVALUATE CONTEXT

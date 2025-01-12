@@ -56,12 +56,33 @@ void APIC_TIMER_INIT(int ticks){
 	printf(INFO"APIC FREQ:\t%d\n",LAPIC_TIMER_FREQUENCY);
 	RTC_INTERRUPT_ENABLE(0);
 	IRQ_RegisterHandler(8,0);
-	IRQ_RegisterHandler(0,TIMER_WAIT_INT);
+	//IRQ_RegisterHandler(0,TIMER_WAIT_INT);
 	*LAPIC(APIC_LAPIC_INITIAL_TIMER_COUNT)=0x0;
 }
 void APIC_SLEEP_MICRO(unsigned long s){
-	s=s*LAPIC_TIMER_FREQUENCY/(1000*1000);
-	apic_timer_c=0;
-	*LAPIC(APIC_LAPIC_INITIAL_TIMER_COUNT)=s;
-	while(apic_timer_c==0);
+	printf("DEPRECATED\n");
+	return;
+
+
+
+	// s=s*LAPIC_TIMER_FREQUENCY/(1000*1000);
+	// apic_timer_c=0;
+	// *LAPIC(APIC_LAPIC_INITIAL_TIMER_COUNT)=s;
+	// while(apic_timer_c==0);
+}
+void APIC_TIMER_STOP(){
+	*LAPIC(APIC_LAPIC_INITIAL_TIMER_COUNT)=0x0;
+}
+void APIC_TIMER_LOOP(int ms,IRQHandler handler){
+	int ticks=(ms*LAPIC_TIMER_FREQUENCY)/(1000*1000L);
+	IRQ_RegisterHandler(0,handler);
+	*LAPIC(APIC_LAPIC_INITIAL_TIMER_COUNT)=ticks;
+	*LAPIC(APIC_LAPIC_TIMER)=(APIC_TIMER_PERIODIC<<17)|32;
+}
+void APIC_TIMER_ONCE(int ms,IRQHandler handler){
+	int ticks=(ms*LAPIC_TIMER_FREQUENCY)/(1000*1000L);
+	IRQ_RegisterHandler(0,handler);
+	*LAPIC(APIC_LAPIC_INITIAL_TIMER_COUNT)=ticks;
+	*LAPIC(APIC_LAPIC_TIMER)=(APIC_TIMER_ONE_SHOT<<17)|32;
+	*LAPIC(APIC_LAPIC_INITIAL_TIMER_COUNT)=0;
 }

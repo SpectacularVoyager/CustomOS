@@ -128,12 +128,12 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 	APIC_INIT(h.apic);
 
 	SetColor(0x00FF00);
-	PCI_device* devices=PCI_GetDevices();
-	FORI(PCI_GetDeviceCount()){
-		if(i%4==0)printf("\n");
-		printf("[%04X %04X]{%02X %02X %02X}\t",devices[i].vendor_id,devices[i].device_id,devices[i].class_id,devices[i].subclass_id,devices[i].progIF);	
-	}
-	printf("\n");
+	// PCI_device* devices=PCI_GetDevices();
+	// FORI(PCI_GetDeviceCount()){
+	// 	if(i%4==0)printf("\n");
+	// 	printf("[%04X %04X]{%02X %02X %02X}\t",devices[i].vendor_id,devices[i].device_id,devices[i].class_id,devices[i].subclass_id,devices[i].progIF);	
+	// }
+	// printf("\n");
 	SetColor(0xFFFFFF);
 
 	//EHCI_INIT(PCI_GetFromID(0x8086, 0x24CD));
