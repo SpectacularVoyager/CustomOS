@@ -23,7 +23,7 @@ ifeq ($(USB),3)
 	QEMU_FLAGS:=$(QEMU_FLAGS) \
 		-device nec-usb-xhci,id=xhci	\
 		-device usb-kbd,bus=xhci.0\
-		-device usb-mouse
+		-device usb-mouse,bus=xhci.0
 	#		-device usb-uas,id=uas,bus=xhci.0	\
 
 else

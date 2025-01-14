@@ -5,3 +5,4 @@
 - Read Device speed
 - Make Input SLOT Context READ-only by maintaining a copy
 - CONFIGURE ENDPOINT WITH LESS HARCODING
+- [USB MADE SIMPLE](https://www.usbmadesimple.co.uk)
