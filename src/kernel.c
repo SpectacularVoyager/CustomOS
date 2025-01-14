@@ -52,7 +52,7 @@ void graphicsStuff(MULTIBOOT_HEADERS headers){
 	unsigned long addr=fb->common.framebuffer_addr;
 	unsigned long page=addr/PAGE_WIDTH;
 
-	int flag=1<<8|0x10;
+	int flag=0b111;
 	AllocatePage(page,page*PAGE_WIDTH,flag);
 	AllocatePage(1,1L*PAGE_WIDTH,flag);
 	AllocatePage(2,2L*PAGE_WIDTH,flag);

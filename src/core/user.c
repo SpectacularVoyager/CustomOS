@@ -11,7 +11,10 @@ void TSS_load(int r) {
     );
 }
 void func(){
+	SetColor(0xDE3163);
 	printf("ENTERED USER MODE\n");
+	printf("FIRST USERMODE PROGRAM\n");
+	__asm__ __volatile__("int $0x80");
 	while(1);
 }
 void USERMODE_ENTER(){

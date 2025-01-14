@@ -45,8 +45,12 @@ void GeneralProtectionFault(registers* r){
 	printf("THE ERROR CODE IS ??\n");
 	__asm__ volatile("cli;hlt");
 }
+void syscall(registers* r){
+	printf("SYSCALL\n");
+}
 void ExceptionInit(){
 	ISR_addHandler(6,InvalidOpcodeException);
 	ISR_addHandler(13,GeneralProtectionFault);
 	ISR_addHandler(14,PageFaultHandler);
+	ISR_addHandler(0x80,syscall);
 }
