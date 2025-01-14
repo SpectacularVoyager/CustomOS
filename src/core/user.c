@@ -6,14 +6,6 @@
 #include "utils/utils.h"
 #include "utils/bit.h"
 
-void TSS_load(int r) {
-    __asm__ volatile (
-        "ltr %0"  // Load Task Register with the value in 'selector'
-        :  // No output operands
-        : "r" (r)  // Input operand: 'selector'
-        : "memory"  // Inform the compiler that memory is affected
-    );
-}
 void func(){
 	int a;
 	//printf("%p\n",100);
@@ -37,7 +29,6 @@ void __attribute__((optimize("O0"))) USERMODE_ENTER(){
 	void* address=(void*)(0x140000000);
 	printf("TRYING TO ENTER USER MODE\n");
 
-	U8(address)=0xF4;
 	memcpy(address,TEST_HALT,100);
 
 	USER_JUMP_ASM(NULL,address,address+0x100000);

@@ -114,15 +114,17 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 	//PageRemap(4,0,0xFD000000,1<<4);
 	//*(uint32_t*)(0x100000000)=0xff00dd;
 	//
-	GDT_LOAD();
-	GDT_FLUSH();
 
 
+	 GDT_LOAD();
+	 GDT_FLUSH();
+	// TSS_FLUSH();
 	printf("HELLO WORLD\n");
 	LOGVALD(gdt)
-	for(int i=0;i<12;i++){
-		printf("VAL[%d]\t%p\n",i,(gdt[i]));
-	}
+	//for(int i=0;i<12;i++){
+	//	printf("VAL[%d]\t%p\n",i,(gdt[i]));
+	//}
+	hexdump(gdt,7*sizeof(GDTEntry),sizeof(GDTEntry));
 	IDT_Initialize(cs);
 	IRQ_Initialize();
 	IRQ_RegisterHandler(14, ATAPIO_HANDLE_IRQ);
@@ -132,8 +134,8 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 
 	SetColor(0xFF0000);
 	//LOAD TSS
-	//TSS_load(0x28);
-	// USERMODE_ENTER();
+	 TSS_FLUSH();
+	USERMODE_ENTER();
 
 	struct multiboot_tag_new_acpi *acpi=(struct multiboot_tag_new_acpi*)headers.acpi;
 	RSDP_t* l=(RSDP_t*)acpi->rsdp;

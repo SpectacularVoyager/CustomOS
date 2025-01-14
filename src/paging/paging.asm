@@ -29,6 +29,7 @@ p2_table:
 
 
 section .rodata
+global gdt64
 TSS:
     dq 0                      ; Reserved (usually set to zero)
     dq 0                      ; Previous TSS link (set to 0 for no link)
@@ -43,6 +44,15 @@ gdt64:
 .data: equ $ - gdt64 ; new
 	GDT_ENTRY 0,0,0x92,0xC
 	;dq (0xC)<<52 | (0x92)<<40
+.usercode: equ $ - gdt64 ; new
+	GDT_ENTRY 0,0,0x9A,0xA
+	;dq (0xA)<<52 | (0xFA)<<40 
+.userdata: equ $ - gdt64 ; new
+	GDT_ENTRY 0,0,0x92,0xC
+	;dq (0xC)<<52 | (0xF2)<<40
+.tss: equ $-gdt64
+	GDT_ENTRY 0,0,0x89,0x0
+	dq 0
 .pointer:
   dw $ - gdt64 - 1
   dq gdt64

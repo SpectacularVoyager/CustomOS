@@ -27,6 +27,16 @@ PagingInit:
 
 	extern loadGDT
 	extern GDT_Descriptor
+	;call loadGDT
+	;lgdt [GDT_Descriptor]
+	; mov ebx,TSS
+	; mov eax,0x68
+	; shl ebx,16
+	; or eax,ebx
+	; mov [gdt64+gdt64.tss],eax
+	; mov eax,0x89
+	; shl eax,8
+	; mov [gdt64+gdt64.tss1],eax
 	lgdt [gdt64.pointer]
 
 	ret
