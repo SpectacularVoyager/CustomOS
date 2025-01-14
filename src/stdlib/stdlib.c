@@ -13,6 +13,7 @@ void AssignMallocMemoryMap(struct multiboot_tag *tag,uint64_t safe_offset){
 	unsigned long malloc_len=0;
 	multiboot_memory_map_t* mmap;
 
+	kprintf("MEMORY MAP\n");
 	for (mmap = ((struct multiboot_tag_mmap *) tag)->entries;
 			(multiboot_uint8_t *) mmap
 			< (multiboot_uint8_t *) tag + tag->size;
@@ -21,6 +22,7 @@ void AssignMallocMemoryMap(struct multiboot_tag *tag,uint64_t safe_offset){
 			 + ((struct multiboot_tag_mmap *) tag)->entry_size))
 	{
 
+		kprintf("\t[%p]->[%p]\t\t[%d]\n",mmap->addr,mmap->addr+mmap->len,mmap->type);
 		if(mmap->type==MULTIBOOT_MEMORY_AVAILABLE){
 			if(malloc_len<mmap->len&&mmap->addr<0x10000000){
 				malloc_start=mmap->addr;

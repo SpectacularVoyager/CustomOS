@@ -11,8 +11,8 @@ global p2_table
 	db	(%3)&0xFF
 	db	(((%4)&0xF)<<4)|((%1>>16)&0xF)
 	db	(%2>>24)&0xFF
-	dd	(%2<<32)&0xFFFFFFFF
-	dd	0
+	; dd	(%2<<32)&0xFFFFFFFF
+	; dd	0
 %endmacro
 
 section .bss
@@ -29,9 +29,12 @@ p2_table:
 
 
 section .rodata
-global gdt64
 TSS:
-	db 0x68
+    dq 0                      ; Reserved (usually set to zero)
+    dq 0                      ; Previous TSS link (set to 0 for no link)
+    dq 0, 0, 0                ; Stack pointers for rings 0, 1, 2 (64-bit)
+    dq 0                      ; I/O map base address (not used, set to 0)
+    dq 0, 0, 0, 0, 0, 0, 0, 0; General-purpose registers (R8-R15 in 64-bit)
 gdt64:
 	GDT_ENTRY 0,0,0,0
 .code: equ $ - gdt64 ; new
@@ -40,20 +43,10 @@ gdt64:
 .data: equ $ - gdt64 ; new
 	GDT_ENTRY 0,0,0x92,0xC
 	;dq (0xC)<<52 | (0x92)<<40
-.usercode: equ $ - gdt64 ; new
-	GDT_ENTRY 0,0,0xFA,0xA
-	;dq (0xA)<<52 | (0xFA)<<40 
-.userdata: equ $ - gdt64 ; new
-	GDT_ENTRY 0,0,0xF2,0xC
-	;dq (0xC)<<52 | (0xF2)<<40
-.tss: equ $-gdt64
-	dd 0
-.tss1: equ $-gdt64
-	dd 0
-	dq 0
 .pointer:
   dw $ - gdt64 - 1
   dq gdt64
+
 
 section .text
 [bits 32]

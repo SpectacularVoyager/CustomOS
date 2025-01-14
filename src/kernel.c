@@ -44,6 +44,7 @@
 #include "utils/list/list.h"
 
 #include "core/user.h"
+#include "arch/GDT.h"
 void Debug();
 extern char* cpuid_flags[62];
 //#define PRINT_CPUID
@@ -52,7 +53,7 @@ void graphicsStuff(MULTIBOOT_HEADERS headers){
 	unsigned long addr=fb->common.framebuffer_addr;
 	unsigned long page=addr/PAGE_WIDTH;
 
-	int flag=0b111;
+	int flag=0b11;
 	AllocatePage(page,page*PAGE_WIDTH,flag);
 	AllocatePage(1,1L*PAGE_WIDTH,flag);
 	AllocatePage(2,2L*PAGE_WIDTH,flag);
@@ -89,9 +90,9 @@ void MTRStuff(){
 //#define NOUSB
 
 
-extern uint64_t gdt64;
 void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long cpuid,uint64_t* gdt)
 {
+
 	FPUEnable();
 	kprintf(INFO "BOOTING OS[%x]\n",magic);
 
@@ -112,11 +113,13 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 	//MTRStuff();
 	//PageRemap(4,0,0xFD000000,1<<4);
 	//*(uint32_t*)(0x100000000)=0xff00dd;
+	//
+	GDT_LOAD();
+	GDT_FLUSH();
 
 
 	printf("HELLO WORLD\n");
 	LOGVALD(gdt)
-	LOGVALD(gdt64)
 	for(int i=0;i<12;i++){
 		printf("VAL[%d]\t%p\n",i,(gdt[i]));
 	}
@@ -129,8 +132,8 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 
 	SetColor(0xFF0000);
 	//LOAD TSS
-	TSS_load(80);
-	USERMODE_ENTER();
+	//TSS_load(0x28);
+	// USERMODE_ENTER();
 
 	struct multiboot_tag_new_acpi *acpi=(struct multiboot_tag_new_acpi*)headers.acpi;
 	RSDP_t* l=(RSDP_t*)acpi->rsdp;
