@@ -59,10 +59,10 @@ void graphicsStuff(MULTIBOOT_HEADERS headers){
 	AllocatePage(2,2L*PAGE_WIDTH,flag);
 	AllocatePage(3,3L*PAGE_WIDTH,flag);
 	AllocatePage(4,4L*PAGE_WIDTH,flag);
-	AllocatePage(5,5L*PAGE_WIDTH,flag);
-	AllocatePage(6,6L*PAGE_WIDTH,flag);
-	AllocatePage(7,7L*PAGE_WIDTH,flag);
-	AllocatePage(8,8L*PAGE_WIDTH,flag);
+	// AllocatePage(5,5L*PAGE_WIDTH,flag);
+	// AllocatePage(6,6L*PAGE_WIDTH,flag);
+	// AllocatePage(7,7L*PAGE_WIDTH,flag);
+	// AllocatePage(8,8L*PAGE_WIDTH,flag);
 	GraphicsInit(
 			addr,
 			fb->common.framebuffer_width,

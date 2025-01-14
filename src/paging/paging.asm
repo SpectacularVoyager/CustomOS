@@ -95,12 +95,12 @@ Paging_Enable:
 Paging_SetUpTables:
   ; map first P4 entry to P3 table
   mov eax, p3_table
-  or eax, 0b11 ; present + writable
+  or eax, 0b111 ; present + writable
   mov [p4_table], eax
 
   ;; map first P3 entry to P2 table
   mov eax, p2_table
-  or eax, 0b11 ; present + writable
+  or eax, 0b111 ; present + writable
   mov [p3_table], eax
 
   ;mov eax, p2_table2
@@ -114,7 +114,7 @@ Paging_SetUpTables:
 .map_p2_table:
   mov eax, 0x200000  ; 2MiB
   mul ecx            ; start address of ecx-th page
-  or eax, 0b10000011 ; present + writable + huge
+  or eax, 0b10000111 ; present + writable + huge
   mov [p2_table + ecx * 8], eax ; map ecx-th entry
 
   inc ecx            ; increase counter

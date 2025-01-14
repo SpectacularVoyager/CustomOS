@@ -13,7 +13,7 @@ inline void invlpg(uint64_t address){
 	asm volatile("invlpg (%0)" ::"r" (address) : "memory");
 }
 void PageSetup(uint64_t fbindex){
-	p3_table[0]=(uint64_t)p2_table|0b11;
+	p3_table[0]=(uint64_t)p2_table|0b111;
 }
 void AllocatePage(int p,unsigned long address,unsigned int flags){
 	if((TABLE(p3_table)[p])&0x3){
@@ -22,9 +22,9 @@ void AllocatePage(int p,unsigned long address,unsigned int flags){
 	}
 	uint64_t* ptr=mallocA(0x1000,0x1000);
 	kprintf(TRACE "ALLOCATED PAGE TABLE(%d ->[%p]) AT %X\n",p,address,ptr);
-	p3_table[p]=(uint64_t)ptr|0b11;
+	p3_table[p]=(uint64_t)ptr|0b111;
 	for(int i=0;i<512;i++){
-		ptr[i]=(PAGE_P2_SIZE*i+address)|0b10000011L|flags;
+		ptr[i]=(PAGE_P2_SIZE*i+address)|0b10000111L|flags;
 	}
 }
 void UnmapPage(uint64_t page){
@@ -36,7 +36,7 @@ void UnmapPage(uint64_t page){
 }
 void PageRemap(int p,uint64_t offset,uint64_t address,int flags){
 	uint64_t* table=TABLE(p3_table[p]);
-	table[offset]=address|0b10000011L|flags;
+	table[offset]=address|0b10000111L|flags;
 	invlpg(address);
 }
 void MemoryRemap(uint64_t memory,uint64_t address,int flags){
@@ -44,6 +44,6 @@ void MemoryRemap(uint64_t memory,uint64_t address,int flags){
 	int offset=(memory%PAGE_WIDTH)/PAGE_P2_SIZE;
 	uint64_t* table=TABLE(p3_table[p]);
 	kprintf(TRACE"REMAPPING %p to %x[%x]\n",address,p,offset);
-	table[offset]=address|0b10000011L|flags;
+	table[offset]=address|0b10000111L|flags;
 	asm volatile("invlpg (%0)" ::"r" (address) : "memory");
 }

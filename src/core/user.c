@@ -25,7 +25,7 @@ extern void TEST_USER();
 extern void TEST_HALT();
 uint8_t testprogram[14]   = {0xBB,0x00,0x00,0x00,0xFD,0xC7,0x03,0xFF,0x00,0xFF,0x00,0xF4,0xB8,0x40};
 void __attribute__((optimize("O0"))) USERMODE_ENTER(){
-	MemoryRemap(0x140000000, 0x40000000, 0b111);
+	AllocatePage(5, 0x40000000, 0b111);
 	void* address=(void*)(0x140000000);
 	printf("TRYING TO ENTER USER MODE\n");
 
