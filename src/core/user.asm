@@ -12,10 +12,10 @@ TEST_USER:
 global TEST_HALT
 extern sayHello
 TEST_HALT:
-	;mov rbx,0xFD000000
-	;mov dword [rbx],0x00FF00
-	 int 0x80
-	 int 0x80
+	mov rbx,0xFD000000
+	mov dword [rbx],0x00FF00
+	 ; int 0x80
+	 ; int 0x80
 	hlt
 ;; https://f.osdev.org/viewtopic.php?t=40894
 ;USER_JUMP_ASM(void* args,void* entry,void* stack);
