@@ -14,3 +14,5 @@ void APIC_SLEEP_MICRO(unsigned long s);
 
 #define MILISECOND *1000
 #define SECOND *1000 MILLISECOND
+
+void APIC_PERIODIC(int ticks);

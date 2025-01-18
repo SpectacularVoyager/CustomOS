@@ -12,6 +12,7 @@ void APIC_TIMER_INT(registers* r){
 }
 volatile int apic_timer_c=0;
 void TIMER_WAIT_INT(registers* r){
+	kprintf("INT\n");
 	apic_timer_c=1;
 }
 unsigned long APIC_TIMER_GETFREQ(){
@@ -19,6 +20,13 @@ unsigned long APIC_TIMER_GETFREQ(){
 }
 void APIC_SET_TIMER_MODE(int mode){
 	*LAPIC(APIC_LAPIC_TIMER)|=(mode<<17);
+}
+void APIC_STOP(){
+	*LAPIC(APIC_LAPIC_INITIAL_TIMER_COUNT)=0x0;
+}
+void APIC_PERIODIC(int ticks){
+	*LAPIC(APIC_LAPIC_INITIAL_TIMER_COUNT)=ticks;
+	APIC_SET_TIMER_MODE(APIC_TIMER_PERIODIC);
 }
 void APIC_TIMER_INIT(int ticks){
 	int rate=12;
@@ -43,7 +51,8 @@ void APIC_TIMER_INIT(int ticks){
 	RTC_INTERRUPT_ENABLE(0);
 	IRQ_RegisterHandler(8,0);
 	IRQ_RegisterHandler(0,TIMER_WAIT_INT);
-	*LAPIC(APIC_LAPIC_INITIAL_TIMER_COUNT)=0x0;
+	//APIC_SET_TIMER_MODE(1);
+	//*LAPIC(APIC_LAPIC_INITIAL_TIMER_COUNT)=1*1000;
 }
 void APIC_SLEEP_MICRO(unsigned long s){
 	s=s*LAPIC_TIMER_FREQUENCY/(1000*1000);

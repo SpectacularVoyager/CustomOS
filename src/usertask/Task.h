@@ -11,3 +11,5 @@ typedef struct {
 } TASK;
 
 TASK* TaskCreate(void* args,void* address,void* stack);
+
+void Scheduler_START();

@@ -1,6 +1,7 @@
 #include "exceptions.h"
 #include <stdint.h>
-#include "../utils/bit.h"
+#include "utils/bit.h"
+#include "syscall.h"
 #define PAGE_FAULT_EXCEPTION_PRESENT	0
 #define PAGE_FAULT_EXCEPTION_WRITE		1
 #define PAGE_FAULT_EXCEPTION_USER		2
@@ -44,9 +45,6 @@ void GeneralProtectionFault(registers* r){
 	printf("THE EXCEPTION OCCURED AT %p\n",r->rip);
 	printf("THE ERROR CODE IS ??\n");
 	__asm__ volatile("cli;hlt");
-}
-void syscall(registers* r){
-	printf("SYSCALL\n");
 }
 void ExceptionInit(){
 	ISR_addHandler(6,InvalidOpcodeException);

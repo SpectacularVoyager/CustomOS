@@ -63,8 +63,8 @@ build:
 isMultiBoot:
 	@./scripts/isMultiBoot.sh $(ISO)
 run: all
-	if [ -f disks/fat.img ]; then \
-		$(QEMU) $(QEMU_FLAGS) -hda $(IMAGE) -hdb disks/fat.img; \
+	if [ -f disks/ext2.img ]; then \
+		$(QEMU) $(QEMU_FLAGS) -hda $(IMAGE) -hdb disks/ext2.img; \
 	else \
 		$(QEMU) $(QEMU_FLAGS) -hda $(IMAGE); \
 	fi
@@ -107,3 +107,6 @@ errors:
 ##		sudo mkfs.vfat -F 32 -n USBBoot -I /dev/sda
 ##		sudo grub-install --root-directory=/media/ankush/USBBoot/ --no-floppy --recheck --force /dev/sda
 ################################
+
+####	TO CREATE DISK IMAGE FOR FS	####
+##	dd if=/dev/zero of=ext2.img bs=1G count=1

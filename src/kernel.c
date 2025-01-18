@@ -18,7 +18,6 @@
 #include "graphics/graphics.h"
 #include "disk/atapio/atapio.h"
 #include "disk/iso/iso.h"
-#include "task/task.h"
 #include <stdlib/stdlib.h>
 #include <stdlib/stdlib.h>
 #include "programs/pong.h"
@@ -45,6 +44,8 @@
 
 #include "core/user.h"
 #include "arch/GDT.h"
+#include "usertask/Task.h"
+#include "drivers/ext2/ext2.h"
 void Debug();
 extern char* cpuid_flags[62];
 //#define PRINT_CPUID
@@ -134,8 +135,8 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 
 	SetColor(0xFF0000);
 	//LOAD TSS
-	 TSS_FLUSH();
-	USERMODE_ENTER();
+	TSS_FLUSH();
+	// USERMODE_ENTER();
 
 	struct multiboot_tag_new_acpi *acpi=(struct multiboot_tag_new_acpi*)headers.acpi;
 	RSDP_t* l=(RSDP_t*)acpi->rsdp;
@@ -184,6 +185,8 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 				}
 				//printTree(&fs,NULL,1);
 				//fromPath(&fs,"/home/ankush/file.txt");
+			}else{
+				int status_ext2=EXT2_READPART(&fs,data.ata[i],&gpt.entries[0]);
 			}
 		}
 	}
@@ -217,7 +220,7 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 	//if((nic=PCI_GetFromID(0x10EC,0x8139))){
 	//	//RTL8139_INIT(nic,pcibase);
 	//}
-	Debug();
+	// Scheduler_START();
 
 	while(1);
 }
