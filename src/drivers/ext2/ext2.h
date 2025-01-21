@@ -29,4 +29,75 @@ typedef struct {
     uint32_t majorRevLevel;
     uint16_t resUid;
     uint16_t resGid;
+    uint32_t firstIno;
+    uint16_t inodeSize;
+    uint16_t blockGroupNr;
+    uint32_t featureCompat;
+    uint32_t featureIncompat;
+    uint32_t featureRoCompat;
+    uint8_t uuid[16];
+    uint8_t volumeName[16];
+    uint8_t lastMounted[64];
+    uint32_t algoBitmap;
+    uint8_t preallocBlocks;
+    uint8_t preallocDirBlocks;
+    uint8_t padding1[2];
+    uint8_t journalUuid[16];
+    uint32_t journalInum;
+    uint32_t journalDev;
+    uint32_t lastOrphan;
+    uint32_t hashSeed[4];
+    uint8_t defHashVersion;
+    uint8_t padding2[3];
+    uint32_t defaultMountOptions;
+    uint32_t firstMetaBg;
+    uint8_t padding3[760];
 }__attribute__((packed)) EXT2_SUPERBLOCK;
+
+typedef struct {
+	uint32_t blockBitmap;
+	uint32_t inodeBitmap;
+	uint32_t blockTable;
+	uint16_t freeBlockCount;
+	uint16_t freeInodeCount;
+	uint16_t usedDirsCount;
+	uint16_t pad;
+	uint8_t reserved[12];
+}__attribute__((packed)) EXT2_BLOCKGROUP;
+
+typedef struct {
+    uint16_t mode;
+    uint16_t UID;
+    uint32_t size;
+    uint32_t accessTime;
+    uint32_t creationTime;
+    uint32_t modificationTime;
+    uint32_t deletionTime;
+    uint16_t GID;
+    uint16_t linkCount;
+    uint32_t blockCount;
+    uint32_t flags;
+    uint32_t OSD1;
+    uint32_t blockPointers[15];
+    uint32_t generation;
+    uint32_t fileACL;
+    uint32_t dirACL;
+    uint32_t fragmentAddress;
+    uint8_t  OSD2[12];
+}__attribute__((packed)) EXT2_INODE;
+
+
+typedef struct {
+	uint32_t inode;
+	uint16_t recLen;
+	uint8_t nameLen;
+	uint8_t fileType;
+	uint8_t name[1];
+}__attribute__((packed)) EXT2_DIR;
+
+typedef struct{
+	GPT_PART_ENTRY* part;
+	AHCI_HBA_PORT* port;
+	EXT2_SUPERBLOCK* superblock;
+	EXT2_BLOCKGROUP* blockgroups;
+} EXT2_PART;

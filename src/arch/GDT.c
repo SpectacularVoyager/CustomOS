@@ -42,7 +42,6 @@ void GDT_LOAD(){
 			,0);
 	GDT_Descriptor.ptr=GDT_Table;
 	GDT_Descriptor.size=sizeof(GDT_Table)-1;
-	hexdump(GDT_Table,7*sizeof(GDTEntry),sizeof(GDTEntry));
 }
 void GDT_FLUSH(){
 	__asm__ __volatile__("lgdt %0"::"m"(GDT_Descriptor));

@@ -5,6 +5,7 @@
 #include "paging/paging.h"
 #include "utils/utils.h"
 #include "utils/bit.h"
+#include "usertask/Task.h"
 
 void func(){
 	int a;
@@ -32,4 +33,12 @@ void __attribute__((optimize("O0"))) USERMODE_ENTER(){
 	memcpy(address,TEST_HALT,100);
 
 	USER_JUMP_ASM(NULL,address,address+0x100000);
+}
+void USERMODE_ADD(){
+	AllocatePage(5, 0x40000000, 0b111);
+	void* address=(void*)(0x140000000);
+	printf("TRYING TO ENTER USER MODE\n");
+
+	memcpy(address,TEST_HALT,100);
+	TaskCreate(NULL,address,address+0x100000);
 }

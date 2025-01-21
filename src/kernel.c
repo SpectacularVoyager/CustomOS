@@ -88,7 +88,7 @@ void MTRStuff(){
 	SetColor(0xffffff);
 }
 
-//#define NOUSB
+#define NOUSB
 
 
 void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long cpuid,uint64_t* gdt)
@@ -117,15 +117,14 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 	//
 
 
-	 GDT_LOAD();
-	 GDT_FLUSH();
+	GDT_LOAD();
+	GDT_FLUSH();
 	// TSS_FLUSH();
 	printf("HELLO WORLD\n");
 	LOGVALD(gdt)
 	//for(int i=0;i<12;i++){
 	//	printf("VAL[%d]\t%p\n",i,(gdt[i]));
 	//}
-	hexdump(gdt,7*sizeof(GDTEntry),sizeof(GDTEntry));
 	IDT_Initialize(cs);
 	IRQ_Initialize();
 	IRQ_RegisterHandler(14, ATAPIO_HANDLE_IRQ);
@@ -192,7 +191,7 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 	}
 	SetColor(0xFFFFFF);
 
-	//APIC_TIMER_INIT(0x2000000);
+	APIC_TIMER_INIT(0x2000000);
 	//for(int i=0;i<100;i++){
 	//	printf(".");
 	//	APIC_SLEEP_MICRO(1000000);
@@ -209,18 +208,8 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 		PCI_Device_Print(usb);
 	}
 #endif
-	//PONG_MAIN();
-	//RTC_INIT(0xf);
-	//RTC_INTERRUPT_ENABLE(0);
-	//APIC_TIMER_INIT(0x2000000);
-	//PCI_device* nic=PCI_GetFromID(0x10EC, 0x8168);
-	//if(nic){
-	//	RTL8168_INIT(nic);
-	//}
-	//if((nic=PCI_GetFromID(0x10EC,0x8139))){
-	//	//RTL8139_INIT(nic,pcibase);
-	//}
-	// Scheduler_START();
+	Scheduler_START();
+	USERMODE_ADD();
 
 	while(1);
 }

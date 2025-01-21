@@ -17,4 +17,6 @@ void syscall(registers* r){
 }
 
 void exit(int code){
+	printf("EXITING WITH CODE[%x]\n",code);
+	while(1);
 }
