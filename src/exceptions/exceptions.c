@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include "utils/bit.h"
 #include "syscall.h"
+#include "utils/inst.h"
 #define PAGE_FAULT_EXCEPTION_PRESENT	0
 #define PAGE_FAULT_EXCEPTION_WRITE		1
 #define PAGE_FAULT_EXCEPTION_USER		2
@@ -34,7 +35,8 @@ void InvalidOpcodeException(registers* r){
 	printf(ERROR "INVALID OPCODE\n");
 	uint8_t* inst=((uint8_t*)r->rip);
 	printf("THE EXCEPTION OCCURED AT %p\n",r->rip);
-	printf("THE Next Bytes Are %02X %02X %02X %02X\n",inst[0],inst[1],inst[2],inst[3]);
+	INST_READ(inst);
+	//printf("THE Next Bytes Are %02X %02X %02X %02X\n",inst[0],inst[1],inst[2],inst[3]);
 	printf("THE Previous Bytes Are %02X %02X %02X %02X\n",inst[-1],inst[-2],inst[-3],inst[-4]);
 	__asm__ volatile("cli;hlt");
 }
@@ -44,7 +46,8 @@ void GeneralProtectionFault(registers* r){
 	uint8_t* inst=((uint8_t*)r->rip);
 	printf("THE EXCEPTION OCCURED AT %p\n",r->rip);
 	printf("THE ERROR CODE IS ??\n");
-	printf("THE Next Bytes Are %02X %02X %02X %02X\n",inst[0],inst[1],inst[2],inst[3]);
+	INST_READ(inst);
+	// printf("THE Next Bytes Are %02X %02X %02X %02X\n",inst[0],inst[1],inst[2],inst[3]);
 	printf("THE Previous Bytes Are %02X %02X %02X %02X\n",inst[-1],inst[-2],inst[-3],inst[-4]);
 	__asm__ volatile("cli;hlt");
 }
@@ -52,5 +55,5 @@ void ExceptionInit(){
 	ISR_addHandler(6,InvalidOpcodeException);
 	ISR_addHandler(13,GeneralProtectionFault);
 	ISR_addHandler(14,PageFaultHandler);
-	ISR_addHandler(0x80,TEST_SYSCALL);
+	ISR_addHandler(0x80,syscall);
 }
