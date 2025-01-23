@@ -12,7 +12,17 @@ align 16
 	stack_bottom:
 	resb 16384 ; 16 KiB
 	stack_top:
+
+global stack_top_syscall
+align 16
+	stack_bottom_syscall:
+	resb 16384 ; 16 KiB
+	stack_top_syscall:
 section .text
+
+global TEST_SYSCALL
+TEST_SYSCALL:
+	hlt
 
 global PagingInit
 PagingInit:

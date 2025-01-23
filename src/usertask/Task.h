@@ -3,7 +3,6 @@
 
 void TaskSwitch(int id);
 
-
 typedef struct {
 	int id;
 	int ready;

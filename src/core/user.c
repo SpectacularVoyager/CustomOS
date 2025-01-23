@@ -7,6 +7,8 @@
 #include "utils/bit.h"
 #include "usertask/Task.h"
 
+extern void* stack_top_syscall;
+
 void func(){
 	int a;
 	//printf("%p\n",100);
