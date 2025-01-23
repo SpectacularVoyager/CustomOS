@@ -28,3 +28,17 @@ ListNode* ListAdd(ListNode* first,void* val){
 	last(first)->next=n;
 	return first;
 }
+ListNode* ListRemove(ListNode* first,ListNode* n){
+	if(n==first){
+		return first->next;
+	}
+	ListNode* cur=first;
+	while(cur->next!=0){
+		if(cur->next==n){
+			cur->next=cur->next->next;
+			//FREE CUR.next
+			n->next=0;
+		}
+	}
+	return first;
+}

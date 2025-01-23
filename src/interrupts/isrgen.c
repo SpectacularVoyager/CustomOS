@@ -1,5 +1,10 @@
 #include "isrgen.h"
 void SetISRs(uint16_t code){
+
+	//RING 3
+	IDT_SetGate(128,ISR128,code,0x8E|3<<5);
+	IDT_EnableGate(128);
+
 	IDT_SetGate(0,ISR0,code,0x8E);
 	IDT_EnableGate(0);
 	IDT_SetGate(1,ISR1,code,0x8E);
@@ -256,8 +261,6 @@ void SetISRs(uint16_t code){
 	IDT_EnableGate(126);
 	IDT_SetGate(127,ISR127,code,0x8E);
 	IDT_EnableGate(127);
-	IDT_SetGate(128,ISR128,code,0x8E);
-	IDT_EnableGate(128);
 	IDT_SetGate(129,ISR129,code,0x8E);
 	IDT_EnableGate(129);
 	IDT_SetGate(130,ISR130,code,0x8E);

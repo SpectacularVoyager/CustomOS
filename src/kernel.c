@@ -210,6 +210,7 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 #endif
 	Scheduler_START();
 	USERMODE_ADD();
+	USERMODE_ADD();
 
 	while(1);
 }

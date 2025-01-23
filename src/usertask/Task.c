@@ -33,9 +33,7 @@ TASK* TaskCreate(void* args,void* address,void* stack){
 	tasks=ListAdd(tasks,t);
 	return t;
 }
-void Scheduler_LOOP_ROUND_ROBIN(registers* r){
-	//kprintf("TICK\n");
-	//printRegs(r);
+void SwitchTask(){
 	int _tasklen=ListLength(tasks);
 	if(_tasklen==0){
 		kprintf(INFO "NO TASKS FOUND IDLING\n");
@@ -51,14 +49,62 @@ void Scheduler_LOOP_ROUND_ROBIN(registers* r){
 		}
 		return;
 	}
-	//SAVE CONTEXT R
+}
+void EMPTYLOOP(){
+	while(1);
+}
+void TaskKill(){
+	EMPTYLOOP();
+	// ListNode* temp=current;
+	// int _tasklen=ListLength(tasks);
+	// if(_tasklen==0){
+	// 	kprintf(INFO "UNEXPECTED NO TASK FOUND\n");
+	// 	return;
+	// }
+	// if(_tasklen<=1){
+	// 	kprintf(INFO "CONTINUING EXISTING TASK\n",ListLength(tasks));
+	// 	//NO SWITCHING NEEDED
+	// 	if(current==0){
+	// 		current=tasks;
+	// 		registers* cur=((TASK*)(current->val))->r;
+	// 		TaskContextSwitch(cur);
+	// 	}
+	// 	ListRemove(tasks,temp);
+	// 	EMPTYLOOP();
+	// }
+	//
+	// if(current->next==0){
+	// 	current=tasks;
+	// }else{
+	// 	current=current->next;
+	// }
+	// //REMOVE CURRENT
+	// TaskContextSwitch(current->val);
+}
+void Scheduler_LOOP_ROUND_ROBIN(registers* r){
+	kprintf("TICK\n");
+	int _tasklen=ListLength(tasks);
+	if(_tasklen==0){
+		kprintf(INFO "NO TASKS FOUND IDLING\n");
+		return;
+	}
+	if(_tasklen<=1){
+		kprintf(INFO "CONTINUING EXISTING TASK\n",ListLength(tasks));
+		//NO SWITCHING NEEDED
+		if(current==0){
+			current=tasks;
+			registers* cur=((TASK*)(current->val))->r;
+			TaskContextSwitch(cur);
+		}
+		return;
+	}
+
 	((TASK*)(current->val))->r=r;
 	if(current->next==0){
 		current=tasks;
 	}else{
 		current=current->next;
 	}
-	//
 	registers* cur=((TASK*)(current->val))->r;
 	//LOAD CONTEXT (current->r)
 	//JUMP TO USER MODE

@@ -1,5 +1,6 @@
 #include "exceptions.h"
 #include <stdint.h>
+#include "interrupts/isr.h"
 #include "utils/bit.h"
 #include "syscall.h"
 #include "utils/inst.h"
@@ -26,6 +27,7 @@ void PageFaultHandler(registers* r){
 
     uint64_t cr2_value;
     asm volatile ("mov %%cr2, %0" : "=r" (cr2_value));
+	printf("\tBAD INSTRUCTION ADDRESS\t%p\n",r->rip);
 	printf("\tBAD ADDRESS\t%p\n",cr2_value);
 	printf("\tERROR REGISTER:\t%x\n",error);
 	__asm__ volatile("cli;hlt");
