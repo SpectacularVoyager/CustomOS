@@ -8,13 +8,14 @@ typedef struct{
 	int currentLBA;
 	void* buffer;
 	int n_sectors;
+	AHCI_HBA_PORT* port;
 }AHCI_BUFFER;
 
-void BUFFER_REFRESH(AHCI_HBA_PORT* port,AHCI_BUFFER* buffer,unsigned long address);
+void BUFFER_REFRESH(AHCI_BUFFER* buffer,unsigned long address);
 
 AHCI_BUFFER BUFFER_INIT(AHCI_HBA_PORT* port,int n,unsigned long address);
 
-unsigned int BUFFER_READ_U32(AHCI_HBA_PORT* port,AHCI_BUFFER* buffer,unsigned long address);
+unsigned int BUFFER_READ_U32(AHCI_BUFFER* buffer,unsigned long address);
 
 ListNode* dir(FAT32_FILESYSTEM* data,FAT_DIR* dir);
 
