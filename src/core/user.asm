@@ -16,6 +16,8 @@ TEST_HALT:
 	mov dword [rbx],0x00FF00
 	mov rbx,0xFD000004
 	mov dword [rbx],0xFF0000
+	mov rax,1
+	int 0x80
 	mov rax,60
 	mov rdi,0
 	int 0x80

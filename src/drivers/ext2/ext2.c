@@ -21,40 +21,6 @@ void FREAD(uint64_t block,void* data,int len){
 
 void* readInodeTable(uint64_t lba);
 
-void readDir(void* inodes,int depth){
-	if(depth<=0)return;
-	int blocksize=(1024<<ext2.superblock->logBlockSize);
-	int blocksizelba=blocksize/GPT_SECTOR_SIZE;
-
-	EXT2_INODE* table=inodes;
-	FORI(2){
-		EXT2_INODE* root=&inodes[ext2.superblock->inodeSize*i];
-		uint64_t lba=ext2.part->startLBA+root->blockPointers[0]*blocksizelba;
-		void* inodes=malloc(1024);
-		AHCI_READ(ext2.port,lba,4,inodes);
-		EXT2_DIR* dir=inodes;
-		while(dir->inode!=0){
-			int cond=(strncmp(dir->name,".",dir->nameLen)==0)||(strncmp(dir->name,"..",dir->nameLen)==0);
-			if(!cond){
-				int group=INODE_GROUP(dir->inode,ext2);
-				int local=(INODE_GROUP_LOCAL(dir->inode,ext2)*ext2.superblock->inodeSize);
-				int val=ext2.part->startLBA+ext2.blockgroups[group].blockTable*blocksizelba;
-				val+=local/0x200;
-				printf("[%x]\t\"%s\"\t%x[%x]\n",dir->fileType,dir->name,dir->inode,val);
-				// printf("%s->%X\n",dir->name,val);
-				if(dir->fileType==2){
-					// printf("EYY\n");
-					// void* next=readInodeTable(val);
-					// readDir(next,depth--);
-					// LOGVAL(val);
-					// LOGVAL(group);
-					// LOGVAL(local);
-				}
-			}
-			dir=((void*)dir+dir->recLen);
-		}
-	}
-}
 void EXT2_READFILE(EXT2_INODE*inode,void* data,int len){
 	int blocksize=(1024<<ext2.superblock->logBlockSize);
 	int blocksizelba=blocksize/GPT_SECTOR_SIZE;
@@ -128,9 +94,6 @@ int EXT2_READPART(void* fs,AHCI_HBA_PORT* port,GPT_PART_ENTRY* entry){
 	if(ext2.superblock->magic!=0xEF53)return -1;
 	int blocksize=(1024<<ext2.superblock->logBlockSize);
 	int blocksizelba=blocksize/GPT_SECTOR_SIZE;
-
-	unsigned long bglba=lba+blocksizelba;
-	unsigned long bgcount=CEILDIV(ext2.superblock->blocksCount, ext2.superblock->blocksPerGroup);
 
 	ext2.blockgroups=malloc(blocksize);
 	AHCI_READ(ext2.port,lba+blocksizelba,blocksizelba,(uint16_t*)ext2.blockgroups);
