@@ -406,9 +406,7 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	XHCI_DOORBELL(0,0);
 	SetColor(0xffffff);
 
-	FORI(maxports)	XHCI_PORT_RESET(i);
-	XHCI_PORT_RESET(0);
-	XHCI_DOORBELL(0,0);
+	// FORI(maxports)	XHCI_PORT_RESET(i);
 
 	return 1;
 }
@@ -873,8 +871,10 @@ void XHCI_ON_COMMAND_COMPLETE(XHCI_TRB* trb){
 
 				printf("ENDPOINT INT IN STATE:\n");
 
-				XHCI_SETIDLE(slot,2,2);
-				XHCI_DOORBELL(slot,3);
+				XHCI_SETIDLE(slot,2,0);
+				XHCI_DOORBELL(slot,1);
+				XHCI_NORMAL(endp,&keyboard,8,2,0);
+				XHCI_DOORBELL(slot,1);
 
 				hexdump(endp->endpoints[2].trbs,0x80,0x20);
 
