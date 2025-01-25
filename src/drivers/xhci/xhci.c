@@ -470,6 +470,28 @@ void PrintKeyboard(void* buf,int _x,int _y){
 	SetColor(0xffffff);
 	TERM_SET_POS(x,y);
 }
+void XHCI_NORMAL(XHCI_Endpoint* endp,void* buffer,int len,int target,int intp){
+		XHCI_TRB_NORMAL normal={
+			.data_low=DWORD((uint64_t)buffer,0),
+			.data_high=DWORD((uint64_t)buffer,1),
+			.TRBTransferLength=len,
+			.TDSize=0,
+			.InterrupterTarget=2,
+			.TRBType=XHCI_TRB_NORMAL_CODE,
+			.IOC=0,
+			.C=1
+		};
+		XHCI_TRB_STATUS status=(XHCI_TRB_STATUS){
+			.TRBType=XHCI_TRB_STATUS_CODE,
+				.D=0,
+				.CH=0,
+				.IOC=1,
+				.C=1,
+				.int_target=intp
+		};
+		XHCI_TRANSFER(endp,target,(XHCI_TRB*)&normal);
+		XHCI_TRANSFER(endp,target,(XHCI_TRB*)&status);
+}
 void XHCI_IRQ8(registers* _r){
 	printf("IRQ RECV LESS GO\n");
 	PrintKeyboard(&keyboard,103,62);
@@ -489,26 +511,7 @@ void XHCI_IRQ8(registers* _r){
 				printf("UNRECOGNISED TRB IN INTERRUPTER 2\n");
 			}
 		trb++;
-		XHCI_TRB_NORMAL normal={
-			.data_low=DWORD((uint64_t)&keyboard,0),
-			.data_high=DWORD((uint64_t)&keyboard,1),
-			.TRBTransferLength=8,
-			.TDSize=0,
-			.InterrupterTarget=2,
-			.TRBType=XHCI_TRB_NORMAL_CODE,
-			.IOC=0,
-			.C=1
-		};
-		XHCI_TRB_STATUS status=(XHCI_TRB_STATUS){
-			.TRBType=XHCI_TRB_STATUS_CODE,
-				.D=0,
-				.CH=0,
-				.IOC=1,
-				.C=1,
-				.int_target=2
-		};
-		XHCI_TRANSFER(endp,2,(XHCI_TRB*)&normal);
-		XHCI_TRANSFER(endp,2,(XHCI_TRB*)&status);
+		XHCI_NORMAL(endp,&keyboard,8,2,2);
 		XHCI_DOORBELL(slot,3);
 	}
 	XHCI_WRITE_ERDP(&xhci_hub.ints[1],(uint64_t)(trb),1<<3);
