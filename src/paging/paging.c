@@ -1,8 +1,9 @@
 #include "paging.h"
 #include"stdint.h"
 #include <stdint.h>
-#include "../stdlib/stdlib.h"
-#include "../stdlib/stdio.h"
+#include "stdlib/stdlib.h"
+#include "stdlib/stdio.h"
+#include "utils/utils.h"
 
 unsigned int pageCount=0;
 #define PAGE_P2_SIZE 0x200000L
@@ -46,4 +47,10 @@ void MemoryRemap(uint64_t memory,uint64_t address,int flags){
 	kprintf(TRACE"REMAPPING %p to %x[%x]\n",address,p,offset);
 	table[offset]=address|0b10000111L|flags;
 	asm volatile("invlpg (%0)" ::"r" (address) : "memory");
+}
+uint64_t PhysicalAddress(uint64_t address){
+	int p=address/PAGE_WIDTH;
+	int offset=(address%PAGE_WIDTH)/PAGE_P2_SIZE;
+	uint64_t a= (uint64_t)TABLE(p3_table[p])|offset;
+	return a;
 }

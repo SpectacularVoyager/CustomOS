@@ -95,6 +95,7 @@ void MTRStuff(){
 void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long cpuid,uint64_t* gdt)
 {
 
+
 	FPUEnable();
 	kprintf(INFO "BOOTING OS[%x]\n",magic);
 
@@ -120,12 +121,8 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 
 	GDT_LOAD();
 	GDT_FLUSH();
-	// TSS_FLUSH();
-	printf("HELLO WORLD\n");
-	LOGVALD(gdt)
-	//for(int i=0;i<12;i++){
-	//	printf("VAL[%d]\t%p\n",i,(gdt[i]));
-	//}
+	LOGVALD(PhysicalAddress(0x100));
+
 	IDT_Initialize(cs);
 	IRQ_Initialize();
 	IRQ_RegisterHandler(14, ATAPIO_HANDLE_IRQ);

@@ -23,3 +23,5 @@ void PageRemap(int n,uint64_t offset,uint64_t address,int flags);
 void MemoryRemap(uint64_t memory,uint64_t address,int flags);
 
 void UnmapPage(uint64_t page);
+
+uint64_t PhysicalAddress(uint64_t address);
