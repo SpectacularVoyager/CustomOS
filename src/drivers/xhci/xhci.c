@@ -406,7 +406,7 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	XHCI_DOORBELL(0,0);
 	SetColor(0xffffff);
 
-	FORI(maxports)	XHCI_PORT_RESET(i);
+	// FORI(maxports)	XHCI_PORT_RESET(i);
 
 	return 1;
 }
@@ -428,7 +428,7 @@ void XHCI_SETIDLE(int slot,int num,int target_int){
 			.TransferType=XHCI_TRANSFER_TYPE_NO_DATA,
 			.TRBTransferLength=8,
 			.IOC=0,
-			.IDT=1,
+			.IDT=0,
 			.bmRequestType=0x21,
 			.bRequest=0xA,
 			.wValue=0x0,
@@ -438,7 +438,7 @@ void XHCI_SETIDLE(int slot,int num,int target_int){
 	};
 	status=(XHCI_TRB_STATUS){
 		.TRBType=XHCI_TRB_STATUS_CODE,
-			.D=0,
+			.D=1,
 			.CH=0,
 			.IOC=1,
 			.C=1,
@@ -512,6 +512,8 @@ void XHCI_IRQ8(registers* _r){
 		XHCI_NORMAL(endp,&keyboard,8,2,2);
 		XHCI_DOORBELL(slot,3);
 	}
+	XHCI_NORMAL(endp,&keyboard,8,0,0);
+	XHCI_DOORBELL(slot,1);
 	XHCI_WRITE_ERDP(&xhci_hub.ints[1],(uint64_t)(trb),1<<3);
 }
 
@@ -680,20 +682,21 @@ void XHCI_CONFIGURE_ENDPOINT0(XHCI_Endpoint* endp,int slot,int conf){
 	XHCI_CONTEXT_CONTROL* control=input_context;
 	XHCI_CONTEXT_SLOT* slot_endp=input_context+(cz*(1));
 	XHCI_CONTEXT_SLOT* endp0=input_context+(cz*(2));
-	XHCI_CONTEXT_ENDPOINT* endp_int=input_context+(cz*(4));
 	control->drop=0;
 	control->conf=0;
 
-	control->add=0b01;
-	slot_endp->context_entries=2;
+	control->add=0b11;
+	slot_endp->context_entries=1;
 	control->conf=1;
 
 	//FORI(0){
 	FORI(device->intf->interface->num_endpoints){
 		USB_ENDPOINT_DESCRIPTOR* endpoint=device->intf[0].endpoint[i];
 		int ind=XHCI_GET_INDEX_DESC(endpoint);
+		XHCI_CONTEXT_ENDPOINT* endp_int=input_context+(2+ind)*cz;
 		int type=XHCI_GET_TYPE_DESC(endpoint);
 		int esit=endpoint->max_packet_size;
+		LOGVAL(type);
 		endp->endpoints[ind].trbs= XHCI_getTransferTRBs();
 		endp_int->ep_type=type;
 		endp_int->max_packet_size=endpoint->max_packet_size;
@@ -871,9 +874,8 @@ void XHCI_ON_COMMAND_COMPLETE(XHCI_TRB* trb){
 
 				printf("ENDPOINT INT IN STATE:\n");
 
-				XHCI_SETIDLE(slot,0,2);
-				XHCI_DOORBELL(slot,1);
-				XHCI_NORMAL(endp,&keyboard,8,2,2);
+				
+				XHCI_SETIDLE(slot,2,0);
 				XHCI_DOORBELL(slot,3);
 
 				hexdump(endp->endpoints[2].trbs,0x80,0x20);
@@ -1020,6 +1022,9 @@ void XHCI_ON_TRANSFER_COMPLETE(XHCI_TRB* trb){
 			}
 			trb++;
 		}
+		XHCI_NORMAL(endp,&keyboard,8,0,0);
+		XHCI_DOORBELL(slot,1);
+		PrintKeyboard(&keyboard,103,60);
 	}
 	XHCI_WRITE_ERDP(&xhci_hub.ints[0],(uint64_t)(trb),1<<3);
 	//EVALUATE CONTEXT

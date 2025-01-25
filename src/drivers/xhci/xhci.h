@@ -422,3 +422,4 @@ typedef struct {
     uint32_t D : 1;
     uint32_t ReservedZ4 : 15;
 }__attribute__((packed)) XHCI_TRB_STATUS;
+
