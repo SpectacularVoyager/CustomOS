@@ -44,3 +44,19 @@ void USERMODE_ADD(){
 	memcpy(address,TEST_HALT,100);
 	TaskCreate(NULL,address,address+0x100000);
 }
+int USERMODE_EXEC_ELF(ELF_FILE* elf){
+	AllocatePage(5, 0x40000000, 0b111);
+	void* address=(void*)(0x140000000);
+	printf("TRYING TO ENTER USER MODE\n");
+
+	ELF_Symbol* _start=ELF_LookUpSymbol(elf,"_start");
+	if(_start==NULL){
+		return 0;
+	}
+	char* addr=elf->file+elf->sections[_start->SectionTableIndex].Offset;
+	hexdump(addr,elf->sections[_start->SectionTableIndex].Size,32);
+	memcpy(address,elf->file,elf->len);
+
+	TaskCreate(NULL,addr,address+0x100000);
+	return 1;
+}

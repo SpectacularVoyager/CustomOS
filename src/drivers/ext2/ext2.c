@@ -82,6 +82,26 @@ int EXT2_FIND_INODE_IN_DIR(EXT2_INODE* parent,EXT2_INODE* out,char* name){
 	EXT2_INODE_FROM_ID(out, file);
 	return 1;
 }
+int EXT2_GET_INODE_FROM_PATH(EXT2_INODE* child,char* path){
+	if(path[0]!='/'){
+		memset(child,0,sizeof(EXT2_INODE));
+		return 0;
+	}
+	path++;
+	// EXT2_FIND_INODE_IN_DIR(&ext2.root,&filenode,"home");
+	EXT2_INODE* parent=&ext2.root;
+	while(path!=NULL){
+		char* name=path;
+		path=strntokch(path,1000,'/');
+		int status=EXT2_FIND_INODE_IN_DIR(parent,child,name);
+		if(status!=1){
+			memset(child,0,sizeof(EXT2_INODE));
+			return 0;
+		}
+		parent=child;
+	}
+	return 1;
+}
 int EXT2_READPART(void* fs,AHCI_HBA_PORT* port,GPT_PART_ENTRY* entry){
 	// uint64_t lba=0x40;	
 	uint64_t lba=entry->startLBA;	
@@ -99,16 +119,8 @@ int EXT2_READPART(void* fs,AHCI_HBA_PORT* port,GPT_PART_ENTRY* entry){
 	AHCI_READ(ext2.port,lba+blocksizelba,blocksizelba,(uint16_t*)ext2.blockgroups);
 	unsigned long table=lba+ext2.blockgroups->blockTable*blocksizelba;
 
-
 	void* inodes=readInodeTable(table);
-
 	EXT2_INODE* root=&inodes[ext2.superblock->inodeSize*1];
-	EXT2_INODE filenode;
-	EXT2_INODE filenode2;
-	EXT2_FIND_INODE_IN_DIR(root,&filenode,"home");
-	EXT2_FIND_INODE_IN_DIR(&filenode,&filenode2,"main.c");
-	char filetext[filenode2.size];
-	EXT2_READFILE(&filenode2,filetext,filenode2.size);
-	printf("%s\n",filetext);
+	memcpy(&ext2.root,root,sizeof(EXT2_INODE));
 	return 0;
 }
