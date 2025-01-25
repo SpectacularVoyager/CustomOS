@@ -55,7 +55,7 @@ $(objects): %.o: %.c
 		-ffreestanding -Isrc/include -Isrc $(CFLAGS)
 
 link:
-	@$(CC) -T linker.ld -o $(ISO) -ffreestanding -O2 -nostdlib $(shell find -name '*.o') -lgcc
+	@$(CC) -T linker.ld -o $(ISO) -ffreestanding -O2 -nostdlib $(shell find -wholename './out/*.o') -lgcc
 
 build:
 	@grub-mkrescue -o iso.iso ISO
