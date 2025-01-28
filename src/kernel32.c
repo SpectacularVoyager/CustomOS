@@ -1,3 +1,4 @@
+#include "SerialPrintf/printf.h"
 #include "paging/paging.h"
 #include "longmode/longmode.h"
 #include "stdlib/stdio.h"
@@ -23,6 +24,7 @@ int LongMode_Setup(){
 	return 1;
 }
 void load_kernel32(){
+	_putSerial('x');
 	LongMode_Setup();
 	PagingInit();
 }

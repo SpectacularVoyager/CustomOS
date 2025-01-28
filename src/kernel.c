@@ -94,11 +94,10 @@ void MTRStuff(){
 
 void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long cpuid,uint64_t* gdt)
 {
-	while(1);
 
-
-	FPUEnable();
+	// FPUEnable();
 	kprintf(INFO "BOOTING OS[%x]\n",magic);
+	while(1);
 
 #ifdef PRINT_CPUID
 	kprintf(INFO "CPUID:\t%p\n",cpuid);

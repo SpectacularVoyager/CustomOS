@@ -3,18 +3,6 @@ global p3_table
 global p2_table
 ;global p2_table2
 
-; BASE LIMIT ACCESS FLAGS
-%macro GDT_ENTRY 4
-	dw	(%2)&0xFFFF
-	dw	(%1)&0xFFFF
-	db	(%2>>8)&0xFF
-	db	(%3)&0xFF
-	db	(((%4)&0xF)<<4)|((%1>>16)&0xF)
-	db	(%2>>24)&0xFF
-	; dd	(%2<<32)&0xFFFFFFFF
-	; dd	0
-%endmacro
-
 section .bss
 align 4096
 p4_table:
@@ -27,36 +15,20 @@ p2_table:
 ;p2_table2:
 ;  resb 4096
 
-
 section .rodata
-global gdt64
-TSS:
-    dq 0                      ; Reserved (usually set to zero)
-    dq 0                      ; Previous TSS link (set to 0 for no link)
-    dq 0, 0, 0                ; Stack pointers for rings 0, 1, 2 (64-bit)
-    dq 0                      ; I/O map base address (not used, set to 0)
-    dq 0, 0, 0, 0, 0, 0, 0, 0; General-purpose registers (R8-R15 in 64-bit)
 gdt64:
-	GDT_ENTRY 0,0,0,0
+    dq 0 ; zero entry
 .code: equ $ - gdt64 ; new
-	GDT_ENTRY 0,0,0x9A,0xA
-	;dq (0xA)<<52 | (0x9A)<<40 
+    ;dq (1<<43) | (1<<44) | (1<<47) | (1<<53) ; code segment
+	dq (0xA)<<52 | (0x9A)<<40 
 .data: equ $ - gdt64 ; new
-	GDT_ENTRY 0,0,0x92,0xC
-	;dq (0xC)<<52 | (0x92)<<40
-.usercode: equ $ - gdt64 ; new
-	GDT_ENTRY 0,0,0x9A,0xA
-	;dq (0xA)<<52 | (0xFA)<<40 
-.userdata: equ $ - gdt64 ; new
-	GDT_ENTRY 0,0,0x92,0xC
-	;dq (0xC)<<52 | (0xF2)<<40
+    ;dq (1<<43) | (1<<44) | (1<<47) | (1<<53) ; code segment
+	dq (0xC)<<52 | (0x92)<<40
 .tss: equ $-gdt64
-	GDT_ENTRY 0,0,0x89,0x0
-	dq 0
+	dq (0x0)<<52 | (0x89)<<40 | (gdt64.tss)<<16 | 8
 .pointer:
   dw $ - gdt64 - 1
   dq gdt64
-
 
 section .text
 [bits 32]
@@ -95,12 +67,12 @@ Paging_Enable:
 Paging_SetUpTables:
   ; map first P4 entry to P3 table
   mov eax, p3_table
-  or eax, 0b111 ; present + writable
+  or eax, 0b11 ; present + writable
   mov [p4_table], eax
 
   ;; map first P3 entry to P2 table
   mov eax, p2_table
-  or eax, 0b111 ; present + writable
+  or eax, 0b11 ; present + writable
   mov [p3_table], eax
 
   ;mov eax, p2_table2
@@ -114,13 +86,16 @@ Paging_SetUpTables:
 .map_p2_table:
   mov eax, 0x200000  ; 2MiB
   mul ecx            ; start address of ecx-th page
-  or eax, 0b10000111 ; present + writable + huge
+  or eax, 0b10000011 ; present + writable + huge
   mov [p2_table + ecx * 8], eax ; map ecx-th entry
 
   inc ecx            ; increase counter
   cmp ecx, 512       ; if counter == 512, the whole P2 table is mapped
   jne .map_p2_table  ; else map the next entry
 
+  mov eax,0xFD000000
+  or eax,0b10000011
+  mov[p2_table],eax
 	mov ecx,0
 	extern PageSetup
 	call PageSetup

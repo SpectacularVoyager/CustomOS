@@ -4,7 +4,7 @@ OUT32=out/x86
 BUILD=ISO/boot
 ISO=$(BUILD)/os.bin
 # Default CFLAGS:
-CFLAGS?=-O2 -g -DDEBUG_PRINTF
+CFLAGS?=-O2 -g -DDEBUG_PRINTF -mcmodel=large
 # Add mandatory options to CFLAGS:
 CFLAGS:=$(CFLAGS) -Wall -Wextra -mfpmath=sse -Wno-unused-variable -Wno-unused-parameter 
 QEMU=qemu-system-x86_64
@@ -55,7 +55,7 @@ $(objects): %.o: %.c
 		-ffreestanding -Isrc/include -Isrc $(CFLAGS)
 
 link:
-	@$(CC) -T linker.ld -o $(ISO) -ffreestanding -O2 -nostdlib $(shell find -wholename './out/*.o') -lgcc
+	@$(CC) -T linker.ld -o $(ISO) -mcmodel=large -ffreestanding -O2 -nostdlib $(shell find -wholename './out/*.o') -lgcc
 
 build:
 	@grub-mkrescue -o iso.iso ISO
