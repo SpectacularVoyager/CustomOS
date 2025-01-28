@@ -34,7 +34,7 @@ else
 		-device usb-kbd \
 		-device usb-mouse
 endif
-QEMU_FLAGS:=$(QEMU_FLAGS) -serial file:logs/serial.log -net nic,model=rtl8139 -m 2G -vga std 
+QEMU_FLAGS:=$(QEMU_FLAGS) -serial file:logs/serial.log -net nic,model=rtl8169 -m 2G -vga std 
 QEMU_FLAGS:=$(QEMU_FLAGS) 
 
 objects = $(shell find -wholename "./src/*.c")

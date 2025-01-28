@@ -193,6 +193,8 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 	SetColor(0xFFFFFF);
 
 	APIC_TIMER_INIT(0x2000000);
+	PCI_device* device=PCI_GetFromType(0x2,0x0);
+	PCI_Device_Print(device);
 	//for(int i=0;i<100;i++){
 	//	printf(".");
 	//	APIC_SLEEP_MICRO(1000000);
@@ -209,6 +211,7 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 		PCI_Device_Print(usb);
 	}
 #endif
+	/**
 	EXT2_INODE inode;
 	if(EXT2_GET_INODE_FROM_PATH(&inode,"/home/main.c")==1){
 		char file[inode.size];
@@ -225,7 +228,7 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 		int s=ELF_PARSE(&file,hex,elf.size);
 		if(s==1)
 		USERMODE_EXEC_ELF(&file);
-	}
+	}*/
 	//USERMODE_ADD();
 	//USERMODE_ADD();
 
