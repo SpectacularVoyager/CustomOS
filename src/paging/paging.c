@@ -51,6 +51,6 @@ void MemoryRemap(uint64_t memory,uint64_t address,int flags){
 uint64_t PhysicalAddress(uint64_t address){
 	int p=address/PAGE_WIDTH;
 	int offset=(address%PAGE_WIDTH)/PAGE_P2_SIZE;
-	uint64_t a= (uint64_t)TABLE(p3_table[p])|offset;
-	return a;
+	uint64_t* table=TABLE(p3_table[p]);
+	return -1;
 }

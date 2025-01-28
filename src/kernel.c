@@ -60,7 +60,7 @@ void graphicsStuff(MULTIBOOT_HEADERS headers){
 	AllocatePage(1,1L*PAGE_WIDTH,flag);
 	AllocatePage(2,2L*PAGE_WIDTH,flag);
 	AllocatePage(3,3L*PAGE_WIDTH,flag);
-	AllocatePage(4,4L*PAGE_WIDTH,flag);
+	AllocatePage(4,0L*PAGE_WIDTH,flag);
 	// AllocatePage(5,5L*PAGE_WIDTH,flag);
 	// AllocatePage(6,6L*PAGE_WIDTH,flag);
 	// AllocatePage(7,7L*PAGE_WIDTH,flag);
@@ -121,7 +121,6 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 
 	GDT_LOAD();
 	GDT_FLUSH();
-	LOGVALD(PhysicalAddress(0x100));
 
 	IDT_Initialize(cs);
 	IRQ_Initialize();
@@ -132,6 +131,7 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 
 	SetColor(0xFF0000);
 	//LOAD TSS
+	/**
 	TSS_FLUSH();
 	// USERMODE_ENTER();
 
@@ -227,4 +227,5 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 	//USERMODE_ADD();
 
 	while(1);
+	*/
 }
