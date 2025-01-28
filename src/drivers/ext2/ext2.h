@@ -100,4 +100,8 @@ typedef struct{
 	AHCI_HBA_PORT* port;
 	EXT2_SUPERBLOCK* superblock;
 	EXT2_BLOCKGROUP* blockgroups;
+	EXT2_INODE root;
 } EXT2_PART;
+
+int EXT2_GET_INODE_FROM_PATH(EXT2_INODE* ptr,char* path);
+void EXT2_READFILE(EXT2_INODE*inode,void* data,int len);

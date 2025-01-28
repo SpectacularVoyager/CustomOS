@@ -46,6 +46,7 @@
 #include "arch/GDT.h"
 #include "usertask/Task.h"
 #include "drivers/ext2/ext2.h"
+#include "specifications/elf/elf.h"
 void Debug();
 extern char* cpuid_flags[62];
 //#define PRINT_CPUID
@@ -192,6 +193,8 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 	SetColor(0xFFFFFF);
 
 	APIC_TIMER_INIT(0x2000000);
+	PCI_device* device=PCI_GetFromType(0x2,0x0);
+	PCI_Device_Print(device);
 	//for(int i=0;i<100;i++){
 	//	printf(".");
 	//	APIC_SLEEP_MICRO(1000000);
@@ -208,8 +211,26 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 		PCI_Device_Print(usb);
 	}
 #endif
+	/**
+	EXT2_INODE inode;
+	if(EXT2_GET_INODE_FROM_PATH(&inode,"/home/main.c")==1){
+		char file[inode.size];
+		EXT2_READFILE(&inode,file,inode.size);
+		printf(file);
+	}
 	Scheduler_START();
-	USERMODE_ADD();
+
+	EXT2_INODE elf;
+	if(EXT2_GET_INODE_FROM_PATH(&elf,"/home/a.out")==1){
+		char* hex=malloc(elf.size);
+		EXT2_READFILE(&elf,hex,elf.size);
+		ELF_FILE file;
+		int s=ELF_PARSE(&file,hex,elf.size);
+		if(s==1)
+		USERMODE_EXEC_ELF(&file);
+	}*/
+	//USERMODE_ADD();
+	//USERMODE_ADD();
 
 	while(1);
 }

@@ -34,7 +34,7 @@ else
 		-device usb-kbd \
 		-device usb-mouse
 endif
-QEMU_FLAGS:=$(QEMU_FLAGS) -serial file:logs/serial.log -net nic,model=rtl8139 -m 2G -vga std 
+QEMU_FLAGS:=$(QEMU_FLAGS) -serial file:logs/serial.log -net nic,model=rtl8169 -m 2G -vga std 
 QEMU_FLAGS:=$(QEMU_FLAGS) 
 
 objects = $(shell find -wholename "./src/*.c")
@@ -55,7 +55,7 @@ $(objects): %.o: %.c
 		-ffreestanding -Isrc/include -Isrc $(CFLAGS)
 
 link:
-	@$(CC) -T linker.ld -o $(ISO) -ffreestanding -O2 -nostdlib $(shell find -name '*.o') -lgcc
+	@$(CC) -T linker.ld -o $(ISO) -ffreestanding -O2 -nostdlib $(shell find -wholename './out/*.o') -lgcc
 
 build:
 	@grub-mkrescue -o iso.iso ISO
