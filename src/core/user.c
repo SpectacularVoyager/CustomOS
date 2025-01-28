@@ -54,8 +54,13 @@ int USERMODE_EXEC_ELF(ELF_FILE* elf){
 		return 0;
 	}
 	char* addr=elf->file+elf->sections[_start->SectionTableIndex].Offset;
-	hexdump(addr,elf->sections[_start->SectionTableIndex].Size,32);
+	LOGVAL(_start->Size);
 	memcpy(address,elf->file,elf->len);
+	// hexdump(PAGE_WIDTH,32,32);
+	// MemoryRemap((uint64_t)address,0x400000L,0b111);
+	//PageRemap(2,0,(uint64_t)address,0b111);
+	hexdump((void*)0x401000L,32,32);
+	// U32(0x401000)='helo';
 
 	TaskCreate(NULL,addr,address+0x100000);
 	return 1;

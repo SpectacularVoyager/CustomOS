@@ -45,8 +45,13 @@ int ELF_PARSE(ELF_FILE* elf,void* file,int len){
 	elf->name=&elf->sections[elf->header->SectionNameTableIndex];
 	elf->symbolTable=ELF_LookUpSection(elf,".symtab");
 	elf->stringTable=ELF_LookUpSection(elf,".strtab");
+	elf->rela		=ELF_LookUpSection(elf,".rela");
 	if(elf->symbolTable==0||elf->stringTable==0){
 		return 0;
 	}
+	// if(elf->rela==0){
+	// 	printf("ONLY SUPPORT RELOCATABLE FILES\n");
+	// 	return 0;
+	// }
 	return 1;
 }

@@ -54,6 +54,17 @@ typedef struct{
 	uint64_t Size;
 }__attribute__((packed)) ELF_Symbol;
 
+typedef struct {
+	uint64_t Offset;
+	uint64_t Info;
+} __attribute__((packed)) ELF_Rel;
+
+typedef struct {
+	uint64_t Offset;
+	uint64_t Info;
+	uint64_t Addend;
+} __attribute__((packed)) ELF_Rela;
+
 typedef struct{
 	void* file;
 	int len;
@@ -62,6 +73,7 @@ typedef struct{
 	ELF_SectionHeader* name;
 	ELF_SectionHeader* symbolTable;
 	ELF_SectionHeader* stringTable;
+	ELF_SectionHeader* rela;
 	ELF_Symbol* symbols;
 } ELF_FILE;
 int ELF_PARSE(ELF_FILE* elf,void* file,int len);
