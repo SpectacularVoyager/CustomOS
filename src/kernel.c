@@ -94,6 +94,7 @@ void MTRStuff(){
 
 void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long cpuid,uint64_t* gdt)
 {
+	while(1);
 
 
 	FPUEnable();
