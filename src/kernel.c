@@ -211,7 +211,6 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 		PCI_Device_Print(usb);
 	}
 #endif
-	/**
 	EXT2_INODE inode;
 	if(EXT2_GET_INODE_FROM_PATH(&inode,"/home/main.c")==1){
 		char file[inode.size];
@@ -228,7 +227,7 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 		int s=ELF_PARSE(&file,hex,elf.size);
 		if(s==1)
 		USERMODE_EXEC_ELF(&file);
-	}*/
+	}
 	//USERMODE_ADD();
 	//USERMODE_ADD();
 
