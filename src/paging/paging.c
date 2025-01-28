@@ -47,3 +47,6 @@ void MemoryRemap(uint64_t memory,uint64_t address,int flags){
 	table[offset]=address|0b10000111L|flags;
 	asm volatile("invlpg (%0)" ::"r" (address) : "memory");
 }
+void PageIdentity(int p1,int p2,int flags){
+	p3_table[p1]=(p2*PAGE_WIDTH)|0b111|flags;
+}

@@ -3,6 +3,7 @@
 #include <stdlib/stdlib.h>
 #include <stdlib/string.h>
 #include "paging/paging.h"
+#include "specifications/elf/elf.h"
 #include "utils/utils.h"
 #include "utils/bit.h"
 #include "usertask/Task.h"
@@ -54,11 +55,17 @@ int USERMODE_EXEC_ELF(ELF_FILE* elf){
 		return 0;
 	}
 	char* addr=elf->file+elf->sections[_start->SectionTableIndex].Offset;
-	LOGVAL(_start->Size);
 	memcpy(address,elf->file,elf->len);
 	// hexdump(PAGE_WIDTH,32,32);
 	// MemoryRemap((uint64_t)address,0x400000L,0b111);
 	//PageRemap(2,0,(uint64_t)address,0b111);
+	LOGVAL(elf->header->Entry);
+	void* nameTable=elf->file+elf->name->Offset;
+	FORI(elf->header->SectionHeaderCount){
+		ELF_SectionHeader* section=&elf->sections[i];
+		char* name=&nameTable[section->NameOffset];
+		printf("%s\t[%x -> %x]\n",name,section->Offset,section->Offset+section->Size);
+	}
 	hexdump((void*)0x401000L,32,32);
 	// U32(0x401000)='helo';
 

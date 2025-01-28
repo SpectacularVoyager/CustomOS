@@ -36,6 +36,11 @@
 #define MASK(a,b)	((a)&(~(b)))
 #define VAL(a)		(a)
 
+typedef struct {
+	uint8_t* data;
+	int len;
+} BITMASK;
+
 inline void printWSTR(void* ptr){
 	uint16_t* p=(void*)ptr;
 }
