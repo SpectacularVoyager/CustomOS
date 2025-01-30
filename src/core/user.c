@@ -64,7 +64,10 @@ int USERMODE_EXEC_ELF(ELF_FILE* elf){
 	FORI(elf->header->SectionHeaderCount){
 		ELF_SectionHeader* section=&elf->sections[i];
 		char* name=&nameTable[section->NameOffset];
-		printf("%s\t[%x -> %x]\n",name,section->Offset,section->Offset+section->Size);
+		printf("%s\t[%x -> %x] [%x->%x]\n",name,section->Offset,section->Offset+section->Size,section->Addr,section->Addr+section->Size);
+	}
+	if(elf->rela!=0){
+		printf("RELA\t[%x %x]\n",elf->rela->Offset,elf->rela->Addend);
 	}
 	hexdump((void*)0x401000L,32,32);
 	// U32(0x401000)='helo';

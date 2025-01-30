@@ -99,7 +99,7 @@ usb:
 	@cp ISO/boot/os.bin $(USB_MEDIA)/boot/os.bin
 
 losetup:
-	@sudo losetup -Pf disks/fat.img
+	@sudo losetup -Pf disks/ext2.img
 errors:
 	make 2>&1 >/dev/null | grep -i 'error'
 

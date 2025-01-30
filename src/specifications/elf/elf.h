@@ -73,7 +73,7 @@ typedef struct{
 	ELF_SectionHeader* name;
 	ELF_SectionHeader* symbolTable;
 	ELF_SectionHeader* stringTable;
-	ELF_SectionHeader* rela;
+	ELF_Rela* rela;
 	ELF_Symbol* symbols;
 } ELF_FILE;
 int ELF_PARSE(ELF_FILE* elf,void* file,int len);

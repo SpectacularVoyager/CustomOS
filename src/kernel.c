@@ -64,7 +64,7 @@ void graphicsStuff(MULTIBOOT_HEADERS headers){
 	// AllocatePage(5,5L*PAGE_WIDTH,flag);
 	// AllocatePage(6,6L*PAGE_WIDTH,flag);
 	// AllocatePage(7,7L*PAGE_WIDTH,flag);
-	// AllocatePage(8,8L*PAGE_WIDTH,flag);
+	AllocatePage(8,8L*PAGE_WIDTH,flag);
 	GraphicsInit(
 			addr,
 			fb->common.framebuffer_width,
@@ -94,9 +94,11 @@ void MTRStuff(){
 
 void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long cpuid,uint64_t* gdt)
 {
-
-	FPUEnable();
+	//UnmapPage(0x200000);
 	kprintf(INFO "BOOTING OS[%x]\n",magic);
+	AllocatePage(8,0,0b111);
+	multiboot_address+=8*PAGE_WIDTH;
+	FPUEnable();
 
 #ifdef PRINT_CPUID
 	kprintf(INFO "CPUID:\t%p\n",cpuid);
@@ -108,6 +110,7 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 		}
 	}
 #endif
+	kprintf("%p\n",multiboot_address);
 	MULTIBOOT_HEADERS headers=MultibootProcessHeaders(multiboot_address);
 
 	AssignMallocMemoryMap(headers.mmap,0x170000);
@@ -212,7 +215,7 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 	}
 #endif
 	EXT2_INODE inode;
-	if(EXT2_GET_INODE_FROM_PATH(&inode,"/home/main.c")==1){
+	if(EXT2_GET_INODE_FROM_PATH(&inode,"/home/ASM/main.c")==1){
 		char file[inode.size];
 		EXT2_READFILE(&inode,file,inode.size);
 		printf(file);
@@ -220,7 +223,7 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 	Scheduler_START();
 
 	EXT2_INODE elf;
-	if(EXT2_GET_INODE_FROM_PATH(&elf,"/home/a.out")==1){
+	if(EXT2_GET_INODE_FROM_PATH(&elf,"/home/ASM/a.out")==1){
 		char* hex=malloc(elf.size);
 		EXT2_READFILE(&elf,hex,elf.size);
 		ELF_FILE file;
