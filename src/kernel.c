@@ -125,7 +125,6 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 	graphicsStuff(headers);
 	AllocatePage(7,0L*PAGE_WIDTH,0b111);
 	updateMallocPtr();
-	// UnmapPage(0);
 	// while(1);
 	//MTRStuff();
 	//PageRemap(4,0,0xFD000000,1<<4);

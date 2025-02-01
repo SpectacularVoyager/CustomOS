@@ -29,7 +29,7 @@ void AllocatePage(int p,unsigned long address,unsigned int flags){
 	}
 }
 void UnmapPage(uint64_t page){
-	p2_table[0]=0;
+	// p2_table[0]=0;
 	// int p=page/PAGE_WIDTH;
 	// int offset=(page%PAGE_WIDTH)/PAGE_P2_SIZE;
 	// uint64_t* table=TABLE(p3_table[p]);

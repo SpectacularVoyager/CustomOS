@@ -29,8 +29,7 @@ void syscall(registers* r){
 }
 int write(int fd,char* buffer,int len){
 	if(fd!=1)return -1;
-	hexdump(buffer,10,10);
-	LOGVALD(buffer);
+	printf(buffer);
 	return len;
 }
 void exit(int code){

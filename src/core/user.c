@@ -54,17 +54,36 @@ int USERMODE_EXEC_ELF(ELF_FILE* elf){
 	if(_start==NULL){
 		return 0;
 	}
-	char* addr=elf->file+elf->sections[_start->SectionTableIndex].Offset;
+	// char* addr=elf->file+elf->sections[_start->SectionTableIndex].Offset;
 	kprintf("%p %p %p\n",MemoryPhysical(address),elf->file,elf->len);
 	memcpy(address,elf->file,elf->len);
 
 	
 	LOGVAL(elf->header->Entry);
 	void* nameTable=elf->file+elf->name->Offset;
+	int flag=0;
 	FORI(elf->header->SectionHeaderCount){
 		ELF_SectionHeader* section=&elf->sections[i];
 		char* name=&nameTable[section->NameOffset];
+		if(section->Addr!=0){
+			if(section->Addr/0x200000==2){
+			}else{
+				flag=1;
+			}
+		}
 		printf("%s\t[%x -> %x] [%x->%x]\n",name,section->Offset,section->Offset+section->Size,section->Addr,section->Addr+section->Size);
+	}
+	if(flag==1){
+		printf("CAN ONLY EXECUTE Processes mapped at 0x400000\n");
+		return 0;
+	}
+	MemoryRemap(0x400000,(uint64_t)address,0b111);
+	FORI(elf->header->SectionHeaderCount){
+		ELF_SectionHeader* section=&elf->sections[i];
+		char* name=&nameTable[section->NameOffset];
+		if(section->Addr!=0){
+			memcpy(ADDR(section->Addr),elf->file+section->Offset,section->Size);
+		}
 	}
 	if(elf->rela!=0){
 		printf("RELA\t[%x %x]\n",elf->rela->Offset,elf->rela->Addend);
