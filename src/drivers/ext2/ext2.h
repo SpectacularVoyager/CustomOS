@@ -1,3 +1,4 @@
+#pragma once
 #include "drivers/ahci/ahci.h"
 #include "drivers/gpt/gpt.h"
 

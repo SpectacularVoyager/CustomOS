@@ -2,7 +2,9 @@
 #include "stdlib/string.h"
 #include "utils/utils.h"
 
-extern void* stack_top_syscall;
+//MADE IT A FUNCTION SO IT IS ACCESSIBLE FROM GCC
+//VERY BAD HACK PLS FIX
+extern uint64_t stack_top_syscall();
 
 void GDT_LoadEntry(GDTEntry* entry,long base,int limit,unsigned char access,unsigned char flags){
 	entry->LimitLow			= ((limit)&0xFFFF);
@@ -38,6 +40,7 @@ void GDT_LOAD(){
 	memset(&tss,0,sizeof(TSS));
 
 	tss.RSP0=(uint64_t)stack_top_syscall;
+	LOGVALD(tss.RSP0);
 	TSS_LoadEntry((TSSEntry*)(&GDT_Table[5]),(uint64_t)&tss,sizeof(TSS)-1,
 			GDT_ACCESS_PRESENT|GDT_ACCESS_PRIV(3)|GDT_ACCESS_EXEC|GDT_ACCESS_ACCESSED
 			,0);

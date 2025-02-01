@@ -25,3 +25,4 @@ void printWStr(uint16_t* ptr,size_t len);
 void hexdump(void* mem,size_t size,size_t stride);
 
 #define TRACK printf("[TRACK] %s %d\n",__FILE__,__LINE__);
+#define KTRACK kprintf("[TRACK] %s %d\n",__FILE__,__LINE__);

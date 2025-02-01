@@ -4,6 +4,7 @@
 #include "interrupts/irq.h"
 #include "utils/list/list.h"
 #include "utils/list/vector.h"
+#include "utils/utils.h"
 #include "core/user.h"
 #include "stdlib/stdlib.h"
 #include "stdlib/string.h"
@@ -22,6 +23,7 @@ void Scheduler_START(){
 void TaskContextSwitch(registers* r){
 	USER_JUMP_ASM(0,(void*)r->rip,(void*)r->rsp);
 }
+TASK* TaskCurrent(){return current->val;}
 
 TASK* TaskCreate(void* args,void* address,void* stack){
 	TASK* t=malloc(sizeof(TASK));
@@ -31,6 +33,9 @@ TASK* TaskCreate(void* args,void* address,void* stack){
 	t->r->rip=(uint64_t)address;
 	t->r->rsp=(uint64_t)stack;
 	tasks=ListAdd(tasks,t);
+	FORI(256){
+		t->fd[i]=(FILE_DESC){.used=0};
+	}
 	return t;
 }
 void SwitchTask(){

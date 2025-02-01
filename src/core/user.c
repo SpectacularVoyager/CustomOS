@@ -1,3 +1,4 @@
+#pragma once
 #include "user.h"
 #include <stdlib/stdio.h>
 #include <stdlib/stdlib.h>
@@ -47,14 +48,14 @@ void USERMODE_ADD(){
 }
 //GET PAGE DYNAMICALLY
 int USERMODE_EXEC_ELF(ELF_FILE* elf){
-	char* address=(void*)(1*PAGE_WIDTH);
+	char* address=(void*)0x3C000000L;
 	kprintf("TRYING TO ENTER USER MODE\n");
 
 	ELF_Symbol* _start=ELF_LookUpSymbol(elf,"_start");
 	if(_start==NULL){
 		return 0;
 	}
-	// char* addr=elf->file+elf->sections[_start->SectionTableIndex].Offset;
+	uint64_t _start_addr=elf->sections[_start->SectionTableIndex].Offset;
 	kprintf("%p %p %p\n",MemoryPhysical(address),elf->file,elf->len);
 	memcpy(address,elf->file,elf->len);
 
@@ -90,6 +91,6 @@ int USERMODE_EXEC_ELF(ELF_FILE* elf){
 	}
 	// U32(0x401000)='helo';
 
-	TaskCreate(NULL,address,address+0x100000);
+	TaskCreate(NULL,address+_start_addr,address+0x100000);
 	return 1;
 }
