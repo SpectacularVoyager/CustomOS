@@ -104,7 +104,7 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 	//UnmapPage(0x200000);
 	kprintf(INFO "BOOTING OS[%x]\n",magic);
 	AllocatePage(8,0,0b111);
-	// multiboot_address+=8*PAGE_WIDTH;
+	multiboot_address+=8*PAGE_WIDTH;
 	FPUEnable();
 	
 #ifdef PRINT_CPUID
@@ -244,8 +244,9 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 		EXT2_READFILE(&elf,hex,elf.size);
 		ELF_FILE file;
 		int s=ELF_PARSE(&file,hex,elf.size);
-		if(s==1)
-		USERMODE_EXEC_ELF(&file);
+		if(s==1){
+			USERMODE_EXEC_ELF(&file);
+		}
 	}
 	//USERMODE_ADD();
 	//USERMODE_ADD();

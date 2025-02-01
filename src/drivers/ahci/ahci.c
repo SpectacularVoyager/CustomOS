@@ -26,17 +26,17 @@ AHCI_DATA AHCI_INIT(PCI_device* device){
 	commandTable=mallocA((1<<13)*32,4096);
 
 
-	LOGVALD(commandlist);
-	LOGVALD(recv);
-	LOGVALD(commandTable);
+	// LOGVALD(commandlist);
+	// LOGVALD(recv);
+	// LOGVALD(commandTable);
 
 	commandlist=MemoryPhysical(commandlist);
 	recv=MemoryPhysical(recv);
 	commandTable=MemoryPhysical(commandTable);
 
-	LOGVALD(commandlist);
-	LOGVALD(recv);
-	LOGVALD(commandTable);
+	// LOGVALD(commandlist);
+	// LOGVALD(recv);
+	// LOGVALD(commandTable);
 
 
 	//PCI_Device_Print(device);

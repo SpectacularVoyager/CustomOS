@@ -45,9 +45,9 @@ void USERMODE_ADD(){
 	memcpy(address,TEST_HALT,100);
 	TaskCreate(NULL,address,address+0x100000);
 }
+//GET PAGE DYNAMICALLY
 int USERMODE_EXEC_ELF(ELF_FILE* elf){
-	AllocatePage(5, 0x40000000, 0b111);
-	void* address=(void*)(5*PAGE_WIDTH);
+	char* address=(void*)(1*PAGE_WIDTH);
 	kprintf("TRYING TO ENTER USER MODE\n");
 
 	ELF_Symbol* _start=ELF_LookUpSymbol(elf,"_start");
@@ -55,7 +55,7 @@ int USERMODE_EXEC_ELF(ELF_FILE* elf){
 		return 0;
 	}
 	char* addr=elf->file+elf->sections[_start->SectionTableIndex].Offset;
-	kprintf("%p %p %p",address,elf->file,elf->len);
+	kprintf("%p %p %p\n",MemoryPhysical(address),elf->file,elf->len);
 	memcpy(address,elf->file,elf->len);
 
 	
@@ -71,6 +71,6 @@ int USERMODE_EXEC_ELF(ELF_FILE* elf){
 	}
 	// U32(0x401000)='helo';
 
-	TaskCreate(NULL,addr,address+0x100000);
+	TaskCreate(NULL,address,address+0x100000);
 	return 1;
 }
