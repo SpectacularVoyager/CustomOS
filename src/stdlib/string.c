@@ -1,9 +1,20 @@
 #include "string.h"
+#include "stdio.h"
+#include "utils/utils.h"
+#include "paging/paging.h"
+
+#pragma GCC push_options
+#pragma GCC optimize("O0")
 void memcpy(void* dest,const void* src,int size){
-	uint8_t* _dest=(uint8_t*)dest;
-	uint8_t* _src=(uint8_t*)src;
-	for(int i=0;i<size;i++)_dest[i]=_src[i];
-} 
+	// uint8_t* _dest=MemoryPhysical((uint8_t*)dest);
+	// uint8_t* _src=MemoryPhysical((uint8_t*)src);
+	uint8_t* _dest=((uint8_t*)dest);
+	uint8_t* _src=((uint8_t*)src);
+	for(int i=0;i<size;i++){
+		_dest[i]=_src[i];
+	}
+}
+#pragma GCC pop_options 
 void memset(void* dest,uint8_t val,int size){
 	uint8_t* _dest=(uint8_t*)dest;
 	for(int i=0;i<size;i++)_dest[i]=val;

@@ -47,18 +47,18 @@ void USERMODE_ADD(){
 }
 int USERMODE_EXEC_ELF(ELF_FILE* elf){
 	AllocatePage(5, 0x40000000, 0b111);
-	void* address=(void*)(0x140000000);
-	printf("TRYING TO ENTER USER MODE\n");
+	void* address=(void*)(5*PAGE_WIDTH);
+	kprintf("TRYING TO ENTER USER MODE\n");
 
 	ELF_Symbol* _start=ELF_LookUpSymbol(elf,"_start");
 	if(_start==NULL){
 		return 0;
 	}
 	char* addr=elf->file+elf->sections[_start->SectionTableIndex].Offset;
+	kprintf("%p %p %p",address,elf->file,elf->len);
 	memcpy(address,elf->file,elf->len);
-	// hexdump(PAGE_WIDTH,32,32);
-	// MemoryRemap((uint64_t)address,0x400000L,0b111);
-	//PageRemap(2,0,(uint64_t)address,0b111);
+
+	
 	LOGVAL(elf->header->Entry);
 	void* nameTable=elf->file+elf->name->Offset;
 	FORI(elf->header->SectionHeaderCount){
@@ -69,7 +69,6 @@ int USERMODE_EXEC_ELF(ELF_FILE* elf){
 	if(elf->rela!=0){
 		printf("RELA\t[%x %x]\n",elf->rela->Offset,elf->rela->Addend);
 	}
-	hexdump((void*)0x401000L,32,32);
 	// U32(0x401000)='helo';
 
 	TaskCreate(NULL,addr,address+0x100000);

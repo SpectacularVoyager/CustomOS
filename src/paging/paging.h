@@ -1,5 +1,5 @@
 #include <stdint.h>
-
+/** DOES NOT WORK WITH P4 PAGING */
 #define PAGE_WIDTH 0x40000000L
 
 #define PAGE_PRESENT	1<<0
@@ -28,6 +28,8 @@ void UnmapPage(uint64_t page);
 void PageIdentity(int p1,int p2,int flags);
 
 void* PageGetEmpty(int pages,int flags);
+
+void* MemoryPhysical(void* p_addr);
 
 typedef struct {
 	int p;

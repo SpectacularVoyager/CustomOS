@@ -13,7 +13,7 @@ uint32_t color=0xffffffff;
 
 
 #define GET_PIXEL(x,y) (y)*width+(x)
-#define DOUBLE_BUFFERING
+// #define DOUBLE_BUFFERING
 int GraphicsInit(long addr,int w,int h,int _bpp){
 	if(_bpp!=32){
 		kprintf_("CANNOT INIT WITH BPP %d\n",_bpp);
@@ -30,6 +30,7 @@ int GraphicsInit(long addr,int w,int h,int _bpp){
 #else
 	video=(uint32_t*)(addr);
 #endif
+	kprintf("HERE");
 	return 0;
 }
 void SetPixel(int x,int y,uint32_t r){

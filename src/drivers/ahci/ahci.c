@@ -3,6 +3,8 @@
 #include "stdlib/stdio.h"
 #include "stdlib/stdlib.h"
 #include "utils/bit.h"
+#include "utils/utils.h"
+#include "paging/paging.h"
 
 AHCI_HBA_CMD_HEADER* commandlist;
 AHCI_RECIEVED_FIS* recv;
@@ -22,6 +24,21 @@ AHCI_DATA AHCI_INIT(PCI_device* device){
 	commandlist=mallocA(sizeof(AHCI_HBA_CMD_HEADER)*32,4096);
 	recv=mallocA(sizeof(AHCI_RECIEVED_FIS),4096);
 	commandTable=mallocA((1<<13)*32,4096);
+
+
+	LOGVALD(commandlist);
+	LOGVALD(recv);
+	LOGVALD(commandTable);
+
+	commandlist=MemoryPhysical(commandlist);
+	recv=MemoryPhysical(recv);
+	commandTable=MemoryPhysical(commandTable);
+
+	LOGVALD(commandlist);
+	LOGVALD(recv);
+	LOGVALD(commandTable);
+
+
 	//PCI_Device_Print(device);
 	PCIGeneralDevice ahci;
 	PCI_GetGeneralDevice(device,&ahci);
@@ -139,6 +156,9 @@ int AHCI_FIND_CMD_SLOT(AHCI_HBA_PORT *port)
 
 bool AHCI_READ(AHCI_HBA_PORT *port, uint64_t start, uint32_t count, uint16_t *buf)
 {
+	kprintf("BUF(VIRT):\t%x\t\t",buf);
+	buf=MemoryPhysical(buf);
+	kprintf("BUF(PHYS):\t%x\n",buf);
 	//port=portSATA;
 	port->is = (uint32_t) -1;		// Clear pending interrupt bits
 	int spin = 0; // Spin lock timeout counter

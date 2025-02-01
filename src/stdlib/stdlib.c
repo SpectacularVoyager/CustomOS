@@ -1,6 +1,7 @@
 #include "stdlib.h"
 #include "stdio.h"
 #include "string.h"
+#include "paging/paging.h"
 
 
 unsigned long malloc_start=0x270000;
@@ -8,6 +9,7 @@ unsigned long malloc_end=0;
 
 unsigned long ms=0;
 unsigned long me=0;
+#define PAGE_MALLOC	7
 void AssignMallocMemoryMap(struct multiboot_tag *tag,uint64_t safe_offset){
 	int i=1;
 	unsigned long malloc_len=0;
@@ -34,8 +36,15 @@ void AssignMallocMemoryMap(struct multiboot_tag *tag,uint64_t safe_offset){
 		}
 	}
 	malloc_start+=safe_offset;
+	// malloc_start+=7*PAGE_WIDTH;
+	// malloc_end+=7*PAGE_WIDTH;
 	kprintf(INFO"MALLOC-> %p\t%p\n",malloc_start,malloc_end);
 	//malloc_start+=safe_offset;
+}
+void updateMallocPtr(){
+
+	malloc_start+=7*PAGE_WIDTH;
+	malloc_end+=7*PAGE_WIDTH;
 }
 void MallocDebug(){
 	printf(INFO"[%p -> %p]\n",ms,me);

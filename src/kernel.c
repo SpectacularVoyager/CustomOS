@@ -63,8 +63,6 @@ void graphicsStuff(MULTIBOOT_HEADERS headers){
 	AllocatePage(4,4L*PAGE_WIDTH,flag);
 	// AllocatePage(5,5L*PAGE_WIDTH,flag);
 	// AllocatePage(6,6L*PAGE_WIDTH,flag);
-	// AllocatePage(7,7L*PAGE_WIDTH,flag);
-	AllocatePage(8,8L*PAGE_WIDTH,flag);
 	GraphicsInit(
 			addr,
 			fb->common.framebuffer_width,
@@ -72,6 +70,7 @@ void graphicsStuff(MULTIBOOT_HEADERS headers){
 			fb->common.framebuffer_bpp
 			);
 	printf(INFO"FRAMEBUFFER_ADDR:\t%p\n",fb->common.framebuffer_addr);
+	kprintf(INFO"FRAMEBUFFER_ADDR:\t%p\n",fb->common.framebuffer_addr);
 }
 void MTRStuff(){
 	SetColor(0xff8c00);
@@ -94,12 +93,20 @@ void MTRStuff(){
 
 void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long cpuid,uint64_t* gdt)
 {
+	kprintf("  ___             _           _   \n");
+	kprintf(" / _ \\           (_)         | |  \n");
+	kprintf("/ /_\\ \\_ __  _ __ _  ___ ___ | |_ \n");
+	kprintf("|  _  | '_ \\| '__| |/ __/ _ \\| __|\n");
+	kprintf("| | | | |_) | |  | | (_| (_) | |_ \n");
+	kprintf("\\_| |_/ .__/|_|  |_|\\___\\___/ \\__|\n");
+	kprintf("      | |                         \n");
+	kprintf("      |_|                         \n");
 	//UnmapPage(0x200000);
 	kprintf(INFO "BOOTING OS[%x]\n",magic);
 	AllocatePage(8,0,0b111);
-	multiboot_address+=8*PAGE_WIDTH;
+	// multiboot_address+=8*PAGE_WIDTH;
 	FPUEnable();
-
+	
 #ifdef PRINT_CPUID
 	kprintf(INFO "CPUID:\t%p\n",cpuid);
 	for(int i=0;i<62;i++){
@@ -113,13 +120,22 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 	kprintf("%p\n",multiboot_address);
 	MULTIBOOT_HEADERS headers=MultibootProcessHeaders(multiboot_address);
 
+	//Better Page Allocations
 	AssignMallocMemoryMap(headers.mmap,0x170000);
 	graphicsStuff(headers);
+	AllocatePage(7,0L*PAGE_WIDTH,0b111);
+	updateMallocPtr();
+	// while(1);
 	//MTRStuff();
 	//PageRemap(4,0,0xFD000000,1<<4);
 	//*(uint32_t*)(0x100000000)=0xff00dd;
 	//
-
+	// LOGVALD(MemoryPhysical(ADDR(0x0)));
+	// LOGVALD(MemoryPhysical(ADDR(PAGE_WIDTH)));
+	// LOGVALD(MemoryPhysical(ADDR(PAGE_WIDTH+0x100)));
+	// LOGVALD(MemoryPhysical(ADDR(2*PAGE_WIDTH+0x100)));
+	// LOGVALD(MemoryPhysical(ADDR(7*PAGE_WIDTH+0x100)));
+	// LOGVALD(MemoryPhysical(ADDR(9*PAGE_WIDTH+0x100)));
 
 	GDT_LOAD();
 	GDT_FLUSH();
@@ -179,13 +195,13 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 			FAT32_FILESYSTEM fs;
 			int val=FAT_READPART(&fs,data.ata[i],&gpt.entries[0]);
 			if(val==1){
-				ListNode* node=dir(&fs,NULL);
-
-				while(node!=NULL){
-					DIRECTORY* dir=((DIRECTORY*)node->val);
-					printf("\t%s %d\n",dir->name,isDir(dir));
-					node=node->next;
-				}
+				// ListNode* node=dir(&fs,NULL);
+				//
+				// while(node!=NULL){
+				// 	DIRECTORY* dir=((DIRECTORY*)node->val);
+				// 	printf("\t%s %d\n",dir->name,isDir(dir));
+				// 	node=node->next;
+				// }
 				//printTree(&fs,NULL,1);
 				//fromPath(&fs,"/home/ankush/file.txt");
 			}else{

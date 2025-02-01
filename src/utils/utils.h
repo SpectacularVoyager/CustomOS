@@ -10,6 +10,8 @@
 
 #define LOGVAL(a) printf("%16s\t0x%X\n",#a,a);
 #define LOGVALD(a) printf("%16s\t%p\n",#a,a);
+#define KLOGVAL(a) kprintf("%16s\t0x%X\n",#a,a);
+#define KLOGVALD(a) kprintf("%16s\t%p\n",#a,a);
 
 #define FORI(x) for(size_t i=0;i<(x);i++)
 #define FORJ(x) for(size_t j=0;j<(x);j++)
