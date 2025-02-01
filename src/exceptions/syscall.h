@@ -6,9 +6,9 @@ void syscall(registers* r);
 #define SYSCALL_WRITE	1
 #define SYSCALL_OPEN	2
 
-extern void TEST_SYSCALL();
+extern void USER_PRIV_LOOP();
 
-void exit(int code);
+void exit(registers* r,int code);
 int write(int fd,char* buffer,unsigned int len);
 
 typedef unsigned short umode_t; 

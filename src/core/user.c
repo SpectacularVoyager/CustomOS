@@ -48,7 +48,7 @@ void USERMODE_ADD(){
 }
 //GET PAGE DYNAMICALLY
 int USERMODE_EXEC_ELF(ELF_FILE* elf){
-	char* address=(void*)0x3C000000L;
+	char* address=(void*)PAGE_WIDTH;
 	kprintf("TRYING TO ENTER USER MODE\n");
 
 	ELF_Symbol* _start=ELF_LookUpSymbol(elf,"_start");

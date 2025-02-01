@@ -35,7 +35,6 @@ ACPIHeaders ACPI_INIT(RSDP_t* rsdp){
 	//kprintf(INFO"LENGTH %x\n",rsdt->h.Length);
 	//kprintf(INFO"OEMID %6s\n",rsdt->h.OEMID);
 	//kprintf(INFO"OEM TABLE ID %8s\n",rsdt->h.OEMTableID);
-	LOGVALD(rsdt);
 	if(!ACPISDT_Checksum((ACPISDTHeader*)rsdt)){
 		printf(ERROR "CHECKSUM DOES NOT MATCH\n");
 	}

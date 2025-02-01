@@ -158,15 +158,12 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 	// USERMODE_ENTER();
 
 	struct multiboot_tag_new_acpi *acpi=(struct multiboot_tag_new_acpi*)headers.acpi;
-	LOGVALD(U64(((RSDP_t*)acpi->rsdp)->OEMID));
+	// LOGVALD(U64(((RSDP_t*)acpi->rsdp)->OEMID));
 	RSDP_t* l=(RSDP_t*)acpi->rsdp;
 
 	ACPIHeaders h=ACPI_INIT(l);
-	TRACK
 	void* pcibase=(void*)h.mcfg->allocations[0].base;
-	TRACK
 	APIC_INIT(h.apic);
-	TRACK
 
 	SetColor(0x00FF00);
 	PCI_device* devices=PCI_GetDevices();

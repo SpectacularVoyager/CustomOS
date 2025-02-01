@@ -5,6 +5,11 @@ global TEST_USER
 
 USER_PREV equ 3
 
+global USER_PRIV_LOOP
+USER_PRIV_LOOP:
+	mov rax,11
+	jmp USER_PRIV_LOOP
+
 TEST_USER:
 	mov rbx,0xFD000000
 	mov dword [rbx],0xFF00FF

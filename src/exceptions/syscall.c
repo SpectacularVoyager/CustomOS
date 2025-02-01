@@ -16,7 +16,7 @@ void syscall(registers* r){
 	int ret=0;
 	switch(r->rax){
 		case SYSCALL_EXIT:
-			exit(ARG1(r));
+			exit(r,ARG1(r));
 			break;
 		case SYSCALL_WRITE:
 			ret=write(ARG1(r),(void*)ARG2(r),ARG3(r));
@@ -79,7 +79,9 @@ int read(int fd,char* buffer,unsigned int len){
 	}
 	return idx;
 }
-void exit(int code){
+void exit(registers* r,int code){
+	r->rip=(uint64_t)USER_PRIV_LOOP;
+	// LOGVALD(r->rflags);
 	printf("EXITING WITH CODE[%x]\n",code);
-	TaskKill();
+	//TaskKill();
 }

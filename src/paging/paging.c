@@ -54,7 +54,6 @@ void PageIdentity(int p1,int p2,int flags){
 	p3_table[p1]=(p2*PAGE_WIDTH)|0b111|flags;
 }
 void* MemoryPhysical(void* p_addr){
-	KLOGVALD(p_addr);
 	uint64_t addr=(uint64_t)p_addr;
 
 	uint64_t _p=p3_table[addr/PAGE_WIDTH];
