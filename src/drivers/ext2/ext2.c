@@ -110,7 +110,6 @@ int EXT2_READPART(void* fs,AHCI_HBA_PORT* port,GPT_PART_ENTRY* entry){
 	ext2.superblock=malloc(GPT_SECTOR_SIZE*2);
 	ext2.port=port;
 	AHCI_READ(ext2.port,lba+2,2,(uint16_t*)ext2.superblock);
-	kprintf(TRACE "%s[%d]\n",__FILE__,__LINE__);
 
 	if(ext2.superblock->magic!=0xEF53)return -1;
 	int blocksize=(1024<<ext2.superblock->logBlockSize);
@@ -118,7 +117,7 @@ int EXT2_READPART(void* fs,AHCI_HBA_PORT* port,GPT_PART_ENTRY* entry){
 
 	ext2.blockgroups=malloc(blocksize);
 	AHCI_READ(ext2.port,lba+blocksizelba,blocksizelba,(uint16_t*)ext2.blockgroups);
-	kprintf(TRACE "%s[%d]\n",__FILE__,__LINE__);
+
 	unsigned long table=lba+ext2.blockgroups->blockTable*blocksizelba;
 
 	void* inodes=readInodeTable(table);

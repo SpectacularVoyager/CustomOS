@@ -125,6 +125,7 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 	graphicsStuff(headers);
 	AllocatePage(7,0L*PAGE_WIDTH,0b111);
 	updateMallocPtr();
+	// UnmapPage(0);
 	// while(1);
 	//MTRStuff();
 	//PageRemap(4,0,0xFD000000,1<<4);
@@ -136,9 +137,9 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 	// LOGVALD(MemoryPhysical(ADDR(2*PAGE_WIDTH+0x100)));
 	// LOGVALD(MemoryPhysical(ADDR(7*PAGE_WIDTH+0x100)));
 	// LOGVALD(MemoryPhysical(ADDR(9*PAGE_WIDTH+0x100)));
-
 	GDT_LOAD();
 	GDT_FLUSH();
+
 	// TSS_FLUSH();
 	printf("HELLO WORLD\n");
 	LOGVALD(gdt)
@@ -158,11 +159,15 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 	// USERMODE_ENTER();
 
 	struct multiboot_tag_new_acpi *acpi=(struct multiboot_tag_new_acpi*)headers.acpi;
+	LOGVALD(U64(((RSDP_t*)acpi->rsdp)->OEMID));
 	RSDP_t* l=(RSDP_t*)acpi->rsdp;
 
 	ACPIHeaders h=ACPI_INIT(l);
+	TRACK
 	void* pcibase=(void*)h.mcfg->allocations[0].base;
+	TRACK
 	APIC_INIT(h.apic);
+	TRACK
 
 	SetColor(0x00FF00);
 	PCI_device* devices=PCI_GetDevices();

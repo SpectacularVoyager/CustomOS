@@ -10,6 +10,7 @@
 #define PAGE_FAULT_EXCEPTION_RES_WRITE	3
 
 void PageFaultHandler(registers* r){
+
 	//SetColor(0xFF00000);
 	printf(ERROR "PAGE FAULT\n");
 	int error=r->zero;
@@ -24,9 +25,11 @@ void PageFaultHandler(registers* r){
 		
 	
 
-
     uint64_t cr2_value;
     asm volatile ("mov %%cr2, %0" : "=r" (cr2_value));
+	if(cr2_value==0){
+		printf("\tNULL POINTER EXCEPTION\n");
+	}
 	printf("\tBAD INSTRUCTION ADDRESS\t%p\n",r->rip);
 	printf("\tBAD ADDRESS\t%p\n",cr2_value);
 	printf("\tERROR REGISTER:\t%x\n",error);
