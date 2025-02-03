@@ -175,6 +175,9 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 
 	APIC_TIMER_INIT(0x2000000);
 
+	PCI_device* device=PCI_GetFromID(0x10EC,0x8139);
+	RTL8139_INIT(device,pcibase);
+
 	// FORI(10){
 	// 	FORJ(10){
 	// 		printf(".");
