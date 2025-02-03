@@ -83,7 +83,7 @@ void MTRStuff(){
 	SetColor(0xffffff);
 }
 
-//#define NOUSB
+#define NOUSB
 
 
 void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long cpuid)
