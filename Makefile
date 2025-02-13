@@ -34,9 +34,9 @@ else
 		-device usb-kbd \
 		-device usb-mouse
 endif
-QEMU_FLAGS:=$(QEMU_FLAGS) -serial file:logs/serial.log -net nic,model=rtl8139 -net user \
-			-netdev tap,id=tap0 -m 1G -vga std 
-QEMU_FLAGS:=$(QEMU_FLAGS) 
+QEMU_FLAGS:=$(QEMU_FLAGS) -serial file:logs/serial.log -m 1G -vga std 
+# QEMU_FLAGS:=$(QEMU_FLAGS) -net nic,model=rtl8139
+QEMU_FLAGS:=$(QEMU_FLAGS) -netdev type=tap,id=br0 -device rtl8139,netdev=br0
 
 objects = $(shell find -wholename "./src/*.c")
 objects := ${objects:.c=.o}
