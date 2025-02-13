@@ -112,7 +112,6 @@ int EXT2_GET_INODE_FROM_PATH(EXT2_INODE* child,char* path){
 	// EXT2_FIND_INODE_IN_DIR(&ext2.root,&filenode,"home");
 	EXT2_INODE* parent=&ext2.root;
 	while(path!=NULL){
-		printf(path);
 		char* name=path;
 		path=strntokch(path,1000,'/');
 		int status=EXT2_FIND_INODE_IN_DIR(parent,child,name);

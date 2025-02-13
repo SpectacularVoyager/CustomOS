@@ -1,5 +1,6 @@
 #include "kshell.h"
 #include "printf/printf.h"
+#include "stdlib/stdio.h"
 #include "utils/utils.h"
 #include "stdlib/string.h"
 #include "vga/term.h"
@@ -24,7 +25,9 @@ char* KSHELL_NEXT_ARG(char* str){
 }
 
 void prompt(){
+	SetColor(0x00FF00);
 	printf("kshell>");
+	SetColor(0xFFFFFF);
 }
 void INIT(){
 	if(!kshell_init){
@@ -37,7 +40,7 @@ void INIT(){
 void evaluate(char* buffer){
 	if(strncmp(buffer,"ls",2)==0){
 		char* next=KSHELL_NEXT_ARG(buffer)+1;
-		volatile char* path="/";
+		volatile char* path="/home";
 		if(!(next[0]=='\0'||next[0]==' ')){
 			printf("%s\n",next);
 			path=next;
@@ -45,14 +48,14 @@ void evaluate(char* buffer){
 		};
 		EXT2_INODE elf;
 		int inode;
-		if((inode=EXT2_GET_INODE_FROM_PATH(&elf,"/home"))==1){
+		if((inode=EXT2_GET_INODE_FROM_PATH(&elf,path))==1){
+			printf("IN");
 			EXT2_LS(&elf);
 			//EXT2_FIND_IN_DIR(&elf,"/");
 		}
 
 	}else if(strncmp(buffer,"exec",4)==0){
 		EXT2_INODE elf;
-		int inode;
 		char* next=KSHELL_NEXT_ARG(buffer)+1;
 		volatile char* path="/home/ASM/main.c";
 		if(!(next[0]=='\0'||next[0]==' ')){
