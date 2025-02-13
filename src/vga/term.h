@@ -23,3 +23,8 @@ enum vga_color {
 void putch(char c);
 void VGA_SetColor(uint8_t fg,uint8_t bg);
 #define _putchar putch
+
+void TERM_SET_POS(int _r,int _c);
+
+int TERM_GET_X();
+int TERM_GET_Y();

@@ -14,6 +14,7 @@ volatile int apic_timer_c=0;
 void TIMER_WAIT_INT(registers* r){
 	kprintf("INT\n");
 	apic_timer_c=1;
+	//printf("RTC\n");
 }
 unsigned long APIC_TIMER_GETFREQ(){
 	return LAPIC_TIMER_FREQUENCY;

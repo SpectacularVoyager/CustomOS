@@ -15,7 +15,7 @@ QEMU_FLAGS= -cpu qemu64,+ssse3,+fpu
 QEMU_FLAGS:= $(QEMU_FLAGS)-M q35
 USB?=3
 
-USB_MEDIA=/media/ankush/USBBoot
+USB_MEDIA=/media/ankush/USBBoot1
 
 IMAGE=iso.iso
 #QEMU_FLAGS:= $(QEMU_FLAGS) -device usb-storage,drive=fat32
@@ -23,7 +23,7 @@ ifeq ($(USB),3)
 	QEMU_FLAGS:=$(QEMU_FLAGS) \
 		-device nec-usb-xhci,id=xhci	\
 		-device usb-kbd,bus=xhci.0\
-		-device usb-mouse
+		-device usb-mouse,bus=xhci.0
 	#		-device usb-uas,id=uas,bus=xhci.0	\
 
 else ifeq($(USB),2)

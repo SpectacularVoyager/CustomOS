@@ -88,7 +88,7 @@ void MTRStuff(){
 	SetColor(0xffffff);
 }
 
-#define NOUSB
+//#define NOUSB
 
 
 void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long cpuid,uint64_t* gdt)
@@ -231,6 +231,7 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 		PCI_Device_Print(usb);
 	}
 #endif
+	while(1);
 	EXT2_INODE inode;
 	if(EXT2_GET_INODE_FROM_PATH(&inode,"/home/ASM/main.c")==1){
 		char file[inode.size];

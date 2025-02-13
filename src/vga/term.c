@@ -14,8 +14,6 @@ void VGA_SetColor(uint8_t fg,uint8_t bg){
 }
 void putch(char ch){
 	if(ch=='\n'){
-		c=0;
-		r++;
 		return;
 	}
 	if(ch=='\t'){
