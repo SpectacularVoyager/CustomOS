@@ -149,6 +149,7 @@ inline int XHCI_GET_INDEX_DESC(USB_ENDPOINT_DESCRIPTOR* desc){
 	return (((desc->endpoint_address&0xF)<<1)|BIT(desc->endpoint_address,7))-1;
 }
 
+char fromScanCode(char x);
 extern char* XHCI_CMD_CODE[64];
 typedef struct{
 	uint32_t IMAN;

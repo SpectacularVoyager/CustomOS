@@ -14,6 +14,7 @@
 #include "vga/term.h"
 //#define XHCI_DEBUG
 #include "paging/paging.h"
+#include "devices/usb/keyboard.h"
 
 void* xhci_operation_registers;
 #define XHCI_OP(of)	((uint32_t*)((xhci_hub.xhci_operation_registers+of)))
@@ -477,6 +478,10 @@ char fromScanCode(char x){
 	}
 	if(x==0x28)return '\n';
 	if(x==0x2C)return ' ';
+	if(x==0x2A)return '\b';
+	if(x==0x37)return '.';
+	if(x==0x38)return '/';
+
 	return 0;
 }
 void PrintKeyboard(void* buf,int _x,int _y){
@@ -512,8 +517,9 @@ void XHCI_NORMAL(XHCI_Endpoint* endp,void* buffer,int len,int target,int intp){
 		XHCI_TRANSFER(endp,target,(XHCI_TRB*)&status);
 }
 void XHCI_IRQ8(registers* _r){
-	printf("IRQ RECV LESS GO\n");
-	PrintKeyboard(&keyboard,103,62);
+	USB_KEYBOARD_HANDLER(_r,&keyboard);
+	//printf("IRQ RECV LESS GO\n");
+	//PrintKeyboard(&keyboard,103,62);
 	//FORI(6){
 	//	if(keyboard.keys[i]!=0){
 	//		printf("%c",fromScanCode(keyboard.keys[i]));
