@@ -47,7 +47,11 @@
 #include "usertask/Task.h"
 #include "drivers/ext2/ext2.h"
 #include "specifications/elf/elf.h"
+
+#include "devices/usb/keyboard.h"
+
 void Debug();
+void evaluate(char* buffer);
 extern char* cpuid_flags[62];
 //#define PRINT_CPUID
 void graphicsStuff(MULTIBOOT_HEADERS headers){
@@ -231,15 +235,10 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 		PCI_Device_Print(usb);
 	}
 #endif
-	while(1);
-	EXT2_INODE inode;
-	if(EXT2_GET_INODE_FROM_PATH(&inode,"/home/ASM/main.c")==1){
-		char file[inode.size];
-		EXT2_READFILE(&inode,file,inode.size);
-		printf(file);
-	}
-	Scheduler_START();
+	//evaluate("cat");
+	// Scheduler_START();
 
+	while(1);
 	EXT2_INODE elf;
 	if(EXT2_GET_INODE_FROM_PATH(&elf,"/home/ASM/a.out")==1){
 		char* hex=malloc(elf.size);

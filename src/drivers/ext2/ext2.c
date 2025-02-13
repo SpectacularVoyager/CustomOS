@@ -51,6 +51,27 @@ uint64_t EXT2_FIND_IN_DIR(EXT2_INODE* parent,char* name){
 	}
 	return 0;
 }
+uint64_t EXT2_LS(EXT2_INODE* parent){
+	int blocksize=(1024<<ext2.superblock->logBlockSize);
+	int blocksizelba=blocksize/GPT_SECTOR_SIZE;
+	EXT2_BUFFER buffer;
+	uint64_t lba=ext2.part->startLBA+parent->blockPointers[0]*blocksizelba;
+	EXT2_BUFFER_INIT(&buffer,ext2.port,lba);
+	while(1){
+		EXT2_DIR dir;
+		EXT2_BUFFER_READ(&buffer,&dir,8);
+		if(dir.inode==0)break;
+		char strname[dir.nameLen+1];
+		strname[dir.nameLen]=0;
+		EXT2_BUFFER_READ(&buffer,&strname,dir.nameLen);
+		EXT2_BUFFER_SKIP(&buffer,dir.recLen-dir.nameLen-8);
+		printf("%s\n",strname);
+		// if(strncmp(strname, "..4",dir.nameLen+1)==0){
+		// 	return dir.inode;
+		// }
+	}
+	return 1;
+}
 uint64_t EXT2_LBA_FROM_INODE_ID(uint64_t inode){
 	int blocksize=(1024<<ext2.superblock->logBlockSize);
 	int blocksizelba=blocksize/GPT_SECTOR_SIZE;
@@ -91,6 +112,7 @@ int EXT2_GET_INODE_FROM_PATH(EXT2_INODE* child,char* path){
 	// EXT2_FIND_INODE_IN_DIR(&ext2.root,&filenode,"home");
 	EXT2_INODE* parent=&ext2.root;
 	while(path!=NULL){
+		printf(path);
 		char* name=path;
 		path=strntokch(path,1000,'/');
 		int status=EXT2_FIND_INODE_IN_DIR(parent,child,name);
