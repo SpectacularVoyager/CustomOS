@@ -7,6 +7,11 @@
 #include "drivers/ext2/ext2.h"
 #include "stdlib/stdlib.h"
 #include "graphics/graphicsterm.h"
+#include "core/user.h"
+#include "arch/GDT.h"
+#include "usertask/Task.h"
+#include "drivers/ext2/ext2.h"
+#include "specifications/elf/elf.h"
 
 #define KSHELL_MAX_BUFFER_SIZE 1024
 
@@ -45,6 +50,23 @@ void evaluate(char* buffer){
 			//EXT2_FIND_IN_DIR(&elf,"/");
 		}
 
+	}else if(strncmp(buffer,"exec",4)==0){
+		EXT2_INODE elf;
+		int inode;
+		char* next=KSHELL_NEXT_ARG(buffer)+1;
+		volatile char* path="/home/ASM/main.c";
+		if(!(next[0]=='\0'||next[0]==' ')){
+			path=next;
+		};
+		if(EXT2_GET_INODE_FROM_PATH(&elf,"/home/ASM/a.out")==1){
+			char* hex=malloc(elf.size);
+			EXT2_READFILE(&elf,hex,elf.size);
+			ELF_FILE file;
+			int s=ELF_PARSE(&file,hex,elf.size);
+			if(s==1){
+				USERMODE_EXEC_ELF(&file);
+			}
+		}
 	}else if(strncmp(buffer,"cat",3)==0){
 		EXT2_INODE elf;
 		int inode;
