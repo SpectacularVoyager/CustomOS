@@ -52,7 +52,6 @@ int write(int fd,char* buffer,unsigned int len){
 }
 
 int open(const char* path,int flags,umode_t mode){
-	printf("OPEN [%s]\n",path);
 	TASK* t=TaskCurrent();
 	int idx=-1;
 	FILE_DESC* emptyfd;
