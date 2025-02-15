@@ -20,8 +20,31 @@ char kshell_buffer[KSHELL_MAX_BUFFER_SIZE];
 int kshell_ptr=0;
 int kshell_init=0;
 
-char* KSHELL_NEXT_ARG(char* str){
-	return strchrnul(str,' ');
+char* trim(char* str){
+	while(str[0]==' '||str[0]=='\t'){
+		if(str[0]==0)break;
+		str++;
+	}
+	return str;
+}
+int findfirstch(char* str,char c){
+	int i=0;
+	while(str[i]){
+		if(str[i]==c||str[i]=='\0'){
+			break;
+		}
+		i++;
+	}
+	return i;
+}
+
+char* KSHELL_NEXT_ARG(char* str,char* dest){
+	str=trim(str);
+	if(str[0]=='\0')return 0;
+	int len=findfirstch(str, ' ');
+	memcpy(dest,str,len);
+	dest[len]=0x0;
+	return str+len;
 }
 
 void prompt(){
@@ -38,59 +61,68 @@ void INIT(){
 	}
 }
 void evaluate(char* buffer){
-	if(strncmp(buffer,"ls",2)==0){
-		char* next=KSHELL_NEXT_ARG(buffer)+1;
-		volatile char* path="/home";
-		if(!(next[0]=='\0'||next[0]==' ')){
-			printf("%s\n",next);
-			path=next;
-			hexdump(next,10,10);
-		};
+	char inst[100];
+	buffer=KSHELL_NEXT_ARG(buffer,inst);
+	if(strncmp(inst,"ls",2)==0){
+	}else if(strncmp(inst,"exec",4)==0){
+		char file[1000];
+		KSHELL_NEXT_ARG(buffer,file);
 		EXT2_INODE elf;
 		int inode;
-		if((inode=EXT2_GET_INODE_FROM_PATH(&elf,path))==1){
-			printf("IN");
-			EXT2_LS(&elf);
-			//EXT2_FIND_IN_DIR(&elf,"/");
-		}
-
-	}else if(strncmp(buffer,"exec",4)==0){
-		EXT2_INODE elf;
-		char* next=KSHELL_NEXT_ARG(buffer)+1;
-		volatile char* path="/home/ASM/main.c";
-		if(!(next[0]=='\0'||next[0]==' ')){
-			path=next;
-		};
-		if(EXT2_GET_INODE_FROM_PATH(&elf,"/home/ASM/a.out")==1){
+		hexdump(file,30,30);
+		if((inode=EXT2_GET_INODE_FROM_PATH(&elf,file))==1){
 			char* hex=malloc(elf.size);
 			EXT2_READFILE(&elf,hex,elf.size);
-			ELF_FILE file;
-			int s=ELF_PARSE(&file,hex,elf.size);
+			ELF_FILE elffile;
+			int s=ELF_PARSE(&elffile,hex,elf.size);
 			if(s==1){
-				USERMODE_EXEC_ELF(&file,NULL,NULL);
+				char* args[10]={file,"hello",0};
+				char* envp[1]={0};
+				USERMODE_EXEC_ELF(&elffile,args,envp);
+			}else{
+
+				printf("FILE [%s] NOT EXECUTABLE\n",file);
 			}
+		}else{
+			printf("FILE [%s] NOT FOUND\n",file);
 		}
-	}else if(strncmp(buffer,"cat",3)==0){
+	}else if(strncmp(inst,"cat",3)==0){
+		char file[1000];
+		KSHELL_NEXT_ARG(buffer,file);
 		EXT2_INODE elf;
 		int inode;
-		char* next=KSHELL_NEXT_ARG(buffer)+1;
-		volatile char* path="/home/ASM/main.c";
-		if(!(next[0]=='\0'||next[0]==' ')){
-			path=next;
-		};
-		if((inode=EXT2_GET_INODE_FROM_PATH(&elf,path))==1){
-			FORI(4){
-				printf("%p\t",elf.blockPointers[i]);
-			}printf("\n");
+		if((inode=EXT2_GET_INODE_FROM_PATH(&elf,file))==1){
 			char* hex=malloc(elf.size);
 			EXT2_READFILE(&elf,hex,elf.size);
 			printf(hex);
 		}
 	}else{
-		printf("COMMAND \"%s\" NOT FOUND:\n",buffer);
+		// EXT2_INODE elf;
+		// int inode;
+		// if((inode=EXT2_GET_INODE_FROM_PATH(&elf,inst))==1){
+		// 	char* hex=malloc(elf.size);
+		// 	EXT2_READFILE(&elf,hex,elf.size);
+		// 	ELF_FILE file;
+		// 	int s=ELF_PARSE(&file,hex,elf.size);
+		// 	if(s==1){
+		// 		char* args[10];
+		// 		char* envp[1]={0};
+		// 		args[1]=inst;
+		// 		FORI(9){
+		// 			args[i+1]=malloc(100);
+		// 			int x=KSHELL_NEXT_ARG(buffer,args[i]);
+		// 			if(x==0)break;
+		// 			buffer+=x;
+		// 		}
+		// 		USERMODE_EXEC_ELF(&file,args,envp);
+		// 	}else{
+		// 		printf("COMMAND \"%s\" NOT FOUND:\n",inst);
+		// 	}
+		// }else{
+		// 	printf("COMMAND \"%s\" NOT FOUND:\n",inst);
+		// }
 	}
 }
-
 void __getch(char x){
 	INIT();
 	if(x=='\b'){

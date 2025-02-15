@@ -49,6 +49,7 @@
 #include "specifications/elf/elf.h"
 
 #include "devices/usb/keyboard.h"
+#include "vga/term.h"
 
 void Debug();
 void evaluate(char* buffer);
@@ -238,6 +239,8 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 #endif
 	Scheduler_START();
 
+	ClearScreen();
+	TERM_SET_POS(0,0);
 	EXT2_INODE elf;
 	if(EXT2_GET_INODE_FROM_PATH(&elf,"/usr/bin/cat")==1){
 		char* hex=malloc(elf.size);
@@ -247,7 +250,6 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 		if(s==1){
 			char* args[]={"cat","/home/ASM/main.c",0};
 			USERMODE_EXEC_ELF(&file,args,NULL);
-			// USERMODE_EXEC_ELF(&file);
 		}
 	}
 	//USERMODE_ADD();
