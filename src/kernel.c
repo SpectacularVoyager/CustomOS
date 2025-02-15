@@ -238,17 +238,18 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 #endif
 	Scheduler_START();
 
-	//while(1);
-	// EXT2_INODE elf;
-	// if(EXT2_GET_INODE_FROM_PATH(&elf,"/home/ASM/a.out")==1){
-	// 	char* hex=malloc(elf.size);
-	// 	EXT2_READFILE(&elf,hex,elf.size);
-	// 	ELF_FILE file;
-	// 	int s=ELF_PARSE(&file,hex,elf.size);
-	// 	if(s==1){
-	// 		USERMODE_EXEC_ELF(&file);
-	// 	}
-	// }
+	EXT2_INODE elf;
+	if(EXT2_GET_INODE_FROM_PATH(&elf,"/usr/bin/cat")==1){
+		char* hex=malloc(elf.size);
+		EXT2_READFILE(&elf,hex,elf.size);
+		ELF_FILE file;
+		int s=ELF_PARSE(&file,hex,elf.size);
+		if(s==1){
+			char* args[]={"cat","/home/ASM/main.c",0};
+			USERMODE_EXEC_ELF(&file,args,NULL);
+			// USERMODE_EXEC_ELF(&file);
+		}
+	}
 	//USERMODE_ADD();
 	//USERMODE_ADD();
 

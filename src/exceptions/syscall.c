@@ -44,7 +44,6 @@ int getpid(){
 	return TaskCurrent()->id;
 }
 int write(int fd,char* buffer,unsigned int len){
-	// printf("WRITE[%p]\n",buffer);
 	if(fd!=1)return -1;
 	FORI(len){
 		printf("%c",buffer[i]);
@@ -53,7 +52,6 @@ int write(int fd,char* buffer,unsigned int len){
 }
 
 int open(const char* path,int flags,umode_t mode){
-	printf("OPEN [%s]\n",path);
 	TASK* t=TaskCurrent();
 	int idx=-1;
 	FILE_DESC* emptyfd;
@@ -95,7 +93,7 @@ void exit(registers* r,int code){
 	printf("EXITING WITH CODE[%x]\n",code);
 	TaskKill();
 }
-int execve(const char* path,const char *const *argv,const char *const *envp){
+int execve(const char* path,char **argv,char **envp){
 	printf("EXECVE %s\n",path);
 	EXT2_INODE elf;
 	if(EXT2_GET_INODE_FROM_PATH(&elf,path)==1){
@@ -104,7 +102,7 @@ int execve(const char* path,const char *const *argv,const char *const *envp){
 		ELF_FILE file;
 		int s=ELF_PARSE(&file,hex,elf.size);
 		if(s==1){
-			USERMODE_EXEC_ELF(&file);
+			USERMODE_EXEC_ELF(&file,argv,envp);
 			// USERMODE_EXEC_ELF(&file);
 		}
 	}

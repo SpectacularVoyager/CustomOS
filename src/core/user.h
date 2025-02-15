@@ -6,4 +6,4 @@ void USERMODE_ENTER();
 
 void USERMODE_ADD();
 
-int USERMODE_EXEC_ELF(ELF_FILE* file);
+int USERMODE_EXEC_ELF(ELF_FILE* file,char** args,char** env);

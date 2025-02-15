@@ -28,7 +28,7 @@ TEST_HALT:
 	int 0x80
 	hlt
 ;; https://f.osdev.org/viewtopic.php?t=40894
-;USER_JUMP_ASM(void* args,void* entry,void* stack);
+;USER_JUMP_ASM(registers* r,void* entry,void* stack);
 USER_JUMP_ASM:
 	mov rax,0x20 | USER_PREV
 	mov ds,ax
