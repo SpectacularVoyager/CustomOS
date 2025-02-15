@@ -247,6 +247,8 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 		int s=ELF_PARSE(&file,hex,elf.size);
 		if(s==1){
 			USERMODE_EXEC_ELF(&file);
+			USERMODE_EXEC_ELF(&file);
+			// USERMODE_EXEC_ELF(&file);
 		}
 	}
 	//USERMODE_ADD();

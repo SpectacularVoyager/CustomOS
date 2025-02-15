@@ -42,7 +42,7 @@ int write(int fd,char* buffer,unsigned int len){
 }
 
 int open(const char* path,int flags,umode_t mode){
-	// printf("OPEN [%s]\n",path);
+	printf("OPEN [%s]\n",path);
 	TASK* t=TaskCurrent();
 	int idx=-1;
 	FILE_DESC* emptyfd;
@@ -67,7 +67,6 @@ int open(const char* path,int flags,umode_t mode){
 	return 0;
 }
 int read(int fd,char* buffer,unsigned int len){
-	// printf("READ [%p] AT [%x]\n",buffer,fd);
 	TASK* t=TaskCurrent();
 	FILE_DESC* desc=&t->fd[fd];
 	if(desc->used!=1)return 0;
@@ -83,5 +82,5 @@ void exit(registers* r,int code){
 	r->rip=(uint64_t)USER_PRIV_LOOP;
 	// LOGVALD(r->rflags);
 	printf("EXITING WITH CODE[%x]\n",code);
-	//TaskKill();
+	TaskKill();
 }

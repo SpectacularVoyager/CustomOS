@@ -26,7 +26,8 @@ ifeq ($(USB),3)
 		-device usb-mouse
 	#		-device usb-uas,id=uas,bus=xhci.0	\
 
-else ifeq($(USB),2)
+endif
+ifeq ($(USB),2)
 	QEMU_FLAGS:=$(QEMU_FLAGS) \
 		-usb -device usb-ehci,id=ehci		\
         -device usb-host,bus=usb-bus.0,hostbus=3,hostport=1 \

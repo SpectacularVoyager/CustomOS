@@ -1,4 +1,5 @@
 #include "string.h"
+#include "stdlib.h"
 void memcpy(void* dest,const void* src,int size){
 	uint8_t* _dest=(uint8_t*)dest;
 	uint8_t* _src=(uint8_t*)src;
@@ -57,4 +58,10 @@ void memset32(uint32_t* dest,uint32_t src,int n){
 	for(volatile int i=0;i<n;i++){
 		dest[i]=src;
 	}
+}
+char* strdup(const char* c){
+	int len=strlen(c);
+	char* s=malloc(len);
+	memcpy(s,c,len);
+	return s;
 }

@@ -2,6 +2,8 @@
 #include "interrupts/isr.h"
 #include "drivers/ext2/ext2.h"
 
+extern void USER_PRIV_LOOP();
+
 void TaskSwitch(int id);
 
 typedef struct {

@@ -59,14 +59,26 @@ void EMPTYLOOP(){
 	while(1);
 }
 void TaskKill(){
-	EMPTYLOOP();
-	// ListNode* temp=current;
-	// int _tasklen=ListLength(tasks);
-	// if(_tasklen==0){
-	// 	kprintf(INFO "UNEXPECTED NO TASK FOUND\n");
-	// 	return;
-	// }
-	// if(_tasklen<=1){
+	//EMPTYLOOP();
+	ListNode* temp=current;
+	int _tasklen=ListLength(tasks);
+	if(_tasklen==0){
+		kprintf(INFO "UNEXPECTED NO TASK FOUND\n");
+		return;
+	}else if(_tasklen==1){
+		tasks=ListRemove(tasks,temp);
+		printf("AFTER REMOVING LIST_LEN[%d]",ListLength(tasks));
+	}else{
+		if(current->next==0){
+			current=tasks;
+		}else{
+			current=current->next;
+		}
+		tasks=ListRemove(tasks,temp);
+		registers* cur=((TASK*)(current->val))->r;
+		TaskContextSwitch(cur);
+	}
+	// else if(_tasklen<=1){
 	// 	kprintf(INFO "CONTINUING EXISTING TASK\n",ListLength(tasks));
 	// 	//NO SWITCHING NEEDED
 	// 	if(current==0){
@@ -75,16 +87,21 @@ void TaskKill(){
 	// 		TaskContextSwitch(cur);
 	// 	}
 	// 	ListRemove(tasks,temp);
-	// 	EMPTYLOOP();
-	// }
 	//
-	// if(current->next==0){
-	// 	current=tasks;
 	// }else{
-	// 	current=current->next;
+	//
+	// 	if(current->next==0){
+	// 		current=tasks;
+	// 	}else{
+	// 		current=current->next;
+	// 	}
+	// 	//REMOVE CURRENT
+	// 	TaskContextSwitch(current->val);
 	// }
-	// //REMOVE CURRENT
-	// TaskContextSwitch(current->val);
+	// registers r;
+	// r.rip=(uint64_t)USER_PRIV_LOOP;
+	// TaskContextSwitch(&r);
+
 }
 void Scheduler_LOOP_ROUND_ROBIN(registers* r){
 	kprintf("TICK\n");
@@ -99,6 +116,7 @@ void Scheduler_LOOP_ROUND_ROBIN(registers* r){
 		if(current==0){
 			current=tasks;
 			registers* cur=((TASK*)(current->val))->r;
+			APIC_SEND_EOI();
 			TaskContextSwitch(cur);
 		}
 		return;
@@ -113,6 +131,6 @@ void Scheduler_LOOP_ROUND_ROBIN(registers* r){
 	registers* cur=((TASK*)(current->val))->r;
 	//LOAD CONTEXT (current->r)
 	//JUMP TO USER MODE
-	TaskContextSwitch(cur);
 	APIC_SEND_EOI();
+	TaskContextSwitch(cur);
 }
