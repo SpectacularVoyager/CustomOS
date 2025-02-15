@@ -31,6 +31,12 @@ void* PageGetEmpty(int pages,int flags);
 
 void* MemoryPhysical(void* p_addr);
 
+void* PageAllocate();
+
+void PageDealloc(void* page);
+
+void InitAllocator();
+
 typedef struct {
 	int p;
 	int count;

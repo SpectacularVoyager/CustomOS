@@ -103,7 +103,9 @@ int EXT2_FIND_INODE_IN_DIR(EXT2_INODE* parent,EXT2_INODE* out,char* name){
 	EXT2_INODE_FROM_ID(out, file);
 	return 1;
 }
-int EXT2_GET_INODE_FROM_PATH(EXT2_INODE* child,char* path){
+int EXT2_GET_INODE_FROM_PATH(EXT2_INODE* child,char* _path){
+
+	char* path=strdup(_path);
 	if(path[0]!='/'){
 		memset(child,0,sizeof(EXT2_INODE));
 		return 0;

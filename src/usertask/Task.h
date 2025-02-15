@@ -2,6 +2,8 @@
 #include "interrupts/isr.h"
 #include "drivers/ext2/ext2.h"
 
+extern void USER_PRIV_LOOP();
+
 void TaskSwitch(int id);
 
 typedef struct {
@@ -16,6 +18,7 @@ typedef struct {
 	int ready;
 	registers* r;
 	FILE_DESC fd[256];
+	void* address;
 } TASK;
 
 TASK* TaskCreate(void* args,void* address,void* stack);

@@ -127,6 +127,7 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 	//Better Page Allocations
 	AssignMallocMemoryMap(headers.mmap,0x170000);
 	graphicsStuff(headers);
+	InitAllocator();
 	AllocatePage(7,0L*PAGE_WIDTH,0b111);
 	updateMallocPtr();
 	// while(1);
@@ -235,7 +236,6 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 		PCI_Device_Print(usb);
 	}
 #endif
-	//evaluate("cat");
 	Scheduler_START();
 
 	//while(1);

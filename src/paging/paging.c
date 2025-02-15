@@ -4,12 +4,15 @@
 #include "stdlib/stdlib.h"
 #include "stdlib/stdio.h"
 #include "utils/utils.h"
+#include "stdlib/string.h"
 
 unsigned int pageCount=0;
 #define PAGE_P2_SIZE 0x200000L
 
 #define TABLE(x) ((uint64_t*)((uint64_t)x&(~0xff)))
 #define PAGE(x) ((uint64_t*)((uint64_t)x&(~0x1fffff)))
+
+
 inline void invlpg(uint64_t address){
 	asm volatile("invlpg (%0)" ::"r" (address) : "memory");
 }
@@ -53,6 +56,33 @@ void MemoryRemap(uint64_t memory,uint64_t address,int flags){
 void PageIdentity(int p1,int p2,int flags){
 	p3_table[p1]=(p2*PAGE_WIDTH)|0b111|flags;
 }
+int page_allocator[512]={0};
+void InitAllocator(){
+	memset(page_allocator,0,512*sizeof(int));
+}
+void* PageAllocate(){
+	int id=-1;
+	FORI(512){
+		if(page_allocator[i]==0){
+			id=i;
+			break;
+		}
+	}
+	if(id==-1){
+		return 0;
+	}
+
+	uint64_t* ptr= TABLE(p3_table[1]);
+	page_allocator[id]=1;
+	return PAGE(ptr[id]);
+}
+void PageDealloc(void* page){
+	int id=(uint64_t)page/PAGE_P2_SIZE;
+	id=id%512;
+	printf("DEALLOC %p -> %d\n",page,id);
+	page_allocator[id]=0;
+}
+
 void* MemoryPhysical(void* p_addr){
 	uint64_t addr=(uint64_t)p_addr;
 
