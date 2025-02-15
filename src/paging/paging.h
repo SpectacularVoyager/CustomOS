@@ -2,6 +2,8 @@
 /** DOES NOT WORK WITH P4 PAGING */
 #define PAGE_WIDTH 0x40000000L
 
+#define PAGE_P2_SIZE 0x200000L
+
 #define PAGE_PRESENT	1<<0
 #define PAGE_READWRITE	1<<1
 #define PAGE_USER		1<<2
@@ -32,6 +34,8 @@ void* PageGetEmpty(int pages,int flags);
 void* MemoryPhysical(void* p_addr);
 
 void* PageAllocate();
+
+void* PageAllocateN(unsigned int n);
 
 void PageDealloc(void* page);
 
