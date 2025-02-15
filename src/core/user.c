@@ -67,7 +67,7 @@ int USERMODE_EXEC_ELF(ELF_FILE* elf,char** args,char** env){
 	memcpy(address,elf->file,elf->len);
 
 	
-	LOGVAL(elf->header->Entry);
+	// LOGVAL(elf->header->Entry);
 	void* nameTable=elf->file+elf->name->Offset;
 	int flag=0;
 	FORI(elf->header->SectionHeaderCount){
@@ -79,7 +79,7 @@ int USERMODE_EXEC_ELF(ELF_FILE* elf,char** args,char** env){
 				flag=1;
 			}
 		}
-		printf("%s\t[%x -> %x] [%x->%x]\n",name,section->Offset,section->Offset+section->Size,section->Addr,section->Addr+section->Size);
+		//printf("%s\t[%x -> %x] [%x->%x]\n",name,section->Offset,section->Offset+section->Size,section->Addr,section->Addr+section->Size);
 	}
 	if(flag==1){
 		printf("CAN ONLY EXECUTE Processes mapped at 0x400000\n");

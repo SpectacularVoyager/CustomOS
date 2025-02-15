@@ -47,15 +47,19 @@ void EMPTYLOOP(){
 	while(1);
 }
 void TaskKill(){
+	__asm__ volatile("CLI");
 	//EMPTYLOOP();
 	ListNode* temp=current;
+	((TASK*)(current->val))->r->rip=(uint64_t)USER_PRIV_LOOP;
 	PageDealloc(((TASK*)temp->val)->address);
 	int _tasklen=ListLength(tasks);
 	if(_tasklen==0){
 		kprintf(INFO "UNEXPECTED NO TASK FOUND\n");
+		current=0;
 		return;
 	}else if(_tasklen==1){
 		tasks=ListRemove(tasks,temp);
+		current=0;
 	}else{
 		if(current->next==0){
 			current=tasks;
@@ -65,6 +69,9 @@ void TaskKill(){
 		tasks=ListRemove(tasks,temp);
 		TaskChange((TASK*)(current->val));
 	}
+	//LOGVAL(ListLength(tasks));
+	
+	__asm__ volatile("STI");
 }
 void Scheduler_LOOP_ROUND_ROBIN(registers* r){
 	kprintf("TICK\n");
@@ -77,6 +84,7 @@ void Scheduler_LOOP_ROUND_ROBIN(registers* r){
 		kprintf(INFO "CONTINUING EXISTING TASK\n",ListLength(tasks));
 		//NO SWITCHING NEEDED
 		if(current==0){
+			// printf(INFO "QUE\n");
 			current=tasks;
 			registers* cur=((TASK*)(current->val))->r;
 			APIC_SEND_EOI();

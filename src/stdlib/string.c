@@ -61,7 +61,8 @@ void memset32(uint32_t* dest,uint32_t src,int n){
 }
 char* strdup(const char* c){
 	int len=strlen(c);
-	char* s=malloc(len);
+	char* s=malloc(len+1);
 	memcpy(s,c,len);
+	s[len]=0;
 	return s;
 }

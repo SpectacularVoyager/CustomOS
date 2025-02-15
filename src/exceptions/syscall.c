@@ -71,7 +71,7 @@ int open(const char* path,int flags,umode_t mode){
 		emptyfd->offset=0;
 		return idx;
 	}else{
-		printf("FILE :%s NOT FOUND",path);
+		// printf("FILE :%s NOT FOUND",path);
 	}
 	return 0;
 }
@@ -88,9 +88,10 @@ int read(int fd,char* buffer,unsigned int len){
 	return idx;
 }
 void exit(registers* r,int code){
+	// printf("BEFORE EXITING WITH CODE[%x]\n",code);
 	r->rip=(uint64_t)USER_PRIV_LOOP;
 	// LOGVALD(r->rflags);
-	printf("EXITING WITH CODE[%x]\n",code);
+	// printf("EXITING WITH CODE[%x]\n",code);
 	TaskKill();
 }
 int execve(const char* path,char **argv,char **envp){
