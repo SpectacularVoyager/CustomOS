@@ -67,7 +67,7 @@ void evaluate(char* buffer){
 			ELF_FILE file;
 			int s=ELF_PARSE(&file,hex,elf.size);
 			if(s==1){
-				USERMODE_EXEC_ELF(&file);
+				USERMODE_EXEC_ELF(&file,NULL,NULL);
 			}
 		}
 	}else if(strncmp(buffer,"cat",3)==0){
