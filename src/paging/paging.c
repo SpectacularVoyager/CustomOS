@@ -7,7 +7,6 @@
 #include "stdlib/string.h"
 
 unsigned int pageCount=0;
-#define PAGE_P2_SIZE 0x200000L
 
 #define TABLE(x) ((uint64_t*)((uint64_t)x&(~0xff)))
 #define PAGE(x) ((uint64_t*)((uint64_t)x&(~0x1fffff)))
@@ -60,6 +59,28 @@ int page_allocator[512]={0};
 void InitAllocator(){
 	memset(page_allocator,0,512*sizeof(int));
 }
+void* PageAllocateN(unsigned int n){
+	int id=-1;
+	FORI(512){
+		int valid=1;
+		FORI(n){
+			if(i>=512)break;
+			if(page_allocator[i]!=0){
+				valid=0;
+			}
+		}
+		if(valid==1){id=i;break;}
+	}
+	if(id==-1){
+		return 0;
+	}
+
+	uint64_t* ptr= TABLE(p3_table[1]);
+	FORI(n)
+		page_allocator[id+i]=n;
+	kprintf(INFO "ALLOCATED %d PAGES AT %p\n",n,PAGE(ptr[id]));
+	return PAGE(ptr[id]);
+}
 void* PageAllocate(){
 	int id=-1;
 	FORI(512){
@@ -79,8 +100,9 @@ void* PageAllocate(){
 void PageDealloc(void* page){
 	int id=(uint64_t)page/PAGE_P2_SIZE;
 	id=id%512;
-	kprintf("DEALLOC %p -> %d\n",page,id);
-	page_allocator[id]=0;
+	kprintf("DEALLOC %p[%d] -> %d\n",page,page_allocator[id],id);
+	FORI(page_allocator[id])
+		page_allocator[id+i]=0;
 }
 
 void* MemoryPhysical(void* p_addr){
