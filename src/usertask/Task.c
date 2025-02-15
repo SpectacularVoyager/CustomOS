@@ -23,17 +23,19 @@ void Scheduler_START(){
 }
 void TaskChange(TASK* t){
 	MemoryRemap(0x400000,(uint64_t)t->address,0b111);
-	USER_JUMP_ASM(0,(void*)t->r->rip,(void*)t->r->rsp);
+
+	USER_JUMP_ASM((void*)100,(void*)t->r->rip,(void*)t->r->rsp);
 }
 TASK* TaskCurrent(){return current->val;}
 
-TASK* TaskCreate(void* args,void* address,void* stack){
+TASK* TaskCreate(char** args,void* address,void* stack){
 	TASK* t=malloc(sizeof(TASK));
 	t->id=++PID;
 	t->ready=1;
 	memset(t->r,0,sizeof(registers));
 	t->r->rip=(uint64_t)address;
 	t->r->rsp=(uint64_t)stack;
+	t->r->rdi=(uint64_t)args;
 	tasks=ListAdd(tasks,t);
 	FORI(256){
 		t->fd[i]=(FILE_DESC){.used=0};
@@ -54,7 +56,6 @@ void TaskKill(){
 		return;
 	}else if(_tasklen==1){
 		tasks=ListRemove(tasks,temp);
-		printf("AFTER REMOVING LIST_LEN[%d]",ListLength(tasks));
 	}else{
 		if(current->next==0){
 			current=tasks;

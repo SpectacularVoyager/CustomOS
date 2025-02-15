@@ -79,7 +79,7 @@ void* PageAllocate(){
 void PageDealloc(void* page){
 	int id=(uint64_t)page/PAGE_P2_SIZE;
 	id=id%512;
-	printf("DEALLOC %p -> %d\n",page,id);
+	kprintf("DEALLOC %p -> %d\n",page,id);
 	page_allocator[id]=0;
 }
 

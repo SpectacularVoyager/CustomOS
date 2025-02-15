@@ -21,6 +21,6 @@ int open(const char* path,int flags,umode_t mode);
 int read(int fd,char* buffer,unsigned int len);
 
 
-int execve(const char* pathname,const char *const *argv,const char *const *envp);
+int execve(const char* path,char **argv,char **envp);
 
 int getpid();

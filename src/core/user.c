@@ -46,8 +46,15 @@ void USERMODE_ADD(){
 	memcpy(address,TEST_HALT,100);
 	TaskCreate(NULL,address,address+0x100000);
 }
+int ARGS_LEN(char** args,int max){
+	int i=0;
+	for(;i<max;i++){
+		if(args[i]==0)return i;
+	}
+	return i;
+}
 //GET PAGE DYNAMICALLY
-int USERMODE_EXEC_ELF(ELF_FILE* elf){
+int USERMODE_EXEC_ELF(ELF_FILE* elf,char** args,char** env){
 	char* address=PageAllocate();
 	kprintf("TRYING TO ENTER USER MODE\n");
 
@@ -91,6 +98,9 @@ int USERMODE_EXEC_ELF(ELF_FILE* elf){
 	}
 	// U32(0x401000)='helo';
 
-	TaskCreate(NULL,address+_start_addr,address+0x200000);
+	U64(address+0x200000-8)=(uint64_t)args;
+	U64(address+0x200000-16)=(uint64_t)ARGS_LEN(args, 10);
+	// hexdump(args[0],8,8);
+	TASK* t=TaskCreate(args,address+_start_addr,address+0x200000-16);
 	return 1;
 }

@@ -21,7 +21,7 @@ typedef struct {
 	void* address;
 } TASK;
 
-TASK* TaskCreate(void* args,void* address,void* stack);
+TASK* TaskCreate(char** args,void* address,void* stack);
 
 void Scheduler_START();
 
