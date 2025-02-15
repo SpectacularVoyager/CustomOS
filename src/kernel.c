@@ -123,6 +123,7 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 	//Better Page Allocations
 	AssignMallocMemoryMap(headers.mmap,0x170000);
 	graphicsStuff(headers);
+	InitAllocator();
 	AllocatePage(7,0L*PAGE_WIDTH,0b111);
 	updateMallocPtr();
 	// while(1);
@@ -156,7 +157,6 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 	//LOAD TSS
 	TSS_FLUSH();
 	// USERMODE_ENTER();
-
 	struct multiboot_tag_new_acpi *acpi=(struct multiboot_tag_new_acpi*)headers.acpi;
 	// LOGVALD(U64(((RSDP_t*)acpi->rsdp)->OEMID));
 	RSDP_t* l=(RSDP_t*)acpi->rsdp;
@@ -231,12 +231,6 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 		PCI_Device_Print(usb);
 	}
 #endif
-	EXT2_INODE inode;
-	if(EXT2_GET_INODE_FROM_PATH(&inode,"/home/ASM/main.c")==1){
-		char file[inode.size];
-		EXT2_READFILE(&inode,file,inode.size);
-		printf(file);
-	}
 	Scheduler_START();
 
 	EXT2_INODE elf;
@@ -246,7 +240,6 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 		ELF_FILE file;
 		int s=ELF_PARSE(&file,hex,elf.size);
 		if(s==1){
-			USERMODE_EXEC_ELF(&file);
 			USERMODE_EXEC_ELF(&file);
 			// USERMODE_EXEC_ELF(&file);
 		}

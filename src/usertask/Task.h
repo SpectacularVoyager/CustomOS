@@ -18,6 +18,7 @@ typedef struct {
 	int ready;
 	registers* r;
 	FILE_DESC fd[256];
+	void* address;
 } TASK;
 
 TASK* TaskCreate(void* args,void* address,void* stack);

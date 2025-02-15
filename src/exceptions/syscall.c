@@ -5,6 +5,8 @@
 #include <utils/utils.h>
 #include <drivers/ext2/ext2.h>
 #include <usertask/Task.h>
+#include "specifications/elf/elf.h"
+#include "core/user.h"
 
 #define ARG1(r) r->rdi
 #define ARG2(r) r->rsi
@@ -27,10 +29,19 @@ void syscall(registers* r){
 		case SYSCALL_READ:
 			ret=read(ARG1(r),(void*)ARG2(r),ARG3(r));
 			break;
+		case SYSCALL_EXECVE:
+			ret=execve((void*)ARG1(r),(void*)ARG2(r),(void*)ARG3(r));
+			break;
+		case SYSCALL_GET_PID:
+			ret=getpid();
+			break;
 		default:
 			printf("UNRECOGNISED SYSCALL [0x%x]\n",r->rax);
 	}
 	RETURN(r) ret;
+}
+int getpid(){
+	return TaskCurrent()->id;
 }
 int write(int fd,char* buffer,unsigned int len){
 	// printf("WRITE[%p]\n",buffer);
@@ -83,4 +94,19 @@ void exit(registers* r,int code){
 	// LOGVALD(r->rflags);
 	printf("EXITING WITH CODE[%x]\n",code);
 	TaskKill();
+}
+int execve(const char* path,const char *const *argv,const char *const *envp){
+	printf("EXECVE %s\n",path);
+	EXT2_INODE elf;
+	if(EXT2_GET_INODE_FROM_PATH(&elf,path)==1){
+		char* hex=malloc(elf.size);
+		EXT2_READFILE(&elf,hex,elf.size);
+		ELF_FILE file;
+		int s=ELF_PARSE(&file,hex,elf.size);
+		if(s==1){
+			USERMODE_EXEC_ELF(&file);
+			// USERMODE_EXEC_ELF(&file);
+		}
+	}
+	return 0;
 }

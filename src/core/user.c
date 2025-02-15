@@ -48,7 +48,7 @@ void USERMODE_ADD(){
 }
 //GET PAGE DYNAMICALLY
 int USERMODE_EXEC_ELF(ELF_FILE* elf){
-	char* address=(void*)PAGE_WIDTH;
+	char* address=PageAllocate();
 	kprintf("TRYING TO ENTER USER MODE\n");
 
 	ELF_Symbol* _start=ELF_LookUpSymbol(elf,"_start");
@@ -91,6 +91,6 @@ int USERMODE_EXEC_ELF(ELF_FILE* elf){
 	}
 	// U32(0x401000)='helo';
 
-	TaskCreate(NULL,address+_start_addr,address+0x100000);
+	TaskCreate(NULL,address+_start_addr,address+0x200000);
 	return 1;
 }
