@@ -17,14 +17,16 @@
 
 void syscall_inst(){
 	printf("HELLO WORLD\n");
-	USER_MODE_RETURN();
+	
+	while(1);
 }
+extern void syscall_inst_asm();
 void SYSCALL_INITIALIZE_USER(){
 	//ENABLE SYSCALL EXTENSION
 	WRMSR(MSR_EFER,RDMSR(MSR_EFER)|1);
 	WRMSR(MSR_STAR,0x00180008);
-	WRMSR(MSR_LSTAR,(uint64_t)syscall_inst);
-	WRMSR(MSR_CSTAR,(uint64_t)syscall_inst);
+	WRMSR(MSR_LSTAR,(uint64_t)syscall_inst_asm);
+	WRMSR(MSR_CSTAR,(uint64_t)syscall_inst_asm);
 	WRMSR(MSR_SFMASK,0);
 }
 void syscall(registers* r){

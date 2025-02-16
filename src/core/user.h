@@ -7,7 +7,7 @@
 
 
 extern void USER_JUMP_ASM(void* args,void* func,void* stack);
-extern void USER_MODE_RETURN();
+extern void USER_MODE_RETURN(uint64_t rip,uint64_t flags);
 void TSS_load(int r);
 void USERMODE_ENTER();
 

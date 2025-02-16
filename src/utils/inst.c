@@ -13,6 +13,9 @@
 	 }else if(data[0]==0xF||data[1]==0x5){
 			printf("SYSCALL\n");
 			return 0;
+	 }else if(data[0]==0x48||data[1]==0xCF){
+			printf("IRETQ\n");
+			return 0;
 	 }else{
 			printf("[%x] %x %x %x\n",data[0],data[1],data[2],data[3]);
 			return 0;
