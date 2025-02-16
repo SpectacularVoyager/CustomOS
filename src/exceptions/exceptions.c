@@ -4,6 +4,9 @@
 #include "utils/bit.h"
 #include "syscall.h"
 #include "utils/inst.h"
+#include "utils/utils.h"
+
+#include "usertask/Task.h"
 #define PAGE_FAULT_EXCEPTION_PRESENT	0
 #define PAGE_FAULT_EXCEPTION_WRITE		1
 #define PAGE_FAULT_EXCEPTION_USER		2
@@ -43,7 +46,12 @@ void InvalidOpcodeException(registers* r){
 	INST_READ(inst);
 	//printf("THE Next Bytes Are %02X %02X %02X %02X\n",inst[0],inst[1],inst[2],inst[3]);
 	printf("THE Previous Bytes Are %02X %02X %02X %02X\n",inst[-1],inst[-2],inst[-3],inst[-4]);
-	__asm__ volatile("cli;hlt");
+	if((r->rflags>>12)==3){
+		r->rip=(uint64_t)USER_PRIV_LOOP;
+		TaskKill();
+	}else{
+		__asm__ volatile("cli;hlt");
+	}
 }
 void GeneralProtectionFault(registers* r){
 	//SetColor(0xFF00000);
@@ -54,7 +62,12 @@ void GeneralProtectionFault(registers* r){
 	INST_READ(inst);
 	// printf("THE Next Bytes Are %02X %02X %02X %02X\n",inst[0],inst[1],inst[2],inst[3]);
 	printf("THE Previous Bytes Are %02X %02X %02X %02X\n",inst[-1],inst[-2],inst[-3],inst[-4]);
-	__asm__ volatile("cli;hlt");
+	if((r->rflags>>12)==3){
+		r->rip=(uint64_t)USER_PRIV_LOOP;
+		TaskKill();
+	}else{
+		__asm__ volatile("cli;hlt");
+	}
 }
 void ExceptionInit(){
 	ISR_addHandler(6,InvalidOpcodeException);
