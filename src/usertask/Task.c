@@ -19,7 +19,7 @@ uint32_t PID=0;
 void Scheduler_LOOP_ROUND_ROBIN(registers* r);
 void Scheduler_START(){
 	IRQ_RegisterHandler(0,Scheduler_LOOP_ROUND_ROBIN);
-	APIC_PERIODIC(1000*1000*100);
+	APIC_PERIODIC(1000*1000*10);
 }
 void TaskChange(TASK* t){
 	MemoryRemap(0x400000,(uint64_t)t->address,0b111);
