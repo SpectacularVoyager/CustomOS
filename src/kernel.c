@@ -234,16 +234,24 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 	Scheduler_START();
 
 	EXT2_INODE elf;
-	if(EXT2_GET_INODE_FROM_PATH(&elf,"/usr/bin/cat")==1){
+	if(EXT2_GET_INODE_FROM_PATH(&elf,"/usr/bin/test")==1){
 		char* hex=malloc(elf.size);
-		EXT2_READFILE(&elf,hex,elf.size);
-		ELF_FILE file;
-		int s=ELF_PARSE(&file,hex,elf.size);
-		if(s==1){
-			char* args[]={"cat","/home/ASM/main.c",0};
-			USERMODE_EXEC_ELF(&file,args,NULL);
-			// USERMODE_EXEC_ELF(&file);
+		if(EXT2_READFILE(&elf,hex,elf.size)==1){
+			khexdump(hex,elf.size,0x20);
+			ELF_FILE file;
+			int s=ELF_PARSE(&file,hex,elf.size);
+			if(s==1){
+				char* args[]={"cat","/home/ASM/main.c",0};
+				USERMODE_EXEC_ELF(&file,args,NULL);
+				// USERMODE_EXEC_ELF(&file);
+			}else{
+				printf("PARSE ELF FAILED WITH [%s]\n",errno_ELF(s));
+			}
+		}else{
+			printf("ERROR READING FILE\n");
 		}
+	}else{
+		printf("FILE NOT FOUND\n");
 	}
 	//USERMODE_ADD();
 	//USERMODE_ADD();

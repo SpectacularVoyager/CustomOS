@@ -13,19 +13,31 @@ EXT2_PART ext2;
 #define INODE_GROUP(inode,ext2) (inode-1)/ext2.superblock->inodesPerGroup
 #define INODE_GROUP_LOCAL(inode,ext2) (inode-1)%ext2.superblock->inodesPerGroup
 
-void FREAD(uint64_t block,void* data,int len){
+int FREAD(uint64_t block,void* data,int len){
+	LOGVAL(block);
 	char buffer[CEILDIV(len,0x200)*0x200];
-	AHCI_READ(ext2.port,block,CEILDIV(len,0x200), (uint16_t*)buffer);
+	LOGVAL(CEILDIV(len,0x200));
+	int ret=AHCI_READ(ext2.port,block,CEILDIV(len,0x200), (uint16_t*)buffer);
+	if(ret==0){return 0;}
 	memcpy(data,buffer,len);
+	return 1;
 }
 
 void* readInodeTable(uint64_t lba);
 
-void EXT2_READFILE(EXT2_INODE*inode,void* data,int len){
+int EXT2_READFILE(EXT2_INODE*inode,void* data,int len){
 	int blocksize=(1024<<ext2.superblock->logBlockSize);
 	int blocksizelba=blocksize/GPT_SECTOR_SIZE;
 	unsigned long block=inode->blockPointers[0]*blocksizelba+ext2.part->startLBA;
-	FREAD(block,data,len);
+	EXT2_BUFFER buffer;
+	EXT2_BUFFER_INIT(&buffer,ext2.port,block);
+	EXT2_BUFFER_READ(&buffer,data,len);
+	// if(FREAD(block,data,len)){
+	// 	return 1;
+	// }else{
+	// 	return ERROR_EXT2_AHCI_READ_FAIL;
+	// } 
+	return 1;
 }
 void EXT2_READ_INODE_FROM_LBA(EXT2_INODE* inode,uint64_t lba){
 	FREAD(lba,inode,sizeof(EXT2_INODE));
