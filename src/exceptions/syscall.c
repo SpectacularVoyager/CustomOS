@@ -15,16 +15,16 @@
 #define ARG3(r) r->rdx
 #define RETURN(r) r->rax=
 
-void syscall_inst(){
-	printf("HELLO WORLD\n");
-	
+void syscall_inst(uint64_t rdi,uint64_t rsi,uint64_t rdx){
+	printf("HELLO\n");
+	LOGVALD(rdi);
 	while(1);
 }
 extern void syscall_inst_asm();
 void SYSCALL_INITIALIZE_USER(){
 	//ENABLE SYSCALL EXTENSION
 	WRMSR(MSR_EFER,RDMSR(MSR_EFER)|1);
-	WRMSR(MSR_STAR,0x00180008);
+	WRMSR(MSR_STAR,0x00180008L<<32);
 	WRMSR(MSR_LSTAR,(uint64_t)syscall_inst_asm);
 	WRMSR(MSR_CSTAR,(uint64_t)syscall_inst_asm);
 	WRMSR(MSR_SFMASK,0);
