@@ -29,16 +29,26 @@ TEST_HALT:
 	hlt
 ;; https://f.osdev.org/viewtopic.php?t=40894
 ;USER_JUMP_ASM(registers* r,void* entry,void* stack);
+; USER_JUMP_ASM:
+; 	mov rax,0x20 | USER_PREV
+; 	mov ds,ax
+; 	mov es,ax
+;
+;     ; Build a fake iret frame
+; 	push rax							; 
+; 	push rdx							; USER STACK
+; 	push 0x202							; RFLAGS INT ENABLE AND RESERVED
+; 	push 0x18 | USER_PREV				; Selector
+; 	push rsi							; ENTRY POINT
+;
+; 	iretq
 USER_JUMP_ASM:
-	mov rax,0x20 | USER_PREV
-	mov ds,ax
-	mov es,ax
+	mov rbx,rsi
+	;;USERSPACE ADDRESS
+	mov rcx,rbx
+	mov	r11,0x202	;EFLAGS
+	o64 sysret
 
-    ; Build a fake iret frame
-	push rax							; 
-	push rdx							; USER STACK
-	push 0x202							; RFLAGS INT ENABLE AND RESERVED
-	push 0x18 | USER_PREV				; Selector
-	push rsi							; ENTRY POINT
-
-	iretq
+global USER_MODE_RETURN
+USER_MODE_RETURN:
+	o64 sysret

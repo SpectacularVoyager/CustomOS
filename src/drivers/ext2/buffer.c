@@ -37,8 +37,6 @@ void EXT2_BUFFER_READ(EXT2_BUFFER* buffer,void* data,int len){
 	// 	memcpy(data+part,buffer->buffer+buffer->pointer,len-part);
 	// 	buffer->pointer+=part;
 	// }
-	int print=len>1000?1:0;
-	if(print) printf("READING data[%x]\t%x\n",len,buffer->pointer);
 	if(buffer->pointer+len<EXT2_BUFF_CAP){
 		EXT_SIMPLE_BUFFERED_READ(buffer,data,len);
 	}else{
@@ -49,18 +47,14 @@ void EXT2_BUFFER_READ(EXT2_BUFFER* buffer,void* data,int len){
 		FORI(len/EXT2_BUFF_CAP){
 			buffer->pointer=0;
 			EXT2_REFRESH(buffer);
-			if(print) printf("READING data[%x]\t%x\t%p\n",len,buffer->pointer,data);
 			memcpy(data,buffer->buffer,EXT2_BUFF_CAP);
 			data+=EXT2_BUFF_CAP;
 			len-=EXT2_BUFF_CAP;
 		}
-		if(print) printf("READING data[%x]\t%x\t%p\n",len,buffer->pointer,data);
 		buffer->pointer=0;
 		EXT2_REFRESH(buffer);
 		EXT_SIMPLE_BUFFERED_READ(buffer,data,len);
-		hexdump(data,40,40);
 		//EXT2_BUFFER_READ(buffer,data,len);
-		printf("DONE\n");
 
 	}
 }

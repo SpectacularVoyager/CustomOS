@@ -47,6 +47,9 @@
 #include "usertask/Task.h"
 #include "drivers/ext2/ext2.h"
 #include "specifications/elf/elf.h"
+#include "exceptions/syscall.h"
+
+
 void Debug();
 extern char* cpuid_flags[62];
 //#define PRINT_CPUID
@@ -231,13 +234,13 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 		PCI_Device_Print(usb);
 	}
 #endif
+	SYSCALL_INITIALIZE_USER();
 	Scheduler_START();
 
 	EXT2_INODE elf;
-	if(EXT2_GET_INODE_FROM_PATH(&elf,"/usr/bin/test")==1){
+	if(EXT2_GET_INODE_FROM_PATH(&elf,"/usr/bin/ls")==1){
 		char* hex=malloc(elf.size);
 		if(EXT2_READFILE(&elf,hex,elf.size)==1){
-			khexdump(hex,elf.size,0x20);
 			ELF_FILE file;
 			int s=ELF_PARSE(&file,hex,elf.size);
 			if(s==1){
@@ -254,7 +257,7 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 		printf("FILE NOT FOUND\n");
 	}
 	//USERMODE_ADD();
-	//USERMODE_ADD();
+	// USERMODE_ADD();
 
 	while(1);
 }

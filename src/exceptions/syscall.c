@@ -7,13 +7,26 @@
 #include <usertask/Task.h>
 #include "specifications/elf/elf.h"
 #include "core/user.h"
+#include "utils/ports.h"
+#include "utils/bit.h"
 
 #define ARG1(r) r->rdi
 #define ARG2(r) r->rsi
 #define ARG3(r) r->rdx
 #define RETURN(r) r->rax=
 
-
+void syscall_inst(){
+	printf("HELLO WORLD\n");
+	USER_MODE_RETURN();
+}
+void SYSCALL_INITIALIZE_USER(){
+	//ENABLE SYSCALL EXTENSION
+	WRMSR(MSR_EFER,RDMSR(MSR_EFER)|1);
+	WRMSR(MSR_STAR,0x00180008);
+	WRMSR(MSR_LSTAR,(uint64_t)syscall_inst);
+	WRMSR(MSR_CSTAR,(uint64_t)syscall_inst);
+	WRMSR(MSR_SFMASK,0);
+}
 void syscall(registers* r){
 	int ret=0;
 	switch(r->rax){
