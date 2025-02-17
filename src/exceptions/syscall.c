@@ -15,9 +15,32 @@
 #define ARG3(r) r->rdx
 #define RETURN(r) r->rax=
 
-void syscall_inst(uint64_t rdi,uint64_t rsi,uint64_t rdx){
-	printf("HELLO\n");
-	LOGVALD(rdi);
+void syscall_inst(SYSCALL_REGISTERS* r){
+	unsigned long ret;
+	switch(r->rax){
+		case SYSCALL_EXIT:
+			while(1);
+			//exit(r,ARG1(r));
+			break;
+		case SYSCALL_WRITE:
+			ret=write(ARG1(r),(void*)ARG2(r),ARG3(r));
+			break;
+		case SYSCALL_OPEN:
+			ret=open((void*)ARG1(r),ARG2(r),ARG3(r));
+			break;
+		case SYSCALL_READ:
+			ret=read(ARG1(r),(void*)ARG2(r),ARG3(r));
+			break;
+		case SYSCALL_EXECVE:
+			ret=execve((void*)ARG1(r),(void*)ARG2(r),(void*)ARG3(r));
+			break;
+		case SYSCALL_GET_PID:
+			ret=getpid();
+			break;
+		default:
+			printf("UNRECOGNISED SYSCALL [0x%x]\n",r->rax);
+	}
+	RETURN(r) ret;
 	while(1);
 }
 extern void syscall_inst_asm();
