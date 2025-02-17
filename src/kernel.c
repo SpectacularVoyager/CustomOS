@@ -218,6 +218,8 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 	APIC_TIMER_INIT(0x2000000);
 	PCI_device* device=PCI_GetFromType(0x2,0x0);
 	PCI_Device_Print(device);
+	Scheduler_START();
+	//while(1);
 	//for(int i=0;i<100;i++){
 	//	printf(".");
 	//	APIC_SLEEP_MICRO(1000000);
@@ -235,7 +237,6 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 	}
 #endif
 	SYSCALL_INITIALIZE_USER();
-	Scheduler_START();
 
 	EXT2_INODE elf;
 	if(EXT2_GET_INODE_FROM_PATH(&elf,"/usr/bin/ls")==1){

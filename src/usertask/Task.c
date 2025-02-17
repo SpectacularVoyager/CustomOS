@@ -46,6 +46,7 @@ TASK* TaskCreate(char** args,void* address,void* stack){
 void EMPTYLOOP(){
 	while(1);
 }
+extern void restore_kernel_stack();
 void TaskKill(){
 	//EMPTYLOOP();
 	ListNode* temp=current;
@@ -56,6 +57,7 @@ void TaskKill(){
 		return;
 	}else if(_tasklen==1){
 		tasks=ListRemove(tasks,temp);
+
 	}else{
 		if(current->next==0){
 			current=tasks;
@@ -71,6 +73,7 @@ void Scheduler_LOOP_ROUND_ROBIN(registers* r){
 	printf("INT SCH\n");
 	LOGVAL(r->rip)
 	LOGVAL(r->cs)
+	LOGVAL(r->ss)
 	LOGVAL(r->rflags)
 	LOGVAL(r->rsp)
 	int _tasklen=ListLength(tasks);

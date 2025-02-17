@@ -41,34 +41,35 @@ void syscall_inst(SYSCALL_REGISTERS* r,void* stack){
 		default:
 			printf("UNRECOGNISED SYSCALL [0x%x]\n",r->rax);
 	}
+	// while(1);
 	RETURN(r) ret;
-	//while(1);
 }
 extern void syscall_inst_asm();
 void SYSCALL_INITIALIZE_USER(){
 	//ENABLE SYSCALL EXTENSION
 	
+
+	WRMSR(MSR_EFER,RDMSR(MSR_EFER)|1);
+	
 	uint32_t high,low;
 	rdmsr(MSR_STAR,&low,&high);
-	high=0x00180008;
+	high=0x00100008;
 	wrmsr(MSR_STAR,low,high);
 
-	//WRMSR(MSR_EFER,RDMSR(MSR_EFER)|1);
-	
 	WRMSR(MSR_LSTAR,(uint64_t)syscall_inst_asm);
 	WRMSR(MSR_CSTAR,(uint64_t)syscall_inst_asm);
-	WRMSR(MSR_SFMASK,0);
+	WRMSR(MSR_SFMASK,0x600);
 }
 void syscall(registers* r){
-	// printf("INT SYS\n");
-	// LOGVAL(r->rip)
-	// LOGVAL(r->cs)
-	// LOGVAL(r->ss)
-	// LOGVAL(r->rflags)
-	// LOGVAL(r->rsp)
-	r->cs=8;
-	r->ss=16;
-	r->rflags=0x202;
+	printf("INT SYS\n");
+	LOGVAL(r->rip)
+	LOGVAL(r->cs)
+	LOGVAL(r->ss)
+	LOGVAL(r->rflags)
+	LOGVAL(r->rsp)
+	// r->cs=8;
+	// r->ss=16;
+	// r->rflags=0x202;
 	int ret=0;
 	switch(r->rax){
 		case SYSCALL_EXIT:

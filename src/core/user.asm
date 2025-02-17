@@ -29,33 +29,41 @@ TEST_HALT:
 	hlt
 ;; https://f.osdev.org/viewtopic.php?t=40894
 ;USER_JUMP_ASM(registers* r,void* entry,void* stack);
+; USER_JUMP_ASM:
+; 	mov rax,0x20 | USER_PREV
+; 	mov ds,ax
+; 	mov es,ax
+; 	mov fs,ax
+; 	mov gs,ax
+;
+;     ; Build a fake iret frame
+; 	mov rax,0x20 | USER_PREV
+; 	push rax							; 
+; 	push rdx							; USER STACK
+; 	push 0x202							; RFLAGS INT ENABLE AND RESERVED
+; 	push 0x18 | USER_PREV				; Selector
+; 	push rsi							; ENTRY POINT
+;
+; 	iretq
 USER_JUMP_ASM:
-	mov rax,0x20 | USER_PREV
-	mov ds,ax
-	mov es,ax
+	mov rbx,rsi
+	;;USERSPACE ADDRESS
+	mov rcx,rbx
+	mov	r11,0x202	;EFLAGS
 
-    ; Build a fake iret frame
-	push rax							; 
-	push rdx							; USER STACK
-	push 0x202							; RFLAGS INT ENABLE AND RESERVED
-	push 0x18 | USER_PREV				; Selector
-	push rsi							; ENTRY POINT
+	;;USERSPACE STACK
+	;mov rsp,rdx
+	o64 sysret
 
-	iretq
- ; USER_JUMP_ASM:
- ; 	mov rbx,rsi
- ; 	;;USERSPACE ADDRESS
- ; 	mov rcx,rbx
- ; 	mov	r11,0x202	;EFLAGS
- ;
- ; 	;;USERSPACE STACK
- ; 	mov rsp,rdx
- ; 	o64 sysret
+global restore_kernel_stack
+restore_kernel_stack:
+	mov rsp,stack_top_syscall
+	ret
+
 
 global syscall_inst_asm
 extern syscall_inst
 syscall_inst_asm:
-	cli
 
 	mov [registers.rax],rax
 	mov [registers.rbx],rbx
@@ -74,10 +82,11 @@ syscall_inst_asm:
 	mov [registers.r15],r15	
 
 	mov rdi,registers
-	mov si,cs
+	mov rsi,rsp
 
 	mov rsp,stack_top_syscall
 	call syscall_inst
+
 	mov rsp,rsi
 
 
@@ -96,6 +105,11 @@ syscall_inst_asm:
 	mov r13,[registers.r13]
 	mov r14,[registers.r14]
 	mov r15,[registers.r15]	
+
+	mov rcx,0xC0000081
+	rdmsr
+	mov edx,(0x18<<16)|(0x8)
+	wrmsr
 	o64 sysret
 
 global USER_MODE_RETURN
