@@ -15,7 +15,8 @@
 #define ARG3(r) r->rdx
 #define RETURN(r) r->rax=
 
-void syscall_inst(SYSCALL_REGISTERS* r){
+void syscall_inst(SYSCALL_REGISTERS* r,void* stack){
+	LOGVAL(stack);
 	unsigned long ret;
 	switch(r->rax){
 		case SYSCALL_EXIT:
@@ -41,18 +42,33 @@ void syscall_inst(SYSCALL_REGISTERS* r){
 			printf("UNRECOGNISED SYSCALL [0x%x]\n",r->rax);
 	}
 	RETURN(r) ret;
-	while(1);
+	//while(1);
 }
 extern void syscall_inst_asm();
 void SYSCALL_INITIALIZE_USER(){
 	//ENABLE SYSCALL EXTENSION
-	WRMSR(MSR_EFER,RDMSR(MSR_EFER)|1);
-	WRMSR(MSR_STAR,0x00180008L<<32);
+	
+	uint32_t high,low;
+	rdmsr(MSR_STAR,&low,&high);
+	high=0x00180008;
+	wrmsr(MSR_STAR,low,high);
+
+	//WRMSR(MSR_EFER,RDMSR(MSR_EFER)|1);
+	
 	WRMSR(MSR_LSTAR,(uint64_t)syscall_inst_asm);
 	WRMSR(MSR_CSTAR,(uint64_t)syscall_inst_asm);
 	WRMSR(MSR_SFMASK,0);
 }
 void syscall(registers* r){
+	// printf("INT SYS\n");
+	// LOGVAL(r->rip)
+	// LOGVAL(r->cs)
+	// LOGVAL(r->ss)
+	// LOGVAL(r->rflags)
+	// LOGVAL(r->rsp)
+	r->cs=8;
+	r->ss=16;
+	r->rflags=0x202;
 	int ret=0;
 	switch(r->rax){
 		case SYSCALL_EXIT:

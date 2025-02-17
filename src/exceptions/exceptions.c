@@ -48,6 +48,7 @@ void InvalidOpcodeException(registers* r){
 void GeneralProtectionFault(registers* r){
 	//SetColor(0xFF00000);
 	printf(ERROR "GENERAL PROTECTION FAULT\n");
+	printf("SEGMENT[0x%x]\n",r->cs);
 	uint8_t* inst=((uint8_t*)r->rip);
 	printf("THE EXCEPTION OCCURED AT %p\n",r->rip);
 	printf("THE ERROR CODE IS ??\n");

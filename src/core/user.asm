@@ -29,61 +29,28 @@ TEST_HALT:
 	hlt
 ;; https://f.osdev.org/viewtopic.php?t=40894
 ;USER_JUMP_ASM(registers* r,void* entry,void* stack);
-; USER_JUMP_ASM:
-; 	mov rax,0x20 | USER_PREV
-; 	mov ds,ax
-; 	mov es,ax
-;
-;     ; Build a fake iret frame
-; 	push rax							; 
-; 	push rdx							; USER STACK
-; 	push 0x202							; RFLAGS INT ENABLE AND RESERVED
-; 	push 0x18 | USER_PREV				; Selector
-; 	push rsi							; ENTRY POINT
-;
-; 	iretq
 USER_JUMP_ASM:
-	mov rbx,rsi
-	;;USERSPACE ADDRESS
-	mov rcx,rbx
-	mov	r11,0x202	;EFLAGS
-	o64 sysret
+	mov rax,0x20 | USER_PREV
+	mov ds,ax
+	mov es,ax
 
-syscall_push_all:
-	push rax
-	push rbx
-	push rcx
-	push rdx
-	push rsi
-	push rdi
-	push rbp
-	push r8
-	push r9
-	push r10
-	push r11
-	push r12
-	push r13
-	push r14
-	push r15
-	ret
-syscall_pop_all:
-	pop r15
-	pop r14
-	pop r13
-	pop r12
-	pop r11
-	pop r10
-	pop r9
-	pop r8
-	pop rbp
-	pop rdi
-	pop rsi
-	pop rdx
-	pop rcx
-	pop rbx
-	pop rax
-	ret
+    ; Build a fake iret frame
+	push rax							; 
+	push rdx							; USER STACK
+	push 0x202							; RFLAGS INT ENABLE AND RESERVED
+	push 0x18 | USER_PREV				; Selector
+	push rsi							; ENTRY POINT
 
+	iretq
+ ; USER_JUMP_ASM:
+ ; 	mov rbx,rsi
+ ; 	;;USERSPACE ADDRESS
+ ; 	mov rcx,rbx
+ ; 	mov	r11,0x202	;EFLAGS
+ ;
+ ; 	;;USERSPACE STACK
+ ; 	mov rsp,rdx
+ ; 	o64 sysret
 
 global syscall_inst_asm
 extern syscall_inst
@@ -106,11 +73,12 @@ syscall_inst_asm:
 	mov [registers.r14],r14
 	mov [registers.r15],r15	
 
-	mov rcx,rsp
-	mov rsp,stack_top_syscall
 	mov rdi,registers
+	mov si,cs
+
+	mov rsp,stack_top_syscall
 	call syscall_inst
-	mov rsp,rcx
+	mov rsp,rsi
 
 
 	mov rax,[registers.rax]
@@ -128,10 +96,7 @@ syscall_inst_asm:
 	mov r13,[registers.r13]
 	mov r14,[registers.r14]
 	mov r15,[registers.r15]	
-
-
-	sti
-	jmp USER_MODE_RETURN
+	o64 sysret
 
 global USER_MODE_RETURN
 USER_MODE_RETURN:

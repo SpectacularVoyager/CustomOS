@@ -68,11 +68,11 @@ void TaskKill(){
 }
 void Scheduler_LOOP_ROUND_ROBIN(registers* r){
 	kprintf("TICK\n");
-	// printf("INT SCH\n");
-	// LOGVAL(r->rip)
-	// LOGVAL(r->cs)
-	// LOGVAL(r->rflags)
-	// LOGVAL(r->rsp)
+	printf("INT SCH\n");
+	LOGVAL(r->rip)
+	LOGVAL(r->cs)
+	LOGVAL(r->rflags)
+	LOGVAL(r->rsp)
 	int _tasklen=ListLength(tasks);
 	if(_tasklen==0){
 		kprintf(INFO "NO TASKS FOUND IDLING\n");
