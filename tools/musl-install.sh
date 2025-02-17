@@ -13,8 +13,6 @@ MUSL_RELEASE="musl-1.2.5"
 
 cd "${SCRIPTPATH}"
 
-echo `x86_64-$TOOLCHAIN-gcc`
-exit
 
 # # --noreplace -> won't re-compile if it finds libc
 # if test -f "$SCRIPTPATH/cavos-out/lib/libc.a"; then
@@ -41,8 +39,8 @@ fi
 
 # Booo! Scary!
 export PREFIX="$HOME/musl"
-mkdir -p cavos-build
-cd cavos-build
+mkdir -p musl-build
+cd musl-build
 CC=`x86_64-$TOOLCHAIN-gcc` ARCH=x86_64 CROSS_COMPILE=`x86_64-$TOOLCHAIN-` "../$MUSL_RELEASE/configure" --target=`x86_64-$TOOLCHAIN` --build=`x86_64-$TOOLCHAIN` --host=`x86_64-$TOOLCHAIN` --prefix="$PREFIX" --syslibdir="/lib" --enable-debug
 make clean
 make all -j$(nproc)
