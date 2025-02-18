@@ -51,6 +51,7 @@
 
 #include "devices/usb/keyboard.h"
 #include "vga/term.h"
+#include "specifications/tga/tga.h"
 
 void Debug();
 void evaluate(char* buffer);
@@ -254,6 +255,7 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 	// }
 	//USERMODE_ADD();
 	//USERMODE_ADD();
+	//TGA_DRAW("/home/Images/image.tga");
 
 	while(1);
 }
