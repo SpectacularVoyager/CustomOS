@@ -4,6 +4,13 @@
 #define ELF_CLASS_64	2
 #define ELF_OSABI_SYSV	0
 
+#define ERROR_ELF_NO_MAGIC				-1
+#define ERROR_ELF_UNSUPPORTED_ABI		-2
+#define ERROR_ELF_UNSUPPORTED_ARCH		-3
+#define ERROR_ELF_NO_STRING_TABLE		-4
+#define ERROR_ELF_NO_SYMBOL_TABLE		-5
+
+char* errno_ELF(int x);
 typedef struct {
 	uint8_t Magic[4];
 	uint8_t Class;

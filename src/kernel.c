@@ -47,6 +47,7 @@
 #include "usertask/Task.h"
 #include "drivers/ext2/ext2.h"
 #include "specifications/elf/elf.h"
+#include "exceptions/syscall.h"
 
 #include "devices/usb/keyboard.h"
 #include "vga/term.h"
@@ -162,7 +163,6 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 	//LOAD TSS
 	TSS_FLUSH();
 	// USERMODE_ENTER();
-
 	struct multiboot_tag_new_acpi *acpi=(struct multiboot_tag_new_acpi*)headers.acpi;
 	// LOGVALD(U64(((RSDP_t*)acpi->rsdp)->OEMID));
 	RSDP_t* l=(RSDP_t*)acpi->rsdp;

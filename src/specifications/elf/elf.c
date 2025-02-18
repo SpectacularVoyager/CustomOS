@@ -4,6 +4,18 @@
 
 char ELF_MAGIC[4]={0x7F,'E','L','F'};
 
+char* errno_ELF(int x){
+#define ERR_MSG(e)	if(x==e)return (#e);
+	ERR_MSG(ERROR_ELF_NO_MAGIC);
+	ERR_MSG(ERROR_ELF_UNSUPPORTED_ABI);
+	ERR_MSG(ERROR_ELF_UNSUPPORTED_ARCH);
+	ERR_MSG(ERROR_ELF_NO_STRING_TABLE);
+	ERR_MSG(ERROR_ELF_NO_SYMBOL_TABLE);
+#undef ERR_MSG
+	return "MESSAGE NOT FOUND";
+}
+
+
 void* ELF_LookUpSection(ELF_FILE* elf,char* sectionName){
 	void* nameTable=elf->file+elf->name->Offset;
 	FORI(elf->header->SectionHeaderCount){
@@ -33,21 +45,24 @@ int ELF_PARSE(ELF_FILE* elf,void* file,int len){
 	elf->file=file;
 	elf->len=len;
 	if(strncmp((char*)elf->header->Ident.Magic,ELF_MAGIC,4)!=0){
-		return 0;
+		return ERROR_ELF_NO_MAGIC;
 	}
 	if(elf->header->Ident.Class!=ELF_CLASS_64){
-		return 0;
+		return ERROR_ELF_UNSUPPORTED_ARCH;
 	}
 	if(elf->header->Ident.OsAbi!=ELF_OSABI_SYSV){
-		return 0;
+		return ERROR_ELF_UNSUPPORTED_ABI;
 	}
 	elf->sections=elf->file+elf->header->SectionHeaderOffset;
 	elf->name=&elf->sections[elf->header->SectionNameTableIndex];
 	elf->symbolTable=ELF_LookUpSection(elf,".symtab");
 	elf->stringTable=ELF_LookUpSection(elf,".strtab");
 	elf->rela		=ELF_LookUpSection(elf,".rela");
-	if(elf->symbolTable==0||elf->stringTable==0){
-		return 0;
+	if(elf->symbolTable==NULL){
+		return ERROR_ELF_NO_SYMBOL_TABLE;
+	}
+	if(elf->stringTable==NULL){
+		return ERROR_ELF_NO_STRING_TABLE;
 	}
 	// if(elf->rela==0){
 	// 	printf("ONLY SUPPORT RELOCATABLE FILES\n");

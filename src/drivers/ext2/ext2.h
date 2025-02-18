@@ -2,6 +2,9 @@
 #include "drivers/ahci/ahci.h"
 #include "drivers/gpt/gpt.h"
 
+#define ERROR_EXT2_AHCI_READ_FAIL	-1
+
+
 int EXT2_READPART(void* fs,AHCI_HBA_PORT* port,GPT_PART_ENTRY* entry);
 
 typedef struct {
@@ -105,8 +108,4 @@ typedef struct{
 } EXT2_PART;
 
 int EXT2_GET_INODE_FROM_PATH(EXT2_INODE* ptr,char* path);
-void EXT2_READFILE(EXT2_INODE*inode,void* data,int len);
-
-uint64_t EXT2_LS(EXT2_INODE* parent);
-
-uint64_t EXT2_FIND_IN_DIR(EXT2_INODE* parent,char* name);
+int EXT2_READFILE(EXT2_INODE*inode,void* data,int len);

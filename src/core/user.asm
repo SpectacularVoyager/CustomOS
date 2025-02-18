@@ -37,7 +37,7 @@ USER_JUMP_ASM:
     ; Build a fake iret frame
 	push rax							; 
 	push rdx							; USER STACK
-	push 0x202|0x3000					; RFLAGS INT ENABLE AND RESERVED
+	push 0x202							; RFLAGS INT ENABLE AND RESERVED
 	push 0x18 | USER_PREV				; Selector
 	push rsi							; ENTRY POINT
 

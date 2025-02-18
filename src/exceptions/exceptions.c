@@ -56,6 +56,18 @@ void InvalidOpcodeException(registers* r){
 void GeneralProtectionFault(registers* r){
 	//SetColor(0xFF00000);
 	printf(ERROR "GENERAL PROTECTION FAULT\n");
+	if(r->zero!=0){
+		SELECTOR_ERROR* error=(void*)&r->zero;
+
+		printf("INCORRECT SEGMENT:\n");
+		if(error->tbl==0x0)	printf("\tERROR IN TABLE GDT\n");
+		if(error->tbl==0x1)	printf("\tERROR IN TABLE IDT\n");
+		if(error->tbl==0x2)	printf("\tERROR IN TABLE LDT\n");
+		if(error->tbl==0x3)	printf("\tERROR IN TABLE IDT\n");
+		printf("\tSEGMENT:\t%x\n",error->index);
+	}
+	printf("SEGMENT[0x%x]\n",r->cs);
+	printf("FLAGS[0x%x]\n",r->rflags);
 	uint8_t* inst=((uint8_t*)r->rip);
 	printf("THE EXCEPTION OCCURED AT %p\n",r->rip);
 	printf("THE ERROR CODE IS ??\n");
