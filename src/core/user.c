@@ -101,6 +101,8 @@ int USERMODE_EXEC_ELF(ELF_FILE* elf,char** args,char** env){
 	void* stack=address+0x200000;
 	U64(stack-8)=(uint64_t)args;
 	U64(stack-16)=(uint64_t)ARGS_LEN(args, 10);
+
+	//LOGVAL(U64(stack-16))
 	// hexdump(args[0],8,8);
 	TASK* t=TaskCreate(args,address+_start_addr,address+0x200000-16);
 	return 1;

@@ -108,12 +108,14 @@ void evaluate(char* buffer){
 				memset(args,0,sizeof(char*)*10);
 
 				args[0]=strdup(inst);
-				for(int i=1;i<9;i++){
+				int i=0;
+				for(i=1;i<9;i++){
 					char file[1000];
-					KSHELL_NEXT_ARG(buffer,file);
+					if(buffer[0]=='\0')break;
+					buffer=trim(KSHELL_NEXT_ARG(buffer,file));
 					args[i]=strdup(file);
 				}
-				args[9]=0;
+				args[i]=0;
 				USERMODE_EXEC_ELF(&elffile,args,NULL);
 			}else{
 				printf("FILE [%s] NOT EXECUTABLE\n",inst);
