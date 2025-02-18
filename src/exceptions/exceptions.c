@@ -2,7 +2,7 @@
 #include <stdint.h>
 #include "interrupts/isr.h"
 #include "utils/bit.h"
-#include "syscall.h"
+#include "userspace/syscall.h"
 #include "utils/inst.h"
 #include "utils/utils.h"
 
@@ -36,7 +36,12 @@ void PageFaultHandler(registers* r){
 	printf("\tBAD INSTRUCTION ADDRESS\t%p\n",r->rip);
 	printf("\tBAD ADDRESS\t%p\n",cr2_value);
 	printf("\tERROR REGISTER:\t%x\n",error);
-	__asm__ volatile("cli;hlt");
+	if((r->rflags>>12)==3){
+		r->rip=(uint64_t)USER_PRIV_LOOP;
+		TaskKill();
+	}else{
+		__asm__ volatile("cli;hlt");
+	}
 }
 void InvalidOpcodeException(registers* r){
 	//SetColor(0xFF00000);

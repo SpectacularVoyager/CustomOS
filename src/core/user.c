@@ -79,7 +79,7 @@ int USERMODE_EXEC_ELF(ELF_FILE* elf,char** args,char** env){
 				flag=1;
 			}
 		}
-		//printf("%s\t[%x -> %x] [%x->%x]\n",name,section->Offset,section->Offset+section->Size,section->Addr,section->Addr+section->Size);
+		// printf("%s\t[%x -> %x] [%x->%x]\n",name,section->Offset,section->Offset+section->Size,section->Addr,section->Addr+section->Size);
 	}
 	if(flag==1){
 		printf("CAN ONLY EXECUTE Processes mapped at 0x400000\n");

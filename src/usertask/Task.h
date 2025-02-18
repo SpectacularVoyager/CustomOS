@@ -1,3 +1,4 @@
+#pragma once
 #include "interrupts/idt.h"
 #include "interrupts/isr.h"
 #include "drivers/ext2/ext2.h"

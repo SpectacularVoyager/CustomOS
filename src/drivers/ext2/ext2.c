@@ -24,15 +24,19 @@ int FREAD(uint64_t block,void* data,int len){
 
 void* readInodeTable(uint64_t lba);
 
-int EXT2_READFILE(EXT2_INODE*inode,void* data,int len){
+int EXT2_READFILE(EXT2_INODE*inode,void* data,unsigned long len){
 	int blocksize=(1024<<ext2.superblock->logBlockSize);
 	int blocksizelba=blocksize/GPT_SECTOR_SIZE;
+	if(len>(12L+256L)*blocksize){
+		printf("CANNOT HAVE FILES THIS LONG\n");
+		return 0;
+	}
 	unsigned long block=inode->blockPointers[0]*blocksizelba+ext2.part->startLBA;
 	EXT2_BUFFER buffer;
 	EXT2_BUFFER_INIT(&buffer,ext2.port,block);
 
 	void* ptr=data;
-	int rem=len;
+	unsigned long rem=len;
 
 
 

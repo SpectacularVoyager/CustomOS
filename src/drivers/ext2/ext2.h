@@ -111,7 +111,7 @@ typedef struct{
 } EXT2_PART;
 
 int EXT2_GET_INODE_FROM_PATH(EXT2_INODE* ptr,char* path);
-int EXT2_READFILE(EXT2_INODE*inode,void* data,int len);
+int EXT2_READFILE(EXT2_INODE*inode,void* data,unsigned long len);
 
 uint64_t EXT2_LS(EXT2_INODE* parent);
 
