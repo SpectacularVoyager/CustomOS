@@ -1,7 +1,7 @@
 #pragma once
 #include "drivers/ahci/ahci.h"
 #include "drivers/gpt/gpt.h"
-
+#include "buffer.h"
 #define ERROR_EXT2_AHCI_READ_FAIL	-1
 
 
@@ -82,7 +82,10 @@ typedef struct {
     uint32_t blockCount;
     uint32_t flags;
     uint32_t OSD1;
-    uint32_t blockPointers[15];
+    uint32_t blockPointers[12];
+    uint32_t blockPointerIndirect;
+    uint32_t blockPointerIndirectDouble;
+    uint32_t blockPointerIndirectTriple;
     uint32_t generation;
     uint32_t fileACL;
     uint32_t dirACL;
@@ -113,3 +116,7 @@ int EXT2_READFILE(EXT2_INODE*inode,void* data,int len);
 uint64_t EXT2_LS(EXT2_INODE* parent);
 
 uint64_t EXT2_FIND_IN_DIR(EXT2_INODE* parent,char* name);
+
+void EXT2_GET_BUFFER(EXT2_BUFFER* buffer,EXT2_INODE* node);
+
+uint64_t EXT2_DIR_READ_ENT(EXT2_INODE* parent);

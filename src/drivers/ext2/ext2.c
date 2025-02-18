@@ -6,7 +6,6 @@
 #include "utils/utils.h"
 #include "stdlib/file.h"
 #include <stdint.h>
-#include "buffer.h"
 
 EXT2_PART ext2;
 
@@ -14,9 +13,9 @@ EXT2_PART ext2;
 #define INODE_GROUP_LOCAL(inode,ext2) (inode-1)%ext2.superblock->inodesPerGroup
 
 int FREAD(uint64_t block,void* data,int len){
-	LOGVAL(block);
+	//LOGVAL(block);
 	char buffer[CEILDIV(len,0x200)*0x200];
-	LOGVAL(CEILDIV(len,0x200));
+	//LOGVAL(CEILDIV(len,0x200));
 	int ret=AHCI_READ(ext2.port,block,CEILDIV(len,0x200), (uint16_t*)buffer);
 	if(ret==0){return 0;}
 	memcpy(data,buffer,len);
@@ -31,7 +30,37 @@ int EXT2_READFILE(EXT2_INODE*inode,void* data,int len){
 	unsigned long block=inode->blockPointers[0]*blocksizelba+ext2.part->startLBA;
 	EXT2_BUFFER buffer;
 	EXT2_BUFFER_INIT(&buffer,ext2.port,block);
-	EXT2_BUFFER_READ(&buffer,data,len);
+
+	void* ptr=data;
+	int rem=len;
+
+
+
+	FORI(12){
+		if(inode->blockPointers[i]==0)return 1;
+		unsigned long block=inode->blockPointers[i]*blocksizelba+ext2.part->startLBA;
+		FREAD(block,ptr,MIN(rem,blocksize));
+		rem-=blocksize;
+		ptr+=blocksize;
+	}
+
+	if(inode->blockPointerIndirect==0){
+		return 1;
+	}
+	uint32_t block_pointers[256];
+	FREAD(inode->blockPointerIndirect*blocksizelba+ext2.part->startLBA,block_pointers,sizeof(block_pointers));
+	FORI(256){
+		if(block_pointers[i]==0)break;
+		unsigned long block=block_pointers[i]*blocksizelba+ext2.part->startLBA;
+		FREAD(block,ptr,MIN(rem,blocksize));
+		rem-=blocksize;
+		ptr+=blocksize;
+	}
+	// FORI(0x8){
+	// 	FORJ(0x4){
+	// 		printf("%p\t",*(uint32_t*)(&(data[0x1000*(i*4+j)])));
+	// 	}printf("\n");
+	// }
 	return 1;
 }
 void EXT2_READ_INODE_FROM_LBA(EXT2_INODE* inode,uint64_t lba){
@@ -76,6 +105,31 @@ uint64_t EXT2_LS(EXT2_INODE* parent){
 		// if(strncmp(strname, "..4",dir.nameLen+1)==0){
 		// 	return dir.inode;
 		// }
+	}
+	return 1;
+}
+void EXT2_GET_BUFFER(EXT2_BUFFER* buffer,EXT2_INODE* node){
+
+	int blocksize=(1024<<ext2.superblock->logBlockSize);
+	int blocksizelba=blocksize/GPT_SECTOR_SIZE;
+	uint64_t lba=ext2.part->startLBA+node->blockPointers[0]*blocksizelba;
+	EXT2_BUFFER_INIT(buffer,ext2.port,lba);
+}
+uint64_t EXT2_DIR_READ_ENT(EXT2_INODE* parent){
+	int blocksize=(1024<<ext2.superblock->logBlockSize);
+	int blocksizelba=blocksize/GPT_SECTOR_SIZE;
+	EXT2_BUFFER buffer;
+	uint64_t lba=ext2.part->startLBA+parent->blockPointers[0]*blocksizelba;
+	EXT2_BUFFER_INIT(&buffer,ext2.port,lba);
+	while(1){
+		EXT2_DIR dir;
+		EXT2_BUFFER_READ(&buffer,&dir,8);
+		if(dir.inode==0)break;
+		char strname[dir.nameLen+1];
+		strname[dir.nameLen]=0;
+		EXT2_BUFFER_READ(&buffer,&strname,dir.nameLen);
+		EXT2_BUFFER_SKIP(&buffer,dir.recLen-dir.nameLen-8);
+		printf("%s\n",strname);
 	}
 	return 1;
 }

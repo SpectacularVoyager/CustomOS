@@ -41,6 +41,7 @@ void* ELF_LookUpSymbol(ELF_FILE* elf,char* sectionName){
 }
 // #define LOOKUP(table,index) &table[index]
 int ELF_PARSE(ELF_FILE* elf,void* file,int len){
+	khexdump(file,elf->len,40);
 	elf->header=file;
 	elf->file=file;
 	elf->len=len;

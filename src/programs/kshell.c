@@ -118,7 +118,7 @@ void evaluate(char* buffer){
 				args[i]=0;
 				USERMODE_EXEC_ELF(&elffile,args,NULL);
 			}else{
-				printf("FILE [%s] NOT EXECUTABLE\n",inst);
+				printf("FILE [%s] NOT EXECUTABLE [%s]\n",inst,errno_ELF(s));
 			}
 		}else{
 			printf("COMMAND [%s] NOT FOUND\n",inst);

@@ -74,14 +74,14 @@ void TaskKill(){
 	__asm__ volatile("STI");
 }
 void Scheduler_LOOP_ROUND_ROBIN(registers* r){
-	kprintf("TICK\n");
+	//kprintf("TICK\n");
 	int _tasklen=ListLength(tasks);
 	if(_tasklen==0){
-		kprintf(INFO "NO TASKS FOUND IDLING\n");
+		//kprintf(INFO "NO TASKS FOUND IDLING\n");
 		return;
 	}
 	if(_tasklen<=1){
-		kprintf(INFO "CONTINUING EXISTING TASK\n",ListLength(tasks));
+		//kprintf(INFO "CONTINUING EXISTING TASK\n",ListLength(tasks));
 		//NO SWITCHING NEEDED
 		if(current==0){
 			// printf(INFO "QUE\n");
