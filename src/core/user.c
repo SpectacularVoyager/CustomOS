@@ -7,7 +7,6 @@
 #include "specifications/elf/elf.h"
 #include "utils/utils.h"
 #include "utils/bit.h"
-#include "utils/ports.h"
 #include "usertask/Task.h"
 
 extern void* stack_top_syscall;
@@ -27,9 +26,6 @@ void func(){
 void sayHello(){
 	printf("HELLO\n");
 }
-void _USER_JUMP(){
-	
-}
 extern void TEST_USER();
 extern void TEST_HALT();
 uint8_t testprogram[14]   = {0xBB,0x00,0x00,0x00,0xFD,0xC7,0x03,0xFF,0x00,0xFF,0x00,0xF4,0xB8,0x40};
@@ -38,7 +34,7 @@ void __attribute__((optimize("O0"))) USERMODE_ENTER(){
 	void* address=(void*)(0x140000000);
 	printf("TRYING TO ENTER USER MODE\n");
 
-	memcpy(address,TEST_USER,100);
+	memcpy(address,TEST_HALT,100);
 
 	USER_JUMP_ASM(NULL,address,address+0x100000);
 }

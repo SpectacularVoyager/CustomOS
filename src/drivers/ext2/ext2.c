@@ -32,11 +32,6 @@ int EXT2_READFILE(EXT2_INODE*inode,void* data,int len){
 	EXT2_BUFFER buffer;
 	EXT2_BUFFER_INIT(&buffer,ext2.port,block);
 	EXT2_BUFFER_READ(&buffer,data,len);
-	// if(FREAD(block,data,len)){
-	// 	return 1;
-	// }else{
-	// 	return ERROR_EXT2_AHCI_READ_FAIL;
-	// } 
 	return 1;
 }
 void EXT2_READ_INODE_FROM_LBA(EXT2_INODE* inode,uint64_t lba){

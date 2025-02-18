@@ -109,3 +109,7 @@ typedef struct{
 
 int EXT2_GET_INODE_FROM_PATH(EXT2_INODE* ptr,char* path);
 int EXT2_READFILE(EXT2_INODE*inode,void* data,int len);
+
+uint64_t EXT2_LS(EXT2_INODE* parent);
+
+uint64_t EXT2_FIND_IN_DIR(EXT2_INODE* parent,char* name);

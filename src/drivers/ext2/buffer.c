@@ -26,17 +26,6 @@ void EXT_SIMPLE_BUFFERED_READ(EXT2_BUFFER* buffer,void* data,int len){
 		buffer->pointer+=len;
 }
 void EXT2_BUFFER_READ(EXT2_BUFFER* buffer,void* data,int len){
-	// if(buffer->pointer+len<EXT2_BUFF_CAP){
-	// 	memcpy(data,buffer->buffer+buffer->pointer,len);
-	// 	buffer->pointer+=len;
-	// }else{
-	// 	unsigned int part=EXT2_BUFF_CAP-buffer->pointer-1;
-	// 	memcpy(data,buffer->buffer,part);
-	// 	EXT2_REFRESH(buffer);
-	// 	buffer->pointer=0;
-	// 	memcpy(data+part,buffer->buffer+buffer->pointer,len-part);
-	// 	buffer->pointer+=part;
-	// }
 	if(buffer->pointer+len<EXT2_BUFF_CAP){
 		EXT_SIMPLE_BUFFERED_READ(buffer,data,len);
 	}else{
