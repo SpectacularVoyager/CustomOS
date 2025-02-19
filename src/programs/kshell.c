@@ -64,8 +64,9 @@ void evaluate(char* buffer){
 	if(trim(buffer)[0]=='\0')return;
 	char inst[100];
 	buffer=KSHELL_NEXT_ARG(buffer,inst);
-	if(strncmp(inst,"ls",2)==0){
-
+	if(strncmp(inst,"clr",3)==0){
+		TERM_SET_POS(0, 0);
+		ClearScreen();
 	}else if(strncmp(inst,"exec",4)==0){
 		EXT2_INODE elf;
 		char file[100];

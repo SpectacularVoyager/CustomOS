@@ -43,7 +43,40 @@ int FILE_GET(FILE_DESC* desc,FILE* f,char* path){
 		return 0;
 	}
 }
+int FSTAT(FILE* file,struct stat* buffer){
+	memset(buffer,0,sizeof(struct stat));
+	if(file->type==FILE_TYPE_EXT){
+		EXT2_INODE* ext=&file->file.ext2.inode;
+		buffer->st_dev=0;
+		buffer->st_ino=0;
+		buffer->st_nlink=ext->linkCount;
 
+		buffer->st_mode=ext->mode;
+		buffer->st_uid=ext->UID;
+		buffer->st_gid=ext->GID;
+		buffer->__pad0=0;
+		buffer->st_rdev=0;
+		buffer->st_size=ext->size;
+		buffer->st_blksize=0x1000;
+		buffer->st_blocks=ext->blockCount;
+
+		buffer->st_atim=ext->accessTime;
+		buffer->st_mtim=ext->modificationTime;
+		buffer->st_ctim=ext->creationTime;
+	}else if(file->type==FILE_TYPE_VIRT){
+		FILE_DESC_VIRT* virt=&file->file.virt;
+		memset(buffer,0,sizeof(struct stat));
+		buffer->st_mode=S_IFIFO;
+		buffer->st_size=virt->length;
+		buffer->st_blksize=0x1000;
+	}else{
+		return 0;
+	}
+	return 1;
+}
+void FILE_DESC_FREE(FILE_DESC* desc){
+	desc->used=0;
+}
 int FILE_DESC_DUP(FILE_DESC* n,FILE_DESC* o){
 	n->used=o->used;
 	n->offset=o->offset;

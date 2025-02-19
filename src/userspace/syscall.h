@@ -28,6 +28,12 @@ int getpid();
 
 int fork(void);
 
+int dup(int fd);
+
+int close(int fd);
+
+int dup2(int fd,int _new);
+
 struct iovec {
 	void   *iov_base;  /* Starting address */
 	size_t  iov_len;   /* Size of the memory pointed to by iov_base. */

@@ -34,6 +34,21 @@ void syscall(registers* r){
 		case SYS_getpid:
 			ret=getpid();
 			break;
+		case SYS_fork:
+			ret=fork();
+			break;
+		case SYS_stat:
+			ret=fstat(ARG1(r),(void*)ARG2(r));
+			break;
+		case SYS_dup:
+			ret=dup(ARG1(r));
+			break;
+		case SYS_dup2:
+			ret=dup2(ARG1(r),ARG2(r));
+			break;
+		case SYS_close:
+			ret=close(ARG1(r));
+			break;
 		case SYS_fcntl:
 			ret=fcntl(ARG1(r),ARG2(r),ARG3(r));
 			break;
@@ -43,8 +58,23 @@ void syscall(registers* r){
 	}
 	RETURN(r) ret;
 }
+int TASK_FD_FIND(TASK* task){
+	TASK* t=TaskCurrent();
+	int idx=-1;
+	for(int i=3;i<256;i++){
+		if(t->fd[i].used!=1){
+			idx=i;
+			break;
+		}
+	}
+	return idx;
+}
 int ioctl(int fd, int op, ...){
 
+}
+int fstat(int fd, struct stat *statbuf){
+	TASK* t=TaskCurrent();
+	return FSTAT(&t->fd[fd].file,statbuf);
 }
 int getpid(){
 	return TaskCurrent()->id;
@@ -54,18 +84,31 @@ int fcntl(int fd, int op, int args /* arg */ ){
 	printf("FCNTL ON FD(%d) WITH OP [%d] AND {%d} \n",fd,op,args);
 
 }
+int close(int fd){
+	TASK* t=TaskCurrent();
+	if(t->fd[fd].used==0)return 0;
+	FILE_DESC_FREE(&t->fd[fd]);
+	return 1;
+}
+int dup(int fd){
+	TASK* t=TaskCurrent();
+	if(t->fd[fd].used==0)return 0;
+	int idx=TASK_FD_FIND(t);
+	FILE_DESC_DUP(&t->fd[idx],&t->fd[fd]);
+	return 1;
+}
+int dup2(int fd,int _new){
+	TASK* t=TaskCurrent();
+	if(t->fd[fd].used==0)return 0;
+	close(_new);
+	FILE_DESC_DUP(&t->fd[_new],&t->fd[fd]);
+	return 1;
+}
 int open(const char* path,int flags,umode_t mode){
 	TASK* t=TaskCurrent();
-	int idx=-1;
-	FILE_DESC* emptyfd;
-	for(int i=3;i<256;i++){
-		if(t->fd[i].used!=1){
-			emptyfd=&t->fd[i];
-			idx=i;
-			break;
-		}
-	}
+	int idx=TASK_FD_FIND(t);
 	if(idx==-1)return 0;
+	FILE_DESC* emptyfd=&t->fd[idx];
 	FILE f;
 	if(FILE_GET(emptyfd,&f,path)){
 		return idx;
