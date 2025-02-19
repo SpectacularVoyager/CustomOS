@@ -1,4 +1,5 @@
 #include "syscall.h"
+#include "usertask/Task.h"
 
 #define ARG1(r) r->rdi
 #define ARG2(r) r->rsi
@@ -32,8 +33,11 @@ void syscall(registers* r){
 		case SYS_getpid:
 			ret=getpid();
 			break;
+		case SYS_fcntl:
+			ret=fcntl(ARG1(r),ARG2(r),ARG3(r));
+			break;
 		default:
-			//printf("UNRECOGNISED SYSCALL [0x%x][%s]\n",r->rax,SYSCALL_GET_NAME(r->rax));
+			printf("UNRECOGNISED SYSCALL [0x%x][%s]\n",r->rax,SYSCALL_GET_NAME(r->rax));
 			kprintf("UNRECOGNISED SYSCALL [0x%x][%s]\n",r->rax,SYSCALL_GET_NAME(r->rax));
 	}
 	RETURN(r) ret;
@@ -45,6 +49,10 @@ int getpid(){
 	return TaskCurrent()->id;
 }
 
+int fcntl(int fd, int op, int args /* arg */ ){
+	printf("FCNTL ON FD(%d) WITH OP [%d] AND {%d} \n",fd,op,args);
+
+}
 int open(const char* path,int flags,umode_t mode){
 	TASK* t=TaskCurrent();
 	int idx=-1;
@@ -57,15 +65,9 @@ int open(const char* path,int flags,umode_t mode){
 		}
 	}
 	if(idx==-1)return 0;
-	if(EXT2_GET_INODE_FROM_PATH(&emptyfd->inode,path)==1){
-		char* hex=malloc(emptyfd->inode.size);
-		EXT2_READFILE(&emptyfd->inode,hex,emptyfd->inode.size);
-		emptyfd->used=1;
-		emptyfd->buffer=hex;
-		emptyfd->offset=0;
+	FILE file;
+	if(FILE_GET(emptyfd,&file,path)){
 		return idx;
-	}else{
-		// printf("FILE :%s NOT FOUND",path);
 	}
 	return 0;
 }

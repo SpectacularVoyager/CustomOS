@@ -20,6 +20,7 @@ int open(const char* path,int flags,umode_t mode);
 
 int read(int fd,char* buffer,unsigned int len);
 
+int fcntl(int fd, int op,int args);
 
 int execve(const char* path,char **argv,char **envp);
 

@@ -2,17 +2,12 @@
 #include "interrupts/idt.h"
 #include "interrupts/isr.h"
 #include "drivers/ext2/ext2.h"
+#include "filesystem/vfs.h"
 
 extern void USER_PRIV_LOOP();
 
 void TaskSwitch(int id);
 
-typedef struct {
-	char* buffer;
-	EXT2_INODE inode;
-	int used;
-	int offset;
-} FILE_DESC;
 
 typedef struct {
 	int id;

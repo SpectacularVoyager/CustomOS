@@ -1,19 +1,35 @@
 #include "drivers/ext2/ext2.h"
 
-#include "usertask/Task.h"
-typedef struct VFILE_t{
-
-} VFILE;
+#define FILE_TYPE_EXT	1
+#define FILE_TYPE_VIRT	2
 
 typedef struct {
+	EXT2_INODE* inode;
+	char* data;
+} FILE_DESC_EXT2;
+
+typedef struct {
+	char* data;
+	int length;
+} FILE_DESC_VIRT;
+typedef struct{
 	int type;
-	union file{
-		EXT2_INODE ext2;
-		VFILE virt;
-	};
+	union{
+		FILE_DESC_EXT2 ext2;
+		FILE_DESC_VIRT virt;
+	} file;
 } FILE;
 
 typedef struct {
-	char* fullpath;
 	FILE file;
-} MOUNT;
+	int used;
+	int offset;
+} FILE_DESC;
+
+void* FILE_GetBuffer(FILE* file);
+
+int FILE_GetLength(FILE* file);
+
+int FILE_GetRemaining(FILE_DESC* file);
+
+int FILE_GET(FILE_DESC* desc,FILE* f,char* path);

@@ -1,4 +1,7 @@
+#include "usertask/Task.h"
 #include <userspace/syscall.h>
+#include "utils/utils.h"
+#include <stdlib/string.h>
 
 int write(int fd,char* buffer,unsigned int len){
 	if(fd!=1)return -1;
@@ -11,13 +14,10 @@ int read(int fd,char* buffer,unsigned int len){
 	TASK* t=TaskCurrent();
 	FILE_DESC* desc=&t->fd[fd];
 	if(desc->used!=1)return 0;
-	unsigned int idx=0;
-	FORI(len){
-		if(desc->offset>=desc->inode.size)break;
-		buffer[i]=desc->buffer[desc->offset++];
-		idx++;
-	}
-	return idx;
+	void* hex=FILE_GetBuffer(&desc->file);
+	int bytes_read=MIN(len,FILE_GetRemaining(desc));
+	memcpy(buffer,hex,bytes_read);
+	return bytes_read;
 }
 void exit(registers* r,int code){
 	r->rip=(uint64_t)USER_PRIV_LOOP;
