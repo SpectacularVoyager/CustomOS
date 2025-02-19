@@ -24,3 +24,7 @@ void Scheduler_START();
 void TaskKill();
 
 TASK* TaskCurrent();
+
+int TaskDup(TASK* n,TASK* old);
+
+void TaskAddList(TASK* task);

@@ -21,6 +21,21 @@ void Scheduler_START(){
 	IRQ_RegisterHandler(0,Scheduler_LOOP_ROUND_ROBIN);
 	APIC_PERIODIC(1000*1000*10);
 }
+int TaskNewPID(){
+	return  ++PID;
+}
+int TaskDup(TASK* n,TASK* old){
+	n->id=TaskNewPID();
+	n->ready=1;
+	memcpy(n->r,old->r,sizeof(registers));
+	FORI(256){
+		if(FILE_DESC_DUP(&n->fd[i],&old->fd[i])==0){
+			return 0;
+		}
+	}
+
+	return 1;
+}
 void TaskChange(TASK* t){
 	MemoryRemap(0x400000,(uint64_t)t->address,0b111);
 
@@ -30,18 +45,22 @@ TASK* TaskCurrent(){return current->val;}
 
 TASK* TaskCreate(char** args,void* address,void* stack){
 	TASK* t=malloc(sizeof(TASK));
-	t->id=++PID;
+	t->id=TaskNewPID();
 	t->ready=1;
 	memset(t->r,0,sizeof(registers));
 	t->r->rip=(uint64_t)address;
 	t->r->rsp=(uint64_t)stack;
 	t->r->rdi=(uint64_t)args;
-	tasks=ListAdd(tasks,t);
+	//tasks=ListAdd(tasks,t);
+	TaskAddList(t);
 	FORI(256){
 		t->fd[i]=(FILE_DESC){.used=0};
 	}
 	t->address=address;
 	return t;
+}
+void TaskAddList(TASK* task){
+	tasks=ListAdd(tasks,task);
 }
 void EMPTYLOOP(){
 	while(1);

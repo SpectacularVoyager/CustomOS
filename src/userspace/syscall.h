@@ -26,6 +26,7 @@ int execve(const char* path,char **argv,char **envp);
 
 int getpid();
 
+int fork(void);
 
 struct iovec {
 	void   *iov_base;  /* Starting address */

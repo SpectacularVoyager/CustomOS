@@ -1,4 +1,5 @@
 #include "syscall.h"
+#include "drivers/ext2/ext2.h"
 #include "usertask/Task.h"
 
 #define ARG1(r) r->rdi
@@ -65,9 +66,11 @@ int open(const char* path,int flags,umode_t mode){
 		}
 	}
 	if(idx==-1)return 0;
-	FILE file;
-	if(FILE_GET(emptyfd,&file,path)){
+	FILE f;
+	if(FILE_GET(emptyfd,&f,path)){
 		return idx;
+	}else{
+		return 0;
 	}
 	return 0;
 }

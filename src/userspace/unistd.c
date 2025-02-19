@@ -16,7 +16,9 @@ int read(int fd,char* buffer,unsigned int len){
 	if(desc->used!=1)return 0;
 	void* hex=FILE_GetBuffer(&desc->file);
 	int bytes_read=MIN(len,FILE_GetRemaining(desc));
-	memcpy(buffer,hex,bytes_read);
+
+	memcpy(buffer,hex+desc->offset,bytes_read);
+	desc->offset+=bytes_read;
 	return bytes_read;
 }
 void exit(registers* r,int code){
@@ -24,6 +26,7 @@ void exit(registers* r,int code){
 	TaskKill();
 }
 int execve(const char* path,char **argv,char **envp){
+
 	EXT2_INODE elf;
 	if(EXT2_GET_INODE_FROM_PATH(&elf,path)==1){
 		char* hex=malloc(elf.size);
@@ -35,4 +38,12 @@ int execve(const char* path,char **argv,char **envp){
 		}
 	}
 	return 0;
+}
+int fork(void){
+	TASK* t=TaskCurrent();
+	TASK* _new=malloc(sizeof(TASK));
+	TaskDup(_new,t);
+	_new->r->rax=0;
+	TaskAddList(_new);
+	return _new->id;
 }

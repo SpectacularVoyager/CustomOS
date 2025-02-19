@@ -4,7 +4,7 @@
 #define FILE_TYPE_VIRT	2
 
 typedef struct {
-	EXT2_INODE* inode;
+	EXT2_INODE inode;
 	char* data;
 } FILE_DESC_EXT2;
 
@@ -33,3 +33,5 @@ int FILE_GetLength(FILE* file);
 int FILE_GetRemaining(FILE_DESC* file);
 
 int FILE_GET(FILE_DESC* desc,FILE* f,char* path);
+
+int FILE_DESC_DUP(FILE_DESC* n,FILE_DESC* o);
