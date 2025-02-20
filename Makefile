@@ -36,7 +36,6 @@ else
 endif
 QEMU_FLAGS:=$(QEMU_FLAGS) -serial file:logs/serial.log -m 1G -vga std 
 # QEMU_FLAGS:=$(QEMU_FLAGS) -net nic,model=rtl8139
-QEMU_FLAGS:=$(QEMU_FLAGS) -netdev type=tap,id=br0 -device rtl8139,netdev=br0
 
 objects = $(shell find -wholename "./src/*.c")
 objects := ${objects:.c=.o}
@@ -65,9 +64,9 @@ isMultiBoot:
 	@./scripts/isMultiBoot.sh $(ISO)
 run: all
 	if [ -f disks/fat.img ]; then \
-		$(QEMU) $(QEMU_FLAGS) -hda $(IMAGE) -hdb disks/fat.img; \
+		sudo $(QEMU) $(QEMU_FLAGS) -hda $(IMAGE) -hdb disks/fat.img; \
 	else \
-		$(QEMU) $(QEMU_FLAGS) -hda $(IMAGE); \
+		sudo $(QEMU) $(QEMU_FLAGS) -hda $(IMAGE); \
 	fi
 
 run_cfg: build isMultiBoot
