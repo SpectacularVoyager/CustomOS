@@ -243,23 +243,23 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 	Scheduler_START();
 	//evaluate("/usr/bin/test ");
 
-	ClearScreen();
-	TERM_SET_POS(0,0);
-	EXT2_INODE elf;
-	if(EXT2_GET_INODE_FROM_PATH(&elf,"/usr/bin/cat")==1){
-		char* hex=malloc(elf.size);
-		EXT2_READFILE(&elf,hex,elf.size);
-		ELF_FILE file;
-		int s=ELF_PARSE(&file,hex,elf.size);
-		if(s==1){
-			char* args[]={"/usr/bin/cat","/home/ASM/main.c",0};
-			USERMODE_EXEC_ELF(&file,args,NULL);
-		}else{
-			printf("FILE NOT EXECUTABLE [%s]\n",errno_ELF(s));
-		}
-		//LOGVAL(elf.size);
-		//khexdump(hex,elf.size,32);
-	}
+	// ClearScreen();
+	// TERM_SET_POS(0,0);
+	// EXT2_INODE elf;
+	// if(EXT2_GET_INODE_FROM_PATH(&elf,"/usr/bin/cat")==1){
+	// 	char* hex=malloc(elf.size);
+	// 	EXT2_READFILE(&elf,hex,elf.size);
+	// 	ELF_FILE file;
+	// 	int s=ELF_PARSE(&file,hex,elf.size);
+	// 	if(s==1){
+	// 		char* args[]={"/usr/bin/cat","/home/ASM/hello.asm",0};
+	// 		USERMODE_EXEC_ELF(&file,args,NULL);
+	// 	}else{
+	// 		printf("FILE NOT EXECUTABLE [%s]\n",errno_ELF(s));
+	// 	}
+	// 	//LOGVAL(elf.size);
+	// 	//khexdump(hex,elf.size,32);
+	// }
 
 	//USERMODE_ADD();
 	//USERMODE_ADD();
