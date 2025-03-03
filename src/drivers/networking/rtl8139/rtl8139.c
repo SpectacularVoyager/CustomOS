@@ -41,14 +41,20 @@ void RTL8139_INIT(PCI_device* device,void* base){
 	uint8_t* macaddr=data+RTL8139_MAC;
 	RTL8139_HEADER* header=data;
 	device->command|=PCI_COMMAND_BUS_MASTERING;
+	FORI(6)
+		printf("BAR[%d]\t%p\n",i,nic.BAR[i]);
+	hexdump(&rtl8139.mmio,sizeof(PCIGeneralDevice),40);
 
+	printf("INITIALIZING RTL8139\n");
 	//TURN ON
 	outb(rtl8139.ioaddr+0x52,0x0);
 
 	//SOFTWARE RESET 
 	outb(rtl8139.ioaddr + 0x37, 0x10);
+
 	while((inb(rtl8139.ioaddr + 0x37) & 0x10) != 0) { }
 
+	LOGVAL("RTL8139 SOFTWARE RESET OVER\n");
 	//RECV STUFF
 	void* recieve=mallocA(8192+16,0x1000);
 	//MEMORY PHYSICAL

@@ -36,6 +36,7 @@ else
 endif
 QEMU_FLAGS:=$(QEMU_FLAGS) -serial file:logs/serial.log -m 1G -vga std 
 # QEMU_FLAGS:=$(QEMU_FLAGS) -net nic,model=rtl8139
+QEMU_FLAGS:=$(QEMU_FLAGS) -netdev tap,id=mynet0,ifname=tap0,script=no,downscript=no
 
 objects = $(shell find -wholename "./src/*.c")
 objects := ${objects:.c=.o}
