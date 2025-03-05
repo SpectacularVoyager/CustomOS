@@ -65,6 +65,24 @@ void TaskAddList(TASK* task){
 void EMPTYLOOP(){
 	while(1);
 }
+ListNode* TaskNextFree(ListNode* start,ListNode* current){
+	if(start==0||current==0)return 0;
+	ListNode* temp=current;
+	while(current!=0){
+		if(true)
+			return current;
+		current=current->next;
+	}
+	current=start;
+	while(current!=temp){
+		if(true)
+			return current;
+		current=current->next;
+	}
+	if(true)
+		return current;
+	return 0;
+}
 void TaskKill(){
 	__asm__ volatile("CLI");
 	//EMPTYLOOP();
@@ -93,6 +111,7 @@ void TaskKill(){
 	__asm__ volatile("STI");
 }
 void Scheduler_LOOP_ROUND_ROBIN(registers* r){
+	__asm__ volatile("CLI");
 	//kprintf("TICK\n");
 	int _tasklen=ListLength(tasks);
 	if(_tasklen==0){
@@ -123,4 +142,5 @@ void Scheduler_LOOP_ROUND_ROBIN(registers* r){
 	//JUMP TO USER MODE
 	APIC_SEND_EOI();
 	TaskChange((TASK*)(current->val));
+	__asm__ volatile("STI");
 }
