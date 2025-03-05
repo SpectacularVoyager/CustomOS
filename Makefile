@@ -35,8 +35,9 @@ ifeq ($(USB),2)
 		-device usb-kbd \
 		-device usb-mouse
 endif
-QEMU_FLAGS:=$(QEMU_FLAGS) -serial file:logs/serial.log -net nic,model=rtl8139 -m 2G -vga std 
-QEMU_FLAGS:=$(QEMU_FLAGS) 
+QEMU_FLAGS:=$(QEMU_FLAGS) -serial file:logs/serial.log -m 2G -vga std 
+QEMU_FLAGS:=$(QEMU_FLAGS) -net nic,model=rtl8139
+QEMU_FLAGS:=$(QEMU_FLAGS) -netdev tap,id=mynet0,ifname=tap0,script=no,downscript=no
 
 objects = $(shell find -wholename "./src/*.c")
 objects := ${objects:.c=.o}
@@ -65,9 +66,9 @@ isMultiBoot:
 	@./scripts/isMultiBoot.sh $(ISO)
 run: all
 	if [ -f disks/ext2.img ]; then \
-		$(QEMU) $(QEMU_FLAGS) -hda $(IMAGE) -hdb disks/ext2.img; \
+		sudo $(QEMU) $(QEMU_FLAGS) -hda $(IMAGE) -hdb disks/ext2.img; \
 	else \
-		$(QEMU) $(QEMU_FLAGS) -hda $(IMAGE); \
+		sudo $(QEMU) $(QEMU_FLAGS) -hda $(IMAGE); \
 	fi
 
 run_cfg: build isMultiBoot
@@ -103,6 +104,10 @@ losetup:
 	@sudo losetup -Pf disks/ext2.img
 errors:
 	make 2>&1 >/dev/null | grep -i 'error'
+
+tap:
+	@sudo ip tuntap add mode tap tap0
+	@sudo ip link set dev tap0 up
 
 ##### TO MAKE USB BOOTABLE #####
 ##		sudo mkfs.vfat -F 32 -n USBBoot -I /dev/sda

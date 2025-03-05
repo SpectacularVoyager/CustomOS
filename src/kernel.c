@@ -95,7 +95,7 @@ void MTRStuff(){
 	SetColor(0xffffff);
 }
 
-//#define NOUSB
+#define NOUSB
 
 
 void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long cpuid,uint64_t* gdt)
@@ -239,8 +239,9 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 		PCI_Device_Print(usb);
 	}
 #endif
+	RTL8139_INIT(PCI_GetFromID(0x10EC,0x8139),pcibase);
 	//EXT2_DIR_READ_ENTRY("/home",0,0);
-	Scheduler_START();
+	//Scheduler_START();
 	//evaluate("/usr/bin/test ");
 
 	// ClearScreen();
