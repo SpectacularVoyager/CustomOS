@@ -1,5 +1,8 @@
 #include "stdint.h"
 
+#define ETH_TYPE_ARP	0x806
+#define ETH_TYPE_IP		0x800
+
 uint16_t htons(uint16_t nb);
 
 uint32_t htonl(uint32_t nb) ;
@@ -43,10 +46,7 @@ typedef struct {
 	uint8_t hardware_len;
 	uint8_t protocol_len;
 	uint16_t operation;
-	uint32_t sender_hardware_addr;
-	uint32_t sender_protocol_addr;
-	uint32_t target_hardware_addr;
-	uint32_t target_protocol_addr;
+	uint8_t data[1];
 } __attribute__((packed)) PACKET_ARP;
 
 
@@ -59,3 +59,19 @@ void addUDP(PACKET_IP* ip,int src,int dest,void* data,int len);
 void IP_default(PACKET_IP* ip,unsigned long src,unsigned long dest,int ident,int len);
 
 void ETHERNET_default(PACKET_ETHERNET2_BEGIN* eth,uint8_t* src,uint8_t* dest,unsigned int type);
+
+inline void* ARP_GET_SENDER_ADDR(PACKET_ARP* arp){
+	return arp->data+0;
+}
+inline void* ARP_GET_SENDER_PROTOCOL(PACKET_ARP* arp){
+	return arp->data+arp->hardware_len;
+}
+inline void* ARP_GET_TARGET_ADDR(PACKET_ARP* arp){
+	return arp->data+arp->hardware_len+arp->protocol_len;
+}
+inline void* ARP_GET_TARGET_PROTOCOL(PACKET_ARP* arp){
+	return arp->data+2*arp->hardware_len+arp->protocol_len;
+}
+inline int ARP_SIZE(PACKET_ARP* arp){
+	return 2*arp->hardware_len+arp->protocol_len*2;
+}

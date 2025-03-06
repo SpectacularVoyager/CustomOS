@@ -4,21 +4,19 @@
 #define RTL8139_MAC			0x0
 #define RTL8139_RX_BUFFER	0x30
 #define RTL8139_CR			0x37
+#define RTL8139_CAPR		0x38
+#define RTL8139_ISR			0x3E
 #define RTL8139_CONFIG1		0x52
 
 #define PCI_COMMAND_BUS_MASTERING	1<<2
 
+#define RTL8139_STATUS_ROK 1<<0
+#define RTL8139_STATUS_TOK 1<<2
+
 void RTL8139_INIT(PCI_device* device,void* base);
 
-typedef struct {
-	int tsad;
-	PCI_device* device;
-	uint32_t ioaddr;
-	void* mmio;
-} RTL8139;
-
 //TODO RECHECK VALIDITY
-typedef struct {
+typedef struct  RTL8139_HEADER_t{
 	uint8_t MAC[6];
 	uint8_t resv1[2];
 	uint8_t MAR[8];
@@ -71,3 +69,12 @@ typedef struct {
     uint8_t CONFIG5;           // 00D8h Configuration Register 5
     uint8_t resv8[0xFF-0xD9];           // 00D9h-00FFh Reserved
 } __attribute__((packed)) RTL8139_HEADER;
+
+typedef struct {
+	int tsad;
+	PCI_device* device;
+	uint32_t ioaddr;
+	void* mmio;
+	void* recv;
+	RTL8139_HEADER* header;
+} RTL8139;

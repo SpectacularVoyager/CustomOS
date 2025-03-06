@@ -7,7 +7,6 @@ unsigned int checksum(void* _data,int len){
 	int sum=0;
 	FORI(len/2){
 		sum+=htons(data[i]);
-		// LOGVAL(htons(data[i]));
 	}
 	if(len%2==1){
 		printf(__FILE__ ": ODD LEN CHECKSUM MAY NOT WORK\n");
@@ -19,7 +18,7 @@ unsigned int checksum(void* _data,int len){
 void ETHERNET_default(PACKET_ETHERNET2_BEGIN* eth,uint8_t* src,uint8_t* dest,unsigned int type){
 	memcpy(eth->mac_dest,dest,6);
 	memcpy(eth->mac_src,src,6);
-	eth->type=htons(0x800);
+	eth->type=htons(type);
 }
 void ETH_ADDTRAILER(void* eth_end,uint32_t trailer){
 	*(uint8_t*)(eth_end)=trailer;
@@ -69,18 +68,17 @@ void IP_default(PACKET_IP* ip,unsigned long src,unsigned long dest,int ident,int
 
 	//ip->header_checksum=checksum(ip,20);
 }
-void ARP_default(PACKET_ARP* arp,int op,unsigned long mac,unsigned int target){
+void ARP_default(PACKET_ARP* arp,int op,uint8_t mac[6],unsigned int target){
 	arp->hardware_type=1;
-	arp->protocol_type=0x800;
+	arp->protocol_type=ETH_TYPE_ARP;
 	arp->hardware_len=6;
 	arp->protocol_len=4;
 	arp->operation=op;
 
-	arp->sender_hardware_addr=mac;
-	arp->sender_protocol_addr=0;
-
-	arp->target_hardware_addr=0;
-	arp->target_protocol_addr=target;
+	memcpy(arp->data+0,mac,6);
+	memcpy(arp->data+6,&target,4);
+	memcpy(arp->data+10,&target,6);
+	memcpy(arp->data+16,mac,4);
 }
 uint16_t htons(uint16_t nb) {
 	return (nb>>8) | (nb<<8);
