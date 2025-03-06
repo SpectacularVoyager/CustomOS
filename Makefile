@@ -35,9 +35,11 @@ ifeq ($(USB),2)
 		-device usb-kbd \
 		-device usb-mouse
 endif
+# https://gist.github.com/extremecoders-re/e8fd8a67a515fee0c873dcafc81d811c
 QEMU_FLAGS:=$(QEMU_FLAGS) -serial file:logs/serial.log -m 2G -vga std 
-QEMU_FLAGS:=$(QEMU_FLAGS) -net nic,model=rtl8139
-QEMU_FLAGS:=$(QEMU_FLAGS) -netdev tap,id=mynet0,ifname=tap0,script=no,downscript=no
+# QEMU_FLAGS:=$(QEMU_FLAGS) -net nic,model=rtl8139
+# -netdev tap,helper=/usr/libexec/qemu-bridge-helper,id=thor_net0 -device rtl8139,netdev=thor_net0,id=thor_nic0
+QEMU_FLAGS:=$(QEMU_FLAGS) -netdev tap,id=mynet0,ifname=tap0,script=no,downscript=no -device rtl8139,netdev=mynet0,id=mynic
 
 objects = $(shell find -wholename "./src/*.c")
 objects := ${objects:.c=.o}
