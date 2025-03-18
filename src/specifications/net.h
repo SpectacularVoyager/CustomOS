@@ -48,8 +48,24 @@ typedef struct {
 	uint16_t operation;
 	uint8_t data[1];
 } __attribute__((packed)) PACKET_ARP;
-
-
+typedef struct {
+	uint8_t opcode;
+	uint8_t hardware_type;
+	uint8_t address_len;
+	uint8_t hops;
+	uint32_t TransactionID;
+	uint16_t timeElapsed;
+	uint16_t flags;
+	uint32_t ClientAddr;
+	uint32_t AssignedAddr;
+	uint32_t NextServerAddr;
+	uint32_t RelayAgentAddr;
+	uint8_t MAC[16];
+	char server_name[64];
+	char file_name[128];
+	uint32_t MAGIC;
+	uint8_t options[1];
+} __attribute__((packed)) PACKET_DHCP;
 
 void ETH_ADDTRAILER(void* eth_end,uint32_t trailer);
 void addARP(PACKET_ETHERNET2_BEGIN* eth,PACKET_ARP* arp);
@@ -59,6 +75,8 @@ void addUDP(PACKET_IP* ip,int src,int dest,void* data,int len);
 void IP_default(PACKET_IP* ip,unsigned long src,unsigned long dest,int ident,int len);
 
 void ETHERNET_default(PACKET_ETHERNET2_BEGIN* eth,uint8_t* src,uint8_t* dest,unsigned int type);
+
+unsigned long DHCP_default(PACKET_DHCP* dhcp,int op,uint8_t MAC[6]);
 
 inline void* ARP_GET_SENDER_ADDR(PACKET_ARP* arp){
 	return arp->data+0;
@@ -75,3 +93,10 @@ inline void* ARP_GET_TARGET_PROTOCOL(PACKET_ARP* arp){
 inline int ARP_SIZE(PACKET_ARP* arp){
 	return 2*arp->hardware_len+arp->protocol_len*2;
 }
+
+#define DHCP_OPTION_MESSAGE_TYPE	0x35
+#define DHCP_OPTION_REQUEST_LIST	0x37
+#define DHCP_OPTION_END				0xFF
+#define DHCP_MAGIC_COOKIE			0x63825363
+
+#define DHCP_MESSAGE_TYPE_BOOT_REQUEST	0x1

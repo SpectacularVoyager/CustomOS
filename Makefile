@@ -35,6 +35,7 @@ ifeq ($(USB),2)
 		-device usb-kbd \
 		-device usb-mouse
 endif
+# sudo ifconfig tap0 192.168.7.1 up
 # VIRSH https://wiki.libvirt.org/Networking.html#forwarding-incoming-connections
 # https://gist.github.com/extremecoders-re/e8fd8a67a515fee0c873dcafc81d811c
 QEMU_FLAGS:=$(QEMU_FLAGS) -serial file:logs/serial.log -m 2G -vga std 

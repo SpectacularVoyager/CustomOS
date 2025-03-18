@@ -57,7 +57,7 @@ void RTL8139_RECV(){
 			// IP_default(ip,IP(127,0,0,1),IP(127,0,0,1), 0,8);
 			// addUDP(ip,htons(8000),htons(12345),"Hello World123456",18);
 			// hexdump(eth,61,0x10);
-			// RTL8139_SEND(eth,61);
+			// RTL8139_SEND(eth,60);
 			break;
 	}
 }
@@ -128,11 +128,23 @@ void RTL8139_INIT(PCI_device* device,void* base){
 	// RTL8139_SEND(pkt_data, sizeof(pkt_data));
 	
 	PACKET_ETHERNET2_BEGIN* eth=malloc(1584);
-	uint8_t dest[6]={0x3C,0xFD,0xFE,0x9E,0x7F,0x71};
-	ETHERNET_default(eth, rtl8139.header->MAC,dest,0x800);
+	uint8_t dest[6]={0xe4,0xa8,0xdf,0xe1,0xa8,0x47};
+	ETHERNET_default(eth, dest,rtl8139.header->MAC,0x800);
 	PACKET_IP* ip=(PACKET_IP*)&eth->data;
-	IP_default(ip,IP(127,0,0,1),IP(127,0,0,1), 0,8);
+	IP_default(ip,IP(192,168,7,1),IP(192,168,7,1), 0,8);
 	addUDP(ip,htons(8000),htons(12345),"Hello World123456",18);
-	RTL8139_SEND(eth,61);
-	
+	RTL8139_SEND(eth,60);
+
+	{
+		//DHCP
+		PACKET_ETHERNET2_BEGIN* eth=malloc(1584);
+		uint8_t dest[6]={0xFF,0xFF,0xFF,0xFF,0xFF,0xFF};
+		ETHERNET_default(eth, dest,rtl8139.header->MAC,0x800);
+		PACKET_IP* ip=(PACKET_IP*)&eth->data;
+		IP_default(ip,IP(0,0,0,0),IP(255,255,255,255), 0,8);
+		PACKET_DHCP* dhcp=malloc(300);
+		int len=DHCP_default(dhcp,DHCP_MESSAGE_TYPE_BOOT_REQUEST,rtl8139.header->MAC);
+		addUDP(ip,htons(68),htons(67),dhcp,len);
+		RTL8139_SEND(eth,14+htons(ip->len));
+	}
 }
