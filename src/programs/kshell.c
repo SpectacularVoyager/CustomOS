@@ -60,6 +60,20 @@ void INIT(){
 		kshell_init=1;
 	}
 }
+void evalProgram(char* prog,char** args){
+	EXT2_INODE elf;
+	if(EXT2_GET_INODE_FROM_PATH(&elf,prog)==1){
+		char* hex=malloc(elf.size);
+		EXT2_READFILE(&elf,hex,elf.size);
+		ELF_FILE file;
+		int s=ELF_PARSE(&file,hex,elf.size);
+		if(s==1){
+			USERMODE_EXEC_ELF(&file,args,NULL);
+		}else{
+			printf("FILE NOT EXECUTABLE [%s]\n",errno_ELF(s));
+		}
+	}
+}
 void evaluate(char* buffer){
 	if(trim(buffer)[0]=='\0')return;
 	char inst[100];

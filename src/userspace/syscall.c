@@ -1,5 +1,6 @@
 #include "syscall.h"
 #include "drivers/ext2/ext2.h"
+#include "interrupts/idt.h"
 #include "usertask/Task.h"
 
 #define ARG1(r) r->rdi
@@ -51,6 +52,11 @@ void syscall(registers* r){
 			break;
 		case SYS_fcntl:
 			ret=fcntl(ARG1(r),ARG2(r),ARG3(r));
+			break;
+		case 120:
+			hexdump(r,sizeof(registers),32);
+			printf("PRINTING RDI:\t%x\n",ARG1(r));
+			printf("RBX:\t%d\n",r->rbx);
 			break;
 		default:
 			printf("UNRECOGNISED SYSCALL [0x%x][%s]\n",r->rax,SYSCALL_GET_NAME(r->rax));

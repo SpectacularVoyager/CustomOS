@@ -39,7 +39,12 @@ int TaskDup(TASK* n,TASK* old){
 void TaskChange(TASK* t){
 	MemoryRemap(0x400000,(uint64_t)t->address,0b111);
 
-	USER_JUMP_ASM((void*)100,(void*)t->r->rip,(void*)t->r->rsp);
+	USER_JUMP_ASM(t->r,(void*)t->r->rip,(void*)t->r->rsp);
+}
+void JMP_PRIV_LOOP(){
+	registers r;
+
+	USER_JUMP_ASM(&r,USER_PRIV_LOOP,NULL);
 }
 TASK* TaskCurrent(){return current->val;}
 
@@ -62,26 +67,27 @@ TASK* TaskCreate(char** args,void* address,void* stack){
 void TaskAddList(TASK* task){
 	tasks=ListAdd(tasks,task);
 }
+void TasksPrint(){
+	for(ListNode* node=tasks;node!=NULL;node=node->next){
+		TASK* task=(TASK*)node->val;
+		char c=(current==node)?'*':' ';
+		printf("[TASK:%x][%x]%c -> ",task->id,task->ready,c);
+	}printf("\n");
+
+}
 void EMPTYLOOP(){
 	while(1);
 }
 ListNode* TaskNextFree(ListNode* start,ListNode* current){
-	if(start==0||current==0)return 0;
-	ListNode* temp=current;
-	while(current!=0){
-		if(true)
-			return current;
-		current=current->next;
+	if(current==0)return start;
+	ListNode* orig=current;
+	for(;current->next;current=current->next){
+		if(1)return current;
 	}
-	current=start;
-	while(current!=temp){
-		if(true)
-			return current;
-		current=current->next;
+	for(current=start;current!=orig;current=current->next){
+		if(1)return current;
 	}
-	if(true)
-		return current;
-	return 0;
+	return NULL;
 }
 void TaskKill(){
 	__asm__ volatile("CLI");
@@ -89,58 +95,39 @@ void TaskKill(){
 	ListNode* temp=current;
 	((TASK*)(current->val))->r->rip=(uint64_t)USER_PRIV_LOOP;
 	PageDealloc(((TASK*)temp->val)->address);
-	int _tasklen=ListLength(tasks);
-	if(_tasklen==0){
-		kprintf(INFO "UNEXPECTED NO TASK FOUND\n");
-		current=0;
-		return;
-	}else if(_tasklen==1){
-		tasks=ListRemove(tasks,temp);
-		current=0;
-	}else{
-		if(current->next==0){
-			current=tasks;
-		}else{
-			current=current->next;
-		}
-		tasks=ListRemove(tasks,temp);
-		TaskChange((TASK*)(current->val));
-	}
+	//
+	// int _tasklen=ListLength(tasks);
+	// if(_tasklen==0){
+	// 	kprintf(INFO "UNEXPECTED NO TASK FOUND\n");
+	// 	current=0;
+	// 	return;
+	// }else if(_tasklen==1){
+	// 	tasks=ListRemove(tasks,temp);
+	// 	current=0;
+	// }else{
+	// 	if(current->next==0){
+	// 		current=tasks;
+	// 	}else{
+	// 		current=current->next;
+	// 	}
+	// 	tasks=ListRemove(tasks,temp);
+	// 	TaskChange((TASK*)(current->val));
+	// }
 	//LOGVAL(ListLength(tasks));
-	
+	tasks=ListRemove(tasks,current);
+	//current=TaskNextFree(tasks,current);
+	current=NULL;
+	//while(1);
 	__asm__ volatile("STI");
 }
 void Scheduler_LOOP_ROUND_ROBIN(registers* r){
 	__asm__ volatile("CLI");
-	//kprintf("TICK\n");
-	int _tasklen=ListLength(tasks);
-	if(_tasklen==0){
-		//kprintf(INFO "NO TASKS FOUND IDLING\n");
-		return;
-	}
-	if(_tasklen<=1){
-		//kprintf(INFO "CONTINUING EXISTING TASK\n",ListLength(tasks));
-		//NO SWITCHING NEEDED
-		if(current==0){
-			// printf(INFO "QUE\n");
-			current=tasks;
-			registers* cur=((TASK*)(current->val))->r;
-			APIC_SEND_EOI();
-			TaskChange((TASK*)(current->val));
-		}
-		return;
-	}
-
-	((TASK*)(current->val))->r=r;
-	if(current->next==0){
-		current=tasks;
-	}else{
-		current=current->next;
-	}
-	registers* cur=((TASK*)(current->val))->r;
-	//LOAD CONTEXT (current->r)
-	//JUMP TO USER MODE
 	APIC_SEND_EOI();
-	TaskChange((TASK*)(current->val));
+	if((current=TaskNextFree(tasks,current))!=NULL){
+		TasksPrint();
+		TaskChange((TASK*)(current->val));
+	}else{
+		JMP_PRIV_LOOP();
+	}
 	__asm__ volatile("STI");
 }
