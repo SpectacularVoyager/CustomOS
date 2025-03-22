@@ -55,7 +55,9 @@ void MemoryRemap(uint64_t memory,uint64_t address,int flags){
 void PageIdentity(int p1,int p2,int flags){
 	p3_table[p1]=(p2*PAGE_WIDTH)|0b111|flags;
 }
+
 int page_allocator[512]={0};
+
 void InitAllocator(){
 	memset(page_allocator,0,512*sizeof(int));
 }
@@ -63,9 +65,9 @@ void* PageAllocateN(unsigned int n){
 	int id=-1;
 	FORI(512){
 		int valid=1;
-		FORI(n){
-			if(i>=512)break;
-			if(page_allocator[i]!=0){
+		FORJ(n){
+			if(j>=512)break;
+			if(page_allocator[j]!=0){
 				valid=0;
 			}
 		}
