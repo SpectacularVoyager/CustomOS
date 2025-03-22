@@ -12,7 +12,7 @@ void TaskSwitch(int id);
 typedef struct {
 	int id;
 	int ready;
-	registers* r;
+	registers r;
 	FILE_DESC fd[256];
 	void* address;
 } TASK;

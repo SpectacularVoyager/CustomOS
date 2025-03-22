@@ -43,7 +43,7 @@ int fork(void){
 	TASK* t=TaskCurrent();
 	TASK* _new=malloc(sizeof(TASK));
 	TaskDup(_new,t);
-	_new->r->rax=0;
+	_new->r.rax=0;
 	TaskAddList(_new);
 	return _new->id;
 }

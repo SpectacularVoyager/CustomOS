@@ -27,7 +27,7 @@ int TaskNewPID(){
 int TaskDup(TASK* n,TASK* old){
 	n->id=TaskNewPID();
 	n->ready=1;
-	memcpy(n->r,old->r,sizeof(registers));
+	memcpy(&n->r,&old->r,sizeof(registers));
 	FORI(256){
 		if(FILE_DESC_DUP(&n->fd[i],&old->fd[i])==0){
 			return 0;
@@ -38,11 +38,11 @@ int TaskDup(TASK* n,TASK* old){
 }
 void TaskChange(TASK* t){
 	MemoryRemap(0x400000,(uint64_t)t->address,0b111);
-	LOGVALD(t->r->rsp);
+	LOGVALD(t->r.rsp);
 
 	LOGVAL(t->id);
-	LOGVAL(t->r->rdi);
-	USER_JUMP_ASM(t->r,(void*)t->r->rip,(void*)t->r->rsp);
+	LOGVAL(t->r.rdi);
+	USER_JUMP_ASM(&t->r,(void*)t->r.rip,(void*)t->r.rsp);
 }
 void JMP_PRIV_LOOP(){
 	registers r;
@@ -62,9 +62,9 @@ TASK* TaskCreate(char** args,void* address,void* stack){
 	TASK* t=malloc(sizeof(TASK));
 	t->id=TaskNewPID();
 	t->ready=1;
-	memset(t->r,0,sizeof(registers));
-	t->r->rip=(uint64_t)address;
-	t->r->rsp=(uint64_t)stack;
+	memset(&t->r,0,sizeof(registers));
+	t->r.rip=(uint64_t)address;
+	t->r.rsp=(uint64_t)stack;
 
 
 	printf("TASK CREATE\n");
@@ -74,11 +74,11 @@ TASK* TaskCreate(char** args,void* address,void* stack){
 	}
 	t->address=address;
 
-	t->r->rsi=(uint64_t)args;
-	t->r->rdi=(uint64_t)ARGS_LEN(args, 10);
+	t->r.rsi=(uint64_t)args;
+	t->r.rdi=(uint64_t)ARGS_LEN(args, 10);
 
 	LOGVAL(t->id);
-	LOGVAL(t->r->rdi);
+	LOGVAL(t->r.rdi);
 	return t;
 }
 void TaskAddList(TASK* task){
@@ -110,7 +110,7 @@ void TaskKill(){
 	__asm__ volatile("CLI");
 	//EMPTYLOOP();
 	ListNode* temp=current;
-	((TASK*)(current->val))->r->rip=(uint64_t)USER_PRIV_LOOP;
+	((TASK*)(current->val))->r.rip=(uint64_t)USER_PRIV_LOOP;
 	PageDealloc(((TASK*)temp->val)->address);
 	//
 	// int _tasklen=ListLength(tasks);
