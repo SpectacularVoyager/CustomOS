@@ -47,16 +47,13 @@ void USERMODE_ADD(){
 	memcpy(address,TEST_HALT,100);
 	TaskCreate(NULL,address,address+0x100000);
 }
-int ARGS_LEN(char** args,int max){
-	int i=0;
-	for(;i<max;i++){
-		if(args[i]==0)return i;
-	}
-	return i;
-}
 //GET PAGE DYNAMICALLY
 int USERMODE_EXEC_ELF(ELF_FILE* elf,char** args,char** env){
 	char* address=PageAllocateN(CEILDIV(elf->len, PAGE_P2_SIZE));
+	if(address==NULL){
+		printf("COULD NOT ALLOCATE PAGE FOR USER PROC\n");
+		return -1;
+	}
 	kprintf("TRYING TO ENTER USER MODE\n");
 
 	ELF_Symbol* _start=ELF_LookUpSymbol(elf,"_start");
@@ -86,7 +83,6 @@ int USERMODE_EXEC_ELF(ELF_FILE* elf,char** args,char** env){
 		printf("CAN ONLY EXECUTE Processes mapped at 0x400000\n");
 		return 0;
 	}
-	MemoryRemap(0x400000,(uint64_t)address,0b111);
 	FORI(elf->header->SectionHeaderCount){
 		ELF_SectionHeader* section=&elf->sections[i];
 		char* name=&nameTable[section->NameOffset];
@@ -100,13 +96,6 @@ int USERMODE_EXEC_ELF(ELF_FILE* elf,char** args,char** env){
 	// U32(0x401000)='helo';
 
 	void* stack=address+0x200000;
-
-	//LOGVAL(U64(stack-16))
-	// hexdump(args[0],8,8);
-	TASK* t=TaskCreate(args,address+_start_addr,address+0x200000);
-	t->r->rsi=(uint64_t)args;
-	t->r->rdi=(uint64_t)ARGS_LEN(args, 10);
-
-	//hexdump(t->r,sizeof(registers),32);
+	TASK* t=TaskCreate(args,address+_start_addr,stack);
 	return 1;
 }

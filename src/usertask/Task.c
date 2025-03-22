@@ -38,7 +38,10 @@ int TaskDup(TASK* n,TASK* old){
 }
 void TaskChange(TASK* t){
 	MemoryRemap(0x400000,(uint64_t)t->address,0b111);
+	LOGVALD(t->r->rsp);
 
+	LOGVAL(t->id);
+	LOGVAL(t->r->rdi);
 	USER_JUMP_ASM(t->r,(void*)t->r->rip,(void*)t->r->rsp);
 }
 void JMP_PRIV_LOOP(){
@@ -48,6 +51,13 @@ void JMP_PRIV_LOOP(){
 }
 TASK* TaskCurrent(){return current->val;}
 
+int ARGS_LEN(char** args,int max){
+	int i=0;
+	for(;i<max;i++){
+		if(args[i]==0)return i;
+	}
+	return i;
+}
 TASK* TaskCreate(char** args,void* address,void* stack){
 	TASK* t=malloc(sizeof(TASK));
 	t->id=TaskNewPID();
@@ -55,13 +65,20 @@ TASK* TaskCreate(char** args,void* address,void* stack){
 	memset(t->r,0,sizeof(registers));
 	t->r->rip=(uint64_t)address;
 	t->r->rsp=(uint64_t)stack;
-	t->r->rdi=(uint64_t)args;
-	//tasks=ListAdd(tasks,t);
+
+
+	printf("TASK CREATE\n");
 	TaskAddList(t);
 	FORI(256){
 		t->fd[i]=(FILE_DESC){.used=0};
 	}
 	t->address=address;
+
+	t->r->rsi=(uint64_t)args;
+	t->r->rdi=(uint64_t)ARGS_LEN(args, 10);
+
+	LOGVAL(t->id);
+	LOGVAL(t->r->rdi);
 	return t;
 }
 void TaskAddList(TASK* task){
@@ -124,8 +141,10 @@ void Scheduler_LOOP_ROUND_ROBIN(registers* r){
 	__asm__ volatile("CLI");
 	APIC_SEND_EOI();
 	if((current=TaskNextFree(tasks,current))!=NULL){
-		TasksPrint();
-		TaskChange((TASK*)(current->val));
+		//TasksPrint();
+		TASK* task=(TASK*)(current->val);
+		printf("CURRENT:\t%d\n",task->id);
+		TaskChange(task);
 	}else{
 		JMP_PRIV_LOOP();
 	}
