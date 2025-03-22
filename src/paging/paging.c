@@ -63,16 +63,20 @@ void InitAllocator(){
 }
 void* PageAllocateN(unsigned int n){
 	int id=-1;
-	FORI(512){
+	for(int i=0;i<=512-n;i++){
+		printf("[%x]->%x\n",i,page_allocator[i]);
 		int valid=1;
-		FORJ(n){
-			if(j>=512)break;
-			if(page_allocator[j]!=0){
+		for(int j=i;j<i+n;j++){
+			if(page_allocator[i]!=0){
 				valid=0;
 			}
 		}
-		if(valid==1){id=i;break;}
+		if(valid){
+			id=i;
+			break;
+		}
 	}
+	printf("ALLOCATED PAGE[%d]\n",id);
 	if(id==-1){
 		return 0;
 	}
@@ -103,8 +107,11 @@ void PageDealloc(void* page){
 	int id=(uint64_t)page/PAGE_P2_SIZE;
 	id=id%512;
 	kprintf("DEALLOC %p[%d] -> %d\n",page,page_allocator[id],id);
-	FORI(page_allocator[id])
+	for(int i=id;i<page_allocator[id];i++){
 		page_allocator[id+i]=0;
+	}
+	// FORI(page_allocator[id])
+	// 	page_allocator[id+i]=0;
 }
 
 void* MemoryPhysical(void* p_addr){

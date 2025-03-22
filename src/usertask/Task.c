@@ -38,10 +38,9 @@ int TaskDup(TASK* n,TASK* old){
 }
 void TaskChange(TASK* t){
 	MemoryRemap(0x400000,(uint64_t)t->address,0b111);
-	LOGVALD(t->r.rsp);
-
-	LOGVAL(t->id);
-	LOGVAL(t->r.rdi);
+	// LOGVALD(t->r.rsp);
+	// LOGVAL(t->id);
+	// LOGVAL(t->r.rdi);
 	USER_JUMP_ASM(&t->r,(void*)t->r.rip,(void*)t->r.rsp);
 }
 void JMP_PRIV_LOOP(){
@@ -67,7 +66,7 @@ TASK* TaskCreate(char** args,void* address,void* stack){
 	t->r.rsp=(uint64_t)stack;
 
 
-	printf("TASK CREATE\n");
+	//printf("TASK CREATE\n");
 	TaskAddList(t);
 	FORI(256){
 		t->fd[i]=(FILE_DESC){.used=0};
@@ -77,8 +76,8 @@ TASK* TaskCreate(char** args,void* address,void* stack){
 	t->r.rsi=(uint64_t)args;
 	t->r.rdi=(uint64_t)ARGS_LEN(args, 10);
 
-	LOGVAL(t->id);
-	LOGVAL(t->r.rdi);
+	// LOGVAL(t->id);
+	// LOGVAL(t->r.rdi);
 	return t;
 }
 void TaskAddList(TASK* task){
@@ -95,14 +94,17 @@ void TasksPrint(){
 void EMPTYLOOP(){
 	while(1);
 }
+int TaskReady(TASK* task){
+	return task->ready;
+}
 ListNode* TaskNextFree(ListNode* start,ListNode* current){
 	if(current==0)return start;
 	ListNode* orig=current;
 	for(;current->next;current=current->next){
-		if(1)return current;
+		if(TaskReady((TASK*)current))return current;
 	}
 	for(current=start;current!=orig;current=current->next){
-		if(1)return current;
+		if(TaskReady((TASK*)current))return current;
 	}
 	return NULL;
 }
@@ -112,29 +114,8 @@ void TaskKill(){
 	ListNode* temp=current;
 	((TASK*)(current->val))->r.rip=(uint64_t)USER_PRIV_LOOP;
 	PageDealloc(((TASK*)temp->val)->address);
-	//
-	// int _tasklen=ListLength(tasks);
-	// if(_tasklen==0){
-	// 	kprintf(INFO "UNEXPECTED NO TASK FOUND\n");
-	// 	current=0;
-	// 	return;
-	// }else if(_tasklen==1){
-	// 	tasks=ListRemove(tasks,temp);
-	// 	current=0;
-	// }else{
-	// 	if(current->next==0){
-	// 		current=tasks;
-	// 	}else{
-	// 		current=current->next;
-	// 	}
-	// 	tasks=ListRemove(tasks,temp);
-	// 	TaskChange((TASK*)(current->val));
-	// }
-	//LOGVAL(ListLength(tasks));
 	tasks=ListRemove(tasks,current);
-	//current=TaskNextFree(tasks,current);
 	current=NULL;
-	//while(1);
 	__asm__ volatile("STI");
 }
 void Scheduler_LOOP_ROUND_ROBIN(registers* r){
@@ -143,7 +124,7 @@ void Scheduler_LOOP_ROUND_ROBIN(registers* r){
 	if((current=TaskNextFree(tasks,current))!=NULL){
 		//TasksPrint();
 		TASK* task=(TASK*)(current->val);
-		printf("CURRENT:\t%d\n",task->id);
+		//printf("CURRENT:\t%d\n",task->id);
 		TaskChange(task);
 	}else{
 		JMP_PRIV_LOOP();
