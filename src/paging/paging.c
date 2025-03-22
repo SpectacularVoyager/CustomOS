@@ -64,7 +64,6 @@ void InitAllocator(){
 void* PageAllocateN(unsigned int n){
 	int id=-1;
 	for(int i=0;i<=512-n;i++){
-		printf("[%x]->%x\n",i,page_allocator[i]);
 		int valid=1;
 		for(int j=i;j<i+n;j++){
 			if(page_allocator[i]!=0){

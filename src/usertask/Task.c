@@ -38,7 +38,8 @@ int TaskDup(TASK* n,TASK* old){
 }
 void TaskChange(TASK* t){
 	MemoryRemap(0x400000,(uint64_t)t->address,0b111);
-	// LOGVALD(t->r.rsp);
+	LOGVALD(t->r.rsp);
+	LOGVALD(t->r.rip);
 	// LOGVAL(t->id);
 	// LOGVAL(t->r.rdi);
 	USER_JUMP_ASM(&t->r,(void*)t->r.rip,(void*)t->r.rsp);
@@ -110,6 +111,7 @@ ListNode* TaskNextFree(ListNode* start,ListNode* current){
 }
 void TaskKill(){
 	__asm__ volatile("CLI");
+	printf("KILLING TASK[%d]\n",((TASK*)(current->val))->id);
 	//EMPTYLOOP();
 	ListNode* temp=current;
 	((TASK*)(current->val))->r.rip=(uint64_t)USER_PRIV_LOOP;
