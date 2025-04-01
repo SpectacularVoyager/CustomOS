@@ -7,7 +7,9 @@
 #include <usertask/Task.h>
 #include "specifications/elf/elf.h"
 #include "core/user.h"
-#include "musl_syscall.h"
+#include "musl_syscall.h"       
+
+
 void syscall(registers* r);
 
 extern void USER_PRIV_LOOP();
@@ -40,3 +42,5 @@ struct iovec {
 };
 
 long writev(int fd, struct iovec *iov, int iovcnt);
+
+int ioctl(int fd, int op, int arg3);

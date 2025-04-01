@@ -38,10 +38,11 @@ int TaskDup(TASK* n,TASK* old){
 }
 void TaskChange(TASK* t){
 	MemoryRemap(0x400000,(uint64_t)t->address,0b111);
-	LOGVALD(t->r.rsp);
-	LOGVALD(t->r.rip);
+	// LOGVALD(t->r.rsp);
+	// LOGVALD(t->r.rip);
 	// LOGVAL(t->id);
 	// LOGVAL(t->r.rdi);
+	//khexdump((void*)0x400000,4096,32);
 	USER_JUMP_ASM(&t->r,(void*)t->r.rip,(void*)t->r.rsp);
 }
 void JMP_PRIV_LOOP(){
@@ -59,6 +60,8 @@ int ARGS_LEN(char** args,int max){
 	return i;
 }
 TASK* TaskCreate(char** args,void* address,void* stack){
+
+
 	TASK* t=malloc(sizeof(TASK));
 	t->id=TaskNewPID();
 	t->ready=1;
@@ -73,6 +76,7 @@ TASK* TaskCreate(char** args,void* address,void* stack){
 		t->fd[i]=(FILE_DESC){.used=0};
 	}
 	t->address=address;
+
 
 	t->r.rsi=(uint64_t)args;
 	t->r.rdi=(uint64_t)ARGS_LEN(args, 10);
@@ -122,6 +126,9 @@ void TaskKill(){
 }
 void Scheduler_LOOP_ROUND_ROBIN(registers* r){
 	__asm__ volatile("CLI");
+	if(current!=NULL){
+		memcpy(&((TASK*)(current->val))->r,r,sizeof(registers));
+	}
 	APIC_SEND_EOI();
 	if((current=TaskNextFree(tasks,current))!=NULL){
 		//TasksPrint();

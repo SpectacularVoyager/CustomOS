@@ -246,10 +246,9 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 
 	ClearScreen();
 	TERM_SET_POS(0,0);
-	char* args[]={"/usr/bin/catx","/home/ASM/main.c",0};
+	char* args[]={"/usr/bin/bashx","/home/ASM/main.c",0};
 	evalProgram(args[0],args);
 	evalProgram(args[0],args);
-	//evalProgram(args[0],args);
 	// char* argsbash[]={"/usr/bin/bashx","/home/ASM/main.c",0};
 	// evalProgram(argsbash[0],argsbash);
 

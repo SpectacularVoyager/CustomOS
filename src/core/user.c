@@ -39,14 +39,6 @@ void __attribute__((optimize("O0"))) USERMODE_ENTER(){
 
 	USER_JUMP_ASM(NULL,address,address+0x100000);
 }
-void USERMODE_ADD(){
-	AllocatePage(5, 0x40000000, 0b111);
-	void* address=(void*)(0x140000000);
-	printf("TRYING TO ENTER USER MODE\n");
-
-	memcpy(address,TEST_HALT,100);
-	TaskCreate(NULL,address,address+0x100000);
-}
 //GET PAGE DYNAMICALLY
 int USERMODE_EXEC_ELF(ELF_FILE* elf,char** args,char** env){
 	char* address=PageAllocateN(CEILDIV(elf->len, PAGE_P2_SIZE));
@@ -87,15 +79,14 @@ int USERMODE_EXEC_ELF(ELF_FILE* elf,char** args,char** env){
 		ELF_SectionHeader* section=&elf->sections[i];
 		char* name=&nameTable[section->NameOffset];
 		if(section->Addr!=0){
+			//printf("RELOACTING SECTION[%s] %x\t%x ->%x\n",name,section->Addr,section->Offset,section->Size);
 			memcpy(ADDR(section->Addr),elf->file+section->Offset,section->Size);
 		}
 	}
 	if(elf->rela!=0){
 		printf("RELA\t[%x %x]\n",elf->rela->Offset,elf->rela->Addend);
 	}
-	// U32(0x401000)='helo';
 
-	void* stack=address+0x200000;
-	TASK* t=TaskCreate(args,address+_start_addr,stack);
+	TASK* t=TaskCreate(args,address+_start_addr,address+0x100000);
 	return 1;
 }

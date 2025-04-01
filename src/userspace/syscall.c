@@ -11,7 +11,7 @@
 
 char* SYSCALL_GET_NAME(int v);
 void syscall(registers* r){
-	// printf("PROCESSING SYSCALL [%s]\n",SYSCALL_GET_NAME(r->rax));
+	printf("PROCESSING SYSCALL [%s]\n",SYSCALL_GET_NAME(r->rax));
 	int ret=0;
 	switch(r->rax){
 		case SYS_exit:
@@ -53,6 +53,9 @@ void syscall(registers* r){
 		case SYS_fcntl:
 			ret=fcntl(ARG1(r),ARG2(r),ARG3(r));
 			break;
+		case SYS_ioctl:
+			ret=ioctl(ARG1(r),ARG2(r),ARG3(r));
+			break;
 		case 120:
 			hexdump(r,sizeof(registers),32);
 			printf("PRINTING RDI:\t%x\n",ARG1(r));
@@ -74,9 +77,6 @@ int TASK_FD_FIND(TASK* task){
 		}
 	}
 	return idx;
-}
-int ioctl(int fd, int op, ...){
-
 }
 int fstat(int fd, struct stat *statbuf){
 	TASK* t=TaskCurrent();
