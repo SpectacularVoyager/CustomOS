@@ -111,3 +111,11 @@ errors:
 
 ####	TO CREATE DISK IMAGE FOR FS	####
 ##	dd if=/dev/zero of=ext2.img bs=1G count=1
+
+################ DEPENDENCIES ################
+## 	sudo apt-get install xorriso
+## 	sudo apt-get install nasm
+## 	sudo apt-get install grub-pc-bin xorriso 
+## 	sudo apt install mtools
+## 	sudo apt install qemu-system-x86
+##############################################
