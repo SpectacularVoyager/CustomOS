@@ -3,6 +3,8 @@ OUT=out
 OUT32=out/x86
 BUILD=ISO/boot
 ISO=$(BUILD)/os.bin
+
+
 # Default CFLAGS:
 CFLAGS?=-O2 -g -DDEBUG_PRINTF
 # Add mandatory options to CFLAGS:
@@ -38,34 +40,51 @@ endif
 QEMU_FLAGS:=$(QEMU_FLAGS) -serial file:logs/serial.log -net nic,model=rtl8139 -m 2G -vga std 
 QEMU_FLAGS:=$(QEMU_FLAGS) 
 
-objects = $(shell find -wholename "./src/*.c")
-objects := ${objects:.c=.o}
-all: clean boot $(objects) link build isMultiBoot
+SRC_FILES=$(shell find -wholename "./src/*.c")
+OBJECT_FILES=$(SRC_FILES:./src/%.c=out/%.o)
+
+ASM_FILES=./src/boot.asm
+OBJECT_FILES_ASM=$(ASM_FILES:./src/%.asm=out/%.o)
+
+all: boot $(OBJECT_FILES) link build isMultiBoot
 
 clean:
 	@rm -rf $(OUT)
-	mkdir -p $(OUT)
-	mkdir -p logs
-	touch logs/serial.log
-boot:
-	@nasm -g -felf64 $(SOURCE)/boot.asm -o $(OUT)/boot.o
+	@mkdir -p $(OUT)
+	@mkdir -p logs
+	@touch logs/serial.log
 
-$(objects): %.o: %.c
-	@mkdir -p $(shell dirname $(patsubst src/%,out/%,$@))
-	@$(CC) -c $^ -o $(patsubst src/%,out/%,$@) -std=gnu99 \
-		-ffreestanding -Isrc/include -Isrc $(CFLAGS)
+boot:$(OBJECT_FILES_ASM)
 
-link:
-	@$(CC) -T linker.ld -o $(ISO) -ffreestanding -O2 -nostdlib $(shell find -wholename './out/*.o') -lgcc
+$(OBJECT_FILES_ASM):out/%.o: src/%.asm
+	@echo "\033[0;32mCOMPILING ASM\t\033[0m" $<
+	@nasm -g -felf64 $< -o $@
 
-build:
-	@grub-mkrescue -o iso.iso ISO
+c:$(OBJECT_FILES)
+
+$(OBJECT_FILES):out/%.o: src/%.c
+	@mkdir -p $(shell dirname $@)
+	@$(CC) -c $< -o $@ -std=gnu99 -ffreestanding -Isrc/include -Isrc $(CFLAGS)
+	@echo "\033[0;32mCOMPILING\t\033[0m" $<
+
+link :$(ISO)
+$(ISO):$(OBJECT_FILES) $(OBJECT_FILES_ASM)
+	@$(CC) -T linker.ld -o $(ISO) -ffreestanding -O2 -nostdlib $(OBJECT_FILES) $(OBJECT_FILES_ASM) -lgcc
+	@echo "\033[0;34mLINKING\t\033[0m" $@
+
+
+$(IMAGE):$(ISO)
+	grub-mkrescue -o $(IMAGE) ISO
+	@echo "\033[0;34mBUILDING\t\033[0m" $@
+
+build: $(IMAGE)
+
 
 isMultiBoot:
 	@./scripts/isMultiBoot.sh $(ISO)
 run: all
-	if [ -f disks/ext2.img ]; then \
-		$(QEMU) $(QEMU_FLAGS) -hda $(IMAGE) -hdb disks/ext2.img; \
+	@if [ -f disks/ext2.img ]; then \
+		$(QEMU) $(QEMU_FLAGS) -drive file=$(IMAGE),format=raw -drive file=disks/ext2.img,format=raw; \
 	else \
 		$(QEMU) $(QEMU_FLAGS) -hda $(IMAGE); \
 	fi
