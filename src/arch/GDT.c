@@ -32,10 +32,18 @@ TSS __attribute__((aligned(64))) tss;
 //https://forum.osdev.org/viewtopic.php?t=40898
 void GDT_LOAD(){
 	GDT_LoadEntry(&GDT_Table[0],0,0,0,0);
-	GDT_LoadEntry(&GDT_Table[1],0,0,GDT_ACCESS_PRIV(0)|0x9A,0xA);
-	GDT_LoadEntry(&GDT_Table[2],0,0,GDT_ACCESS_PRIV(0)|0x92,0xC);
-	GDT_LoadEntry(&GDT_Table[3],0,0,GDT_ACCESS_PRIV(3)|0x9A,0xA);
-	GDT_LoadEntry(&GDT_Table[4],0,0,GDT_ACCESS_PRIV(3)|0x92,0xC);
+	GDT_LoadEntry(&GDT_Table[1],0,0,
+			GDT_ACCESS_PRIV(0)|GDT_ACCESS_CODE_DATA|GDT_ACCESS_PRESENT|GDT_ACCESS_RW|GDT_ACCESS_EXEC,
+			0xA);
+	GDT_LoadEntry(&GDT_Table[2],0,0,
+			GDT_ACCESS_PRIV(0)|GDT_ACCESS_CODE_DATA|GDT_ACCESS_PRESENT|GDT_ACCESS_RW,
+			0xC);
+	GDT_LoadEntry(&GDT_Table[3],0,0,
+			GDT_ACCESS_PRIV(3)|GDT_ACCESS_CODE_DATA|GDT_ACCESS_PRESENT|GDT_ACCESS_RW|GDT_ACCESS_EXEC,
+			0xA);
+	GDT_LoadEntry(&GDT_Table[4],0,0,
+			GDT_ACCESS_PRIV(3)|GDT_ACCESS_CODE_DATA|GDT_ACCESS_PRESENT|GDT_ACCESS_RW,
+			0xC);
 
 	memset(&tss,0,sizeof(TSS));
 

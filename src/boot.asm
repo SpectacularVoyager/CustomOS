@@ -4,6 +4,7 @@ bits 32
 %include "src/paging/paging.asm"
 %include "src/longmode/long_mode_init.asm"
 %include "src/multiboot.asm"
+%include "src/UserSpace/Userspace.asm"
 
 bits 32
 

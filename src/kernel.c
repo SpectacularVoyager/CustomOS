@@ -53,6 +53,8 @@
 #include "specifications/tga/tga.h"
 #include "file/ext2_file.h"
 
+#include "UserSpace/Userspace.h"
+
 void Debug();
 void evaluate(char* buffer);
 extern char* cpuid_flags[62];
@@ -95,7 +97,7 @@ void MTRStuff(){
 	SetColor(0xffffff);
 }
 
-//#define NOUSB
+#define NOUSB
 
 
 void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long cpuid,uint64_t* gdt)
@@ -240,7 +242,7 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 	}
 #endif
 	//EXT2_DIR_READ_ENTRY("/home",0,0);
-	Scheduler_START();
+	//Scheduler_START();
 	//evaluate("/usr/bin/test ");
 
 	// ClearScreen();
@@ -263,6 +265,8 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 
 	//USERMODE_ADD();
 	//USERMODE_ADD();
+	SYSCALL_INIT();	
+	SYSRET(24,0,0);
 
 	while(1);
 }

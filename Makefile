@@ -38,7 +38,7 @@ ifeq ($(USB),2)
 		-device usb-mouse
 endif
 QEMU_FLAGS:=$(QEMU_FLAGS) -serial file:logs/serial.log -net nic,model=rtl8139 -m 2G -vga std 
-QEMU_FLAGS:=$(QEMU_FLAGS) 
+QEMU_FLAGS:=$(QEMU_FLAGS) -no-reboot -d int
 
 SRC_FILES=$(shell find -wholename "./src/*.c")
 OBJECT_FILES=$(SRC_FILES:./src/%.c=out/%.o)
@@ -74,8 +74,8 @@ $(ISO):$(OBJECT_FILES) $(OBJECT_FILES_ASM)
 
 
 $(IMAGE):$(ISO)
-	grub-mkrescue -o $(IMAGE) ISO
 	@echo "\033[0;34mBUILDING\t\033[0m" $@
+	@grub-mkrescue -o $(IMAGE) ISO
 
 build: $(IMAGE)
 
