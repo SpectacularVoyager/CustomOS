@@ -55,6 +55,7 @@ int ARGS_LEN(char** args,int max){
 }
 //GET PAGE DYNAMICALLY
 int USERMODE_EXEC_ELF(ELF_FILE* elf,char** args,char** env){
+	printf("STARTING PROCESS %s\n",args[0]);
 	char* address=PageAllocateN(CEILDIV(elf->len, PAGE_P2_SIZE));
 	kprintf("TRYING TO ENTER USER MODE\n");
 
@@ -86,6 +87,7 @@ int USERMODE_EXEC_ELF(ELF_FILE* elf,char** args,char** env){
 		return 0;
 	}
 	MemoryRemap(0x400000,(uint64_t)address,0b111);
+	//MemoryRemap(0x402000,((uint64_t)address)+0x2000,0b111);
 	FORI(elf->header->SectionHeaderCount){
 		ELF_SectionHeader* section=&elf->sections[i];
 		char* name=&nameTable[section->NameOffset];
@@ -104,6 +106,7 @@ int USERMODE_EXEC_ELF(ELF_FILE* elf,char** args,char** env){
 
 	//LOGVAL(U64(stack-16))
 	// hexdump(args[0],8,8);
+	//hexdump(address+_start_addr,elf->len,32);
 	TASK* t=TaskCreate(args,address+_start_addr,address+0x200000-16);
 	return 1;
 }

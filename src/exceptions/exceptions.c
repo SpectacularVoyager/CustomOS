@@ -23,6 +23,9 @@ void PageFaultHandler(registers* r){
 		printf("\tILLEGAL READ\n");
 	}
 	if(BIT(error,PAGE_FAULT_EXCEPTION_PRESENT)){
+		printf("\tPAGE PRESENT VIOLATION\n");
+	}
+	if(BIT(error,PAGE_FAULT_EXCEPTION_USER)){
 		printf("\tPAGE PROTECTION VIOLATION\n");
 	}
 		

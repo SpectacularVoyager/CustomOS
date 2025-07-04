@@ -10,7 +10,7 @@
 
 char* SYSCALL_GET_NAME(int v);
 void syscall(registers* r){
-	// printf("PROCESSING SYSCALL [%s]\n",SYSCALL_GET_NAME(r->rax));
+	printf("PROCESSING SYSCALL [%s]\n",SYSCALL_GET_NAME(r->rax));
 	int ret=0;
 	switch(r->rax){
 		case SYS_exit:

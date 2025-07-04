@@ -37,7 +37,8 @@ int TaskDup(TASK* n,TASK* old){
 	return 1;
 }
 void TaskChange(TASK* t){
-	MemoryRemap(0x400000,(uint64_t)t->address,0b111);
+	//MemoryRemap(0x400000,(uint64_t)t->address,0b111);
+	//MemoryRemap(0x402000,(uint64_t)t->address+0x2000,0b111);
 
 	USER_JUMP_ASM((void*)100,(void*)t->r->rip,(void*)t->r->rsp);
 }

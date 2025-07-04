@@ -99,7 +99,13 @@ part:
 debug: all
 	@$(QEMU) $(QEMU_FLAGS) -hda $(IMAGE) -hdb disks/fat.img -monitor stdio
 gdb: all
-	@$(QEMU) -s -S -net nic,model=e1000 -hda $(IMAGE)
+	# @$(QEMU) -s -S -net nic,model=e1000 -hda $(IMAGE)
+
+	@if [ -f disks/ext2.img ]; then \
+		$(QEMU) -s -S $(QEMU_FLAGS) -drive file=$(IMAGE),format=raw -drive file=disks/ext2.img,format=raw; \
+	else \
+		$(QEMU) -s -S $(QEMU_FLAGS) -hda $(IMAGE); \
+	fi
 	# TO RUN
 	# make gdb
 	# gdb ISO/boot/os.bin
