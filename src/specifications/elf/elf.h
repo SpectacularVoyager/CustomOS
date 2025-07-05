@@ -9,6 +9,12 @@
 #define ERROR_ELF_UNSUPPORTED_ARCH		-3
 #define ERROR_ELF_NO_STRING_TABLE		-4
 #define ERROR_ELF_NO_SYMBOL_TABLE		-5
+#define ERROR_ELF_UNSUPPORTED_TYPE		-6
+
+#define ELF_TYPE_NONE	0
+#define ELF_TYPE_REL	1
+#define ELF_TYPE_EXEC	2
+#define ELF_TYPE_DYN	3
 
 char* errno_ELF(int x);
 typedef struct {

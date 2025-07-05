@@ -246,16 +246,30 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 	ClearScreen();
 	TERM_SET_POS(0,0);
 	EXT2_INODE elf;
-	if(EXT2_GET_INODE_FROM_PATH(&elf,"/usr/bin/catx")==1){
+	if(EXT2_GET_INODE_FROM_PATH(&elf,"/usr/local/bash")==1){
 		char* hex=malloc(elf.size);
 		EXT2_READFILE(&elf,hex,elf.size);
 		ELF_FILE file;
 		int s=ELF_PARSE(&file,hex,elf.size);
 		if(s==1){
-			char* args[]={"/usr/bin/catx","/home/ASM/main.c",0};
+			char* args[]={"/usr/local/bash",0};
 			USERMODE_EXEC_ELF(&file,args,NULL);
 		}else{
 			printf("FILE NOT EXECUTABLE [%s]\n",errno_ELF(s));
+		}
+	}
+	{
+
+		EXT2_INODE libc;
+		if(EXT2_GET_INODE_FROM_PATH(&libc,"/lib/libc.so")==1){
+			char* hex=malloc(libc.size);
+			EXT2_READFILE(&libc,hex,libc.size);
+			ELF_FILE file;
+			int s=ELF_PARSE(&file,hex,libc.size);
+			if(s==1){
+			}else{
+				printf("FILE NOT EXECUTABLE [%s]\n",errno_ELF(s));
+			}
 		}
 	}
 

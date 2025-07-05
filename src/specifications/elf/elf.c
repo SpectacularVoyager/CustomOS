@@ -11,6 +11,7 @@ char* errno_ELF(int x){
 	ERR_MSG(ERROR_ELF_UNSUPPORTED_ARCH);
 	ERR_MSG(ERROR_ELF_NO_STRING_TABLE);
 	ERR_MSG(ERROR_ELF_NO_SYMBOL_TABLE);
+	ERR_MSG(ERROR_ELF_UNSUPPORTED_TYPE);
 #undef ERR_MSG
 	return "MESSAGE NOT FOUND";
 }
@@ -52,6 +53,16 @@ int ELF_PARSE(ELF_FILE* elf,void* file,int len){
 	}
 	if(elf->header->Ident.OsAbi!=ELF_OSABI_SYSV){
 		return ERROR_ELF_UNSUPPORTED_ABI;
+	}
+	//TODO: DO SOMETING WITH TYPE
+	switch(elf->header->Type){
+		case ELF_TYPE_NONE:
+			return ERROR_ELF_UNSUPPORTED_TYPE;
+			break;
+		case ELF_TYPE_EXEC:
+			break;
+		default:
+			return ERROR_ELF_UNSUPPORTED_TYPE;
 	}
 	elf->sections=elf->file+elf->header->SectionHeaderOffset;
 	elf->name=&elf->sections[elf->header->SectionNameTableIndex];

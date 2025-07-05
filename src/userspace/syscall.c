@@ -7,10 +7,11 @@
 #define ARG3(r) r->rdx
 #define RETURN(r) r->rax=
 
+int ioctl(int fd, int op,...);
 
 char* SYSCALL_GET_NAME(int v);
 void syscall(registers* r){
-	printf("PROCESSING SYSCALL [%s]\n",SYSCALL_GET_NAME(r->rax));
+	// printf("PROCESSING SYSCALL [%s]\n",SYSCALL_GET_NAME(r->rax));
 	int ret=0;
 	switch(r->rax){
 		case SYS_exit:
@@ -52,6 +53,9 @@ void syscall(registers* r){
 		case SYS_fcntl:
 			ret=fcntl(ARG1(r),ARG2(r),ARG3(r));
 			break;
+		case SYS_ioctl:
+			ret=ioctl(ARG1(r),ARG2(r));
+			break;
 		default:
 			printf("UNRECOGNISED SYSCALL [0x%x][%s]\n",r->rax,SYSCALL_GET_NAME(r->rax));
 			kprintf("UNRECOGNISED SYSCALL [0x%x][%s]\n",r->rax,SYSCALL_GET_NAME(r->rax));
@@ -69,8 +73,16 @@ int TASK_FD_FIND(TASK* task){
 	}
 	return idx;
 }
-int ioctl(int fd, int op, ...){
+int ioctl(int fd, int op,...){
+	printf("IOCTL ON FD(%d) WITH OP [%x] WITH PARAMS[",fd,op);
 
+    va_list args;
+    va_start(args, 1);  
+    for (int i = 0; i < 1; i++) 
+        printf("%d ", va_arg(args, int));
+    printf("]\n");
+    va_end(args);
+	return 0;
 }
 int fstat(int fd, struct stat *statbuf){
 	TASK* t=TaskCurrent();
