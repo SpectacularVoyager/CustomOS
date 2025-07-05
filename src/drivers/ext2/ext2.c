@@ -24,14 +24,22 @@ int FREAD(uint64_t block,void* data,int len){
 
 void* readInodeTable(uint64_t lba);
 
+//SLIGHLY INCORRECT OUTPUT AT END OF FILE
 int EXT2_READFILE(EXT2_INODE*inode,void* data,unsigned long len){
 	int blocksize=(1024<<ext2.superblock->logBlockSize);
 	int blocksizelba=blocksize/GPT_SECTOR_SIZE;
-	if(len>(12L+256L)*blocksize){
-		printf("CANNOT HAVE FILES THIS LONG\n");
-		return 0;
-	}
+	uint64_t block_count=inode->blockCount/(2<<ext2.superblock->logBlockSize);
+	// if(256+12+256*256<block_count){
+	// 	printf("CANNOT HAVE FILES THIS LONG\n");
+	// 	return 0;
+	// }
 	unsigned long block=inode->blockPointers[0]*blocksizelba+ext2.part->startLBA;
+	// LOGVALD(block*0x200);
+	// LOGVALD(inode->blockCount);
+	// LOGVALD(inode->size);
+	// LOGVALD(inode->blockPointerIndirect);
+	// LOGVALD(inode->blockPointerIndirectDouble);
+	// LOGVALD(inode->blockPointerIndirectTriple);
 	EXT2_BUFFER buffer;
 	EXT2_BUFFER_INIT(&buffer,ext2.port,block);
 
@@ -47,19 +55,30 @@ int EXT2_READFILE(EXT2_INODE*inode,void* data,unsigned long len){
 		rem-=blocksize;
 		ptr+=blocksize;
 	}
+	FORI(15){
+		unsigned long block=inode->blockPointers[i]*blocksizelba+ext2.part->startLBA;
+		// printf("BLOCK PTR[%d] %x\n",i,block*0x200);
+	}
 
 	if(inode->blockPointerIndirect==0){
 		return 1;
 	}
-	uint32_t block_pointers[256];
+	uint32_t block_pointers[256*blocksizelba];
 	FREAD(inode->blockPointerIndirect*blocksizelba+ext2.part->startLBA,block_pointers,sizeof(block_pointers));
-	FORI(256){
+	FORI(256*blocksizelba){
 		if(block_pointers[i]==0)break;
 		unsigned long block=block_pointers[i]*blocksizelba+ext2.part->startLBA;
 		FREAD(block,ptr,MIN(rem,blocksize));
 		rem-=blocksize;
 		ptr+=blocksize;
+		//kprintf("BLOCK PTR[%d] %x\n",i,0x200*block);
 	}
+	if(inode->blockPointerIndirectDouble>0){
+		printf("EXT2:CANNOT HANDLE DOUBLE INDIRECT PTRS\n");
+		return 0;
+	}
+	uint32_t indirect_pointers[256];
+	FREAD(inode->blockPointerIndirectDouble*blocksizelba+ext2.part->startLBA,indirect_pointers,sizeof(indirect_pointers));
 	// FORI(0x8){
 	// 	FORJ(0x4){
 	// 		printf("%p\t",*(uint32_t*)(&(data[0x1000*(i*4+j)])));
@@ -146,7 +165,7 @@ uint64_t EXT2_LBA_FROM_INODE_ID(uint64_t inode){
 	val+=local/0x200;
 	return val;
 }
-void EXT2_INODE_FROM_ID(EXT2_INODE* node,uint64_t inode){
+uint64_t EXT2_INODE_FROM_ID(EXT2_INODE* node,uint64_t inode){
 	int blocksize=(1024<<ext2.superblock->logBlockSize);
 	int blocksizelba=blocksize/GPT_SECTOR_SIZE;
 	int group=INODE_GROUP(inode,ext2);
@@ -156,17 +175,17 @@ void EXT2_INODE_FROM_ID(EXT2_INODE* node,uint64_t inode){
 	char temp[0x200];
 	AHCI_READ(ext2.port,val,1,(uint16_t*)temp);
 	memcpy(node,temp+(local%0x200),sizeof(EXT2_INODE));
+	return val;
 }
 void* readInodeTable(uint64_t lba){
 	void* table=malloc(1024);
 	AHCI_READ(ext2.port,lba,4,(uint16_t*)table);
 	return table;
 }
-int EXT2_FIND_INODE_IN_DIR(EXT2_INODE* parent,EXT2_INODE* out,char* name){
+uint64_t EXT2_FIND_INODE_IN_DIR(EXT2_INODE* parent,EXT2_INODE* out,char* name){
 	int file=(EXT2_FIND_IN_DIR(parent,name));
 	if(file==0)return 0;
-	EXT2_INODE_FROM_ID(out, file);
-	return 1;
+	return EXT2_INODE_FROM_ID(out, file);
 }
 int EXT2_GET_INODE_FROM_PATH(EXT2_INODE* child,char* _path){
 
@@ -178,17 +197,18 @@ int EXT2_GET_INODE_FROM_PATH(EXT2_INODE* child,char* _path){
 	path++;
 	// EXT2_FIND_INODE_IN_DIR(&ext2.root,&filenode,"home");
 	EXT2_INODE* parent=&ext2.root;
+	uint64_t file=0;
 	while(path!=NULL){
 		char* name=path;
 		path=strntokch(path,1000,'/');
-		int status=EXT2_FIND_INODE_IN_DIR(parent,child,name);
-		if(status!=1){
+		file=EXT2_FIND_INODE_IN_DIR(parent,child,name);
+		if(file==0){
 			memset(child,0,sizeof(EXT2_INODE));
 			return 0;
 		}
 		parent=child;
 	}
-	return 1;
+	return file;
 }
 int EXT2_READPART(void* fs,AHCI_HBA_PORT* port,GPT_PART_ENTRY* entry){
 	// uint64_t lba=0x40;	

@@ -156,9 +156,9 @@ int AHCI_FIND_CMD_SLOT(AHCI_HBA_PORT *port)
 
 bool AHCI_READ(AHCI_HBA_PORT *port, uint64_t start, uint32_t count, uint16_t *buf)
 {
-	kprintf("BUF(VIRT):\t%x\t\t",buf);
+	//kprintf("BUF(VIRT):\t%x\t\t",buf);
 	buf=MemoryPhysical(buf);
-	kprintf("BUF(PHYS):\t%x\n",buf);
+	//kprintf("BUF(PHYS):\t%x\n",buf);
 	//port=portSATA;
 	port->is = (uint32_t) -1;		// Clear pending interrupt bits
 	int spin = 0; // Spin lock timeout counter

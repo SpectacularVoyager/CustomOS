@@ -87,6 +87,8 @@ int USERMODE_EXEC_ELF(ELF_FILE* elf,char** args,char** env){
 		return 0;
 	}
 	MemoryRemap(0x400000,(uint64_t)address,0b111);
+	MemoryRemap(0x600000,(uint64_t)address+0x200000,0b111);
+	MemoryRemap(0x800000,(uint64_t)address+0x400000,0b111);
 	//MemoryRemap(0x402000,((uint64_t)address)+0x2000,0b111);
 	FORI(elf->header->SectionHeaderCount){
 		ELF_SectionHeader* section=&elf->sections[i];
