@@ -95,7 +95,7 @@ void MTRStuff(){
 	SetColor(0xffffff);
 }
 
-//#define NOUSB
+#define NOUSB
 
 
 void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long cpuid,uint64_t* gdt)
@@ -186,39 +186,6 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 	SetColor(0xFF0000);
 	AHCI_DATA data=AHCI_INIT(PCI_GetFromType(0x1,0x6));
 
-	SetColor(0xFF0000);
-	//FORI(data.n_ata){
-	//	GPT_DATA gpt;
-	//	GPT_READ(data.ata[i],&gpt);
-	//	FORJ(gpt.nEntries){
-	//		//GPT_PrintPartName(gpt.entries[j].name);
-	//		FAT_READPART(data.ata[i],&gpt.entries[j]);
-	//	}
-	//}
-	GPT_DATA gpt;
-	FORI(data.n_ata){
-		int val=GPT_READ(data.ata[i],&gpt);
-		if(val!=0){
-			printf("PART:[%d]\n",i);
-			FAT32_FILESYSTEM fs;
-			int val=FAT_READPART(&fs,data.ata[i],&gpt.entries[0]);
-			if(val==1){
-				// ListNode* node=dir(&fs,NULL);
-				//
-				// while(node!=NULL){
-				// 	DIRECTORY* dir=((DIRECTORY*)node->val);
-				// 	printf("\t%s %d\n",dir->name,isDir(dir));
-				// 	node=node->next;
-				// }
-				//printTree(&fs,NULL,1);
-				//fromPath(&fs,"/home/ankush/file.txt");
-			}else{
-				int status_ext2=EXT2_READPART(&fs,data.ata[i],&gpt.entries[0]);
-			}
-		}
-	}
-	SetColor(0xFFFFFF);
-
 	APIC_TIMER_INIT(0x2000000);
 	PCI_device* device=PCI_GetFromType(0x2,0x0);
 	PCI_Device_Print(device);
@@ -238,58 +205,14 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 		PCI_Device_Print(usb);
 	}
 #endif
-	//EXT2_DIR_READ_ENTRY("/home",0,0);
-	Scheduler_START();
-	//evaluate("/usr/bin/test ");
-
-	ClearScreen();
-	TERM_SET_POS(0,0);
-	{
-		EXT2_INODE elf;
-		if(EXT2_GET_INODE_FROM_PATH(&elf,"/usr/local/bash")!=0){
-			char* hex=malloc(elf.size);
-			EXT2_READFILE(&elf,hex,elf.size);
-			ELF_FILE file;
-			int s=ELF_PARSE(&file,hex,elf.size);
-			if(s==1){
-				char* args[]={"/usr/local/bash",0};
-				USERMODE_EXEC_ELF(&file,args,NULL);
-			}else{
-				printf("FILE NOT EXECUTABLE [%s]\n",errno_ELF(s));
-			}
-		}
-	}
-	//FIX MAX LIMIT FOR EXT2 READ
-	/**
-	{
-
-		EXT2_INODE libc;
-		int inode;
-		if((inode=EXT2_GET_INODE_FROM_PATH(&libc,"/lib/libc.so"))!=0){
-			char* hex=malloc(libc.size);
-			LOGVALD(inode*0x200);
-			EXT2_READFILE(&libc,hex,libc.size);
-			ELF_FILE file;
-			int s=ELF_PARSE(&file,hex,libc.size);
-			if(s==1){
-			}else{
-				printf("FILE NOT EXECUTABLE [%s]\n",errno_ELF(s));
-			}
-		}
-	}
-	*/
-
 	//PONG_MAIN();
-	//RTC_INIT(0xf);
-	//RTC_INTERRUPT_ENABLE(0);
-	//APIC_TIMER_INIT(0x2000000);
-	//PCI_device* nic=PCI_GetFromID(0x10EC, 0x8168);
-	//if(nic){
-	//	RTL8168_INIT(nic);
-	//}
-	//if((nic=PCI_GetFromID(0x10EC,0x8139))){
-	//	//RTL8139_INIT(nic,pcibase);
-	//}
+	// RTC_INIT(0xf);
+	// RTC_INTERRUPT_ENABLE(0);
+	// APIC_TIMER_INIT(0x2000000);
+	PCI_device* nic;
+	if((nic=PCI_GetFromID(0x10EC,0x8139))){
+		RTL8139_INIT(nic,pcibase);
+	}
 	//Debug();
 
 	while(1);

@@ -37,8 +37,12 @@ ifeq ($(USB),2)
 		-device usb-kbd \
 		-device usb-mouse
 endif
-QEMU_FLAGS:=$(QEMU_FLAGS) -serial file:logs/serial.log -net nic,model=rtl8139 -m 2G -vga std 
-QEMU_FLAGS:=$(QEMU_FLAGS) 
+QEMU_FLAGS:=$(QEMU_FLAGS) -serial file:logs/serial.log -m 1G -vga std 
+
+# QEMU_FLAGS:=$(QEMU_FLAGS) -net nic,model=rtl8139
+QEMU_FLAGS:=$(QEMU_FLAGS) \
+   -netdev user,id=u1 -device rtl8139,netdev=u1\
+	-object filter-dump,id=f1,netdev=u1,file=dump.dat
 
 SRC_FILES=$(shell find -wholename "./src/*.c")
 OBJECT_FILES=$(SRC_FILES:./src/%.c=out/%.o)
@@ -84,7 +88,7 @@ isMultiBoot:
 	@./scripts/isMultiBoot.sh $(ISO)
 run: all
 	@if [ -f disks/ext2.img ]; then \
-		$(QEMU) $(QEMU_FLAGS) -drive file=$(IMAGE),format=raw -drive file=disks/ext2.img,format=raw; \
+		sudo $(QEMU) $(QEMU_FLAGS) -drive file=$(IMAGE),format=raw -drive file=disks/ext2.img,format=raw; \
 	else \
 		$(QEMU) $(QEMU_FLAGS) -hda $(IMAGE); \
 	fi
@@ -97,7 +101,8 @@ part:
 
 # INSPECT MEM x/128b 0xfee00000
 debug: all
-	@$(QEMU) $(QEMU_FLAGS) -hda $(IMAGE) -hdb disks/fat.img -monitor stdio
+	@sudo $(QEMU) $(QEMU_FLAGS) -drive file=$(IMAGE),format=raw -drive file=disks/ext2.img,format=raw -monitor stdio
+	@$(QEMU) $(QEMU_FLAGS) -drive file=$(IMAGE),format=raw -drive file=disks/ext2.img,format=raw -monitor stdio
 gdb: all
 	# @$(QEMU) -s -S -net nic,model=e1000 -hda $(IMAGE)
 

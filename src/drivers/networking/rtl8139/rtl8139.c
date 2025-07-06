@@ -21,7 +21,7 @@ void NIC_INT(registers* r){
 	printf("NIC\n");
 }
 void RTL8139_SEND(void* data,unsigned long len){
-	outportl(rtl8139.ioaddr+0x10+rtl8139.tsad*4,(uint32_t)data);
+	outportl(rtl8139.ioaddr+0x10+rtl8139.tsad*4,(uint32_t)MemoryPhysical(data));
 	outportl(rtl8139.ioaddr+0x10+rtl8139.tsad*4,len);
 	rtl8139.tsad=(rtl8139.tsad+1)%4;
 }
@@ -54,11 +54,11 @@ void RTL8139_INIT(PCI_device* device,void* base){
 
 	while((inb(rtl8139.ioaddr + 0x37) & 0x10) != 0) { }
 
-	LOGVAL("RTL8139 SOFTWARE RESET OVER\n");
+	printf("RTL8139 SOFTWARE RESET OVER\n");
 	//RECV STUFF
 	void* recieve=mallocA(8192+16,0x1000);
 	//MEMORY PHYSICAL
-	outportl(rtl8139.ioaddr + 0x30,(uint32_t)recieve);
+	outportl(rtl8139.ioaddr + 0x30,(uint32_t)MemoryPhysical(recieve));
 	//IMR + ISR 
 	outw(rtl8139.ioaddr + 0x3C,0x5);
 
@@ -74,6 +74,6 @@ void RTL8139_INIT(PCI_device* device,void* base){
 	printMAC(header->MAC);
 
 	void* hello="Hello World\n";
-	RTL8139_SEND(hello, 13);
+	//RTL8139_SEND(hello, 13);
 	
 }
