@@ -10,6 +10,8 @@
 
 #define LOGVAL(a) printf("%16s\t0x%X\n",#a,a);
 #define LOGVALD(a) printf("%16s\t%p\n",#a,a);
+#define KLOGVAL(a) kprintf("%16s\t0x%X\n",#a,a);
+#define KLOGVALD(a) kprintf("%16s\t%p\n",#a,a);
 
 #define FORI(x) for(size_t i=0;i<(x);i++)
 #define FORJ(x) for(size_t j=0;j<(x);j++)
@@ -21,5 +23,7 @@
 void printWStr(uint16_t* ptr,size_t len);
 
 void hexdump(void* mem,size_t size,size_t stride);
+void khexdump(void* mem,size_t size,size_t stride);
 
 #define TRACK printf("[TRACK] %s %d\n",__FILE__,__LINE__);
+#define KTRACK kprintf("[TRACK] %s %d\n",__FILE__,__LINE__);

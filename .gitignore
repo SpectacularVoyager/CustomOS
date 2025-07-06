@@ -4,3 +4,4 @@ ISO/boot/*.bin
 logs/*
 disks/*
 disk.img
+res/*

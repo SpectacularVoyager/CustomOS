@@ -2,6 +2,8 @@
 #include "stdlib/stdlib.h"
 #include "stdlib/stdio.h"
 #include "stdlib/string.h"
+#include "utils/utils.h"
+#include "paging/paging.h"
 
 
 int check128(unsigned char* data){
@@ -21,14 +23,14 @@ void GPT_PrintPartName(uint16_t* name){
 
 int GPT_READ(AHCI_HBA_PORT* port,GPT_DATA* data){
 	GPT_PART_HEADER* header=malloc(sizeof(GPT_PART_HEADER));
-	AHCI_READ(port,0x1,1,(uint16_t*)header);
+	AHCI_READ(port,0x1,1,(uint16_t*)MemoryPhysical(header));
 
 	int num=header->number_of_partition_entries*header->size_of_partition_entry;
 	GPT_PART_ENTRY* entry=malloc(num*0x80);
 	AHCI_READ(port,header->partition_entry_lba,4,(void*)entry);
 	if(!(strncmp("EFI PART",(char*)header->signature,8)==0)){
 		printf("COULD NOT READ PART[MISSING SIGNATURE EFI PART]\n");
-		printf("%8s\n",header->signature);
+		hexdump(&header->signature,8,8);
 		return 0;
 	}
 	int n_entries=0;

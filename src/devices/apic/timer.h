@@ -15,9 +15,4 @@ void APIC_SLEEP_MICRO(unsigned long s);
 #define MILISECOND *1000
 #define SECOND *1000 MILLISECOND
 
-
-void APIC_TIMER_STOP();
-
-//IN MICROSECOND
-void APIC_TIMER_LOOP(int ms,IRQHandler handler);
-void APIC_TIMER_ONCE(int ms,IRQHandler handler);
+void APIC_PERIODIC(int ticks);

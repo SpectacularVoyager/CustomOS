@@ -13,6 +13,8 @@
 #include "devices/apic/timer.h"
 #include "vga/term.h"
 //#define XHCI_DEBUG
+#include "paging/paging.h"
+#include "devices/usb/keyboard.h"
 
 void* xhci_operation_registers;
 #define XHCI_OP(of)	((uint32_t*)((xhci_hub.xhci_operation_registers+of)))
@@ -38,8 +40,8 @@ void XHCI_READ_CAP(XHCI_CAP_REG* cap,void* address){
 	cap->HCCParams2=U32(address+0x1C);
 }
 uint64_t* XHCI_SetUpDCBAA(unsigned int maxslots,unsigned int pagesize,XHCI_CAP_REG* config){
-	uint64_t* dcbaa=mallocAB((maxslots+1)*8,64,pagesize);
-	//void* device_context=mallocAB(2048,64,pagesize);
+	uint64_t* dcbaa=(uint64_t*)MemoryPhysical(mallocAB((maxslots+1)*8,64,pagesize));
+	//void* device_context=MemoryPhysical(mallocAB(2048,64,pagesize);
 	FORI(maxslots){
 		dcbaa[i]=0;
 	}
@@ -48,7 +50,7 @@ uint64_t* XHCI_SetUpDCBAA(unsigned int maxslots,unsigned int pagesize,XHCI_CAP_R
 	int scratchpadEntN=(config->HCSParams2>>21)&(0x1f);
 	printf("SCRATCHPAD ENTRIES:\t%x\n",scratchpadEntN);
 	if(scratchpadEntN>0){
-		char* scratchpad=mallocAB(pagesize,pagesize,pagesize);
+		char* scratchpad=MemoryPhysical(mallocAB(pagesize,pagesize,pagesize));
 		dcbaa[0]=(uint64_t)scratchpad;
 		FORI(pagesize){
 			scratchpad[i]=0;
@@ -94,12 +96,18 @@ void XHCI_HANDLE_CAPABILITIES(void* data,PCIGeneralDevice* device,unsigned int m
 			return;
 		}
 		if(BYTE(d,0)==MSI_X_CAP_SIG){
+#ifdef XHCI_DEBUG
+			printf("MSI-X DETECTED\t ENABLED=%x\n",BIT(WORD(d,1),MSI_X_ENABLED));
+#endif
 			//MSIX_HANDLE_CAPABILITY(data,device,maxintrs);
 			msix=data;
 			int off=BYTE(d,1);
 			data=(void*)(((uint64_t)data&(~0xFF))|off);
 			if(off==0x0)break;
 		}else if(BYTE(d,0)==MSI_CAP_SIG){
+#ifdef XHCI_DEBUG
+			printf("MSI DETECTED\t ENABLED=%x\n",BIT(WORD(d,1),MSI_ENABLED));
+#endif
 			msi=data;
 			int off=BYTE(d,1);
 			data=(void*)(((uint64_t)data&(~0xFF))|off);
@@ -123,7 +131,7 @@ void XHCI_HANDLE_CAPABILITIES(void* data,PCIGeneralDevice* device,unsigned int m
 }
 
 XHCI_TRB* XHCI_getTransferTRBs(){
-	XHCI_TRB* trb=mallocAB(64*1024,64*1024,64*1024);
+	XHCI_TRB* trb=MemoryPhysical(mallocAB(64*1024,64*1024,64*1024));
 	//memset(trb,0,64*1024);
 	FORI(256){
 		trb[i].int1=0;
@@ -183,7 +191,7 @@ void XHCI_HANDLE_EXTENDED_CAPABILITIES(XHCI_HUB* xhci_hub,void* data){
 		data=(void*)(((uint64_t)data&(~0xFF))|off<<2);
 		if(off==0x0)break;
 	}
-	void** supportedprotocolm=malloc(sizeof(void*)*spn);
+	void** supportedprotocolm=MemoryPhysical(malloc(sizeof(void*)*spn));
 	FORI(spn){
 		supportedprotocolm[i]=supportedprotocols[i];
 	}
@@ -231,7 +239,7 @@ void XHCI_SLOT_INITIALIZE(int slot,int port){
 	int cz=32<<XHCI_CONTEXT_SIZE(xhci_hub.config);
 
 	//DO INPUT CONTEXT STUFF
-	void* input_context=mallocAB(cz*33,64,xhci_hub.pagesize);
+	void* input_context=MemoryPhysical(mallocAB(cz*33,64,xhci_hub.pagesize));
 	memset(input_context,0,cz*33);
 
 	//CONTROL CONTEXT
@@ -268,7 +276,7 @@ void XHCI_SLOT_INITIALIZE(int slot,int port){
 	xhci_hub.endpoints[slot].contexts=input_context;
 
 	//SET UP IN DCBAA
-	void* output_context=mallocAB(cz*32,64,xhci_hub.pagesize);
+	void* output_context=MemoryPhysical(mallocAB(cz*32,64,xhci_hub.pagesize));
 	memset(output_context,0,cz*32);
 	((uint64_t*)xhci_hub.dcbaa)[slot]=(uint64_t)output_context;
 
@@ -305,6 +313,20 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	reg_int=address+XHCI_RTSOFF(&config)+0x20;
 	ports=xhci_operation_registers+XHCI_PORT_OFF;
 	uint32_t* doorbell=address+config.DBOFF;
+#ifdef XHCI_DEBUG
+	printf(INFO"XHCI DETECTED\n");
+	printf("ADDRESS ->%x\n",address);
+	printf("STATUS ->%x\n",usb.capabilities_pointer);
+	printf("CAPLENGTH:\t%x\n",config.CAPLENGTH);
+	printf("VERSION:\t%x\n",config.HCIVersion);
+	printf("HCSPARAMS1:\t%x\n",config.HCSParams1);
+	printf("HCSPARAMS2:\t%x\n",config.HCSParams2);
+	printf("HCSPARAMS3:\t%x\n",config.HCSParams3);
+	printf("HCCPARAMS1:\t%x\n",config.HCCParams1);
+	printf("RTSOFF:\t%x\n",config.RTSOFF);
+	printf("DBOFF:\t%x\n",config.DBOFF);
+	printf("CONFIG:\t%x\n", XHCI_OP(XHCI_REG_CONFIG));
+#endif
 	printf("HCCPARAMS1:\t%x\n",config.HCCParams1);
 	printf("VERSION:\t%x\n",config.HCIVersion);
 	printf("CONFIG:\t%x\n", *XHCI_OP(XHCI_REG_CONFIG));
@@ -331,7 +353,7 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 
 
 	/** CRCR STUFF */
-	xhci_hub.command_ring=mallocAB(64*1024,64*1024,64*1024);
+	xhci_hub.command_ring=MemoryPhysical(mallocAB(64*1024,64*1024,64*1024));
 
 	FORI(128){
 		xhci_hub.command_ring[i].int1=0;
@@ -351,8 +373,8 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	//-------------//
 	//FORI(maxintrs){
 	FORI(2){
-		uint64_t* event_ring_table=mallocAB(4096,4096,4096);
-		void* event_ring_addr=malloc(16*XHCI_EVENT_RING_SIZE);
+		uint64_t* event_ring_table=MemoryPhysical(mallocAB(4096,4096,4096));
+		void* event_ring_addr=MemoryPhysical(malloc(16*XHCI_EVENT_RING_SIZE));
 		memset(event_ring_addr,0,16*XHCI_EVENT_RING_SIZE);
 
 		event_ring_table[0]=(uint64_t)event_ring_addr;
@@ -382,10 +404,10 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	xhci_hub.doorbell=doorbell,
 	xhci_hub.flag=0,
 	xhci_hub.event_ring=NULL;
-	void* transfer=malloc(sizeof(void*)*maxslots);
+	void* transfer=MemoryPhysical(malloc(sizeof(void*)*maxslots));
 	memset(transfer,0,sizeof(void*)*maxslots);
 	xhci_hub.pagesize=pagesize;
-	XHCI_Endpoint* endpoints=malloc(sizeof(XHCI_Endpoint)*maxslots);
+	XHCI_Endpoint* endpoints=MemoryPhysical(malloc(sizeof(XHCI_Endpoint)*maxslots));
 	FORI(maxslots){
 		memset(&endpoints[i],0,sizeof(XHCI_Endpoint));
 	}
@@ -406,7 +428,7 @@ int XHCI_INIT(PCI_device* device,void* pcibase){
 	XHCI_DOORBELL(0,0);
 	SetColor(0xffffff);
 
-	// FORI(maxports)	XHCI_PORT_RESET(i);
+	FORI(maxports)	XHCI_PORT_RESET(i);
 
 	return 1;
 }
@@ -456,6 +478,10 @@ char fromScanCode(char x){
 	}
 	if(x==0x28)return '\n';
 	if(x==0x2C)return ' ';
+	if(x==0x2A)return '\b';
+	if(x==0x37)return '.';
+	if(x==0x38)return '/';
+
 	return 0;
 }
 void PrintKeyboard(void* buf,int _x,int _y){
@@ -491,8 +517,9 @@ void XHCI_NORMAL(XHCI_Endpoint* endp,void* buffer,int len,int target,int intp){
 		XHCI_TRANSFER(endp,target,(XHCI_TRB*)&status);
 }
 void XHCI_IRQ8(registers* _r){
-	printf("IRQ RECV LESS GO\n");
-	PrintKeyboard(&keyboard,103,62);
+	USB_KEYBOARD_HANDLER(_r,&keyboard);
+	//printf("IRQ RECV LESS GO\n");
+	//PrintKeyboard(&keyboard,103,62);
 	//FORI(6){
 	//	if(keyboard.keys[i]!=0){
 	//		printf("%c",fromScanCode(keyboard.keys[i]));
@@ -676,7 +703,7 @@ void XHCI_CONFIGURE_ENDPOINT0(XHCI_Endpoint* endp,int slot,int conf){
 
 
 	int cz=32<<XHCI_CONTEXT_SIZE(xhci_hub.config);
-	void* input_context=mallocAB(cz*33,64,xhci_hub.pagesize);
+	void* input_context=MemoryPhysical(mallocAB(cz*33,64,xhci_hub.pagesize));
 	void* input_context_readonly=endp->contexts;
 	memset(input_context,0,33*cz);
 	XHCI_CONTEXT_CONTROL* control=input_context;
@@ -685,7 +712,7 @@ void XHCI_CONFIGURE_ENDPOINT0(XHCI_Endpoint* endp,int slot,int conf){
 	control->drop=0;
 	control->conf=0;
 
-	control->add=0b11;
+	control->add=0b1;
 	slot_endp->context_entries=1;
 	control->conf=1;
 
@@ -829,7 +856,7 @@ void XHCI_ON_COMMAND_COMPLETE(XHCI_TRB* trb){
 			// printf("PORT STUFF\t\t");
 			// XHCI_PRINT_PORT(port,&xhci_hub.ports[port-1]);
 			xhci_hub.endpoints[slot].port=port;
-			xhci_hub.endpoints[slot].endpoints=malloc(sizeof(XHCI_Endpoint_Data)*32);
+			xhci_hub.endpoints[slot].endpoints=MemoryPhysical(malloc(sizeof(XHCI_Endpoint_Data)*32));
 			FORI(32){
 				xhci_hub.endpoints[slot].endpoints[i].c=0;
 				xhci_hub.endpoints[slot].endpoints[i].sz=128;
@@ -875,7 +902,7 @@ void XHCI_ON_COMMAND_COMPLETE(XHCI_TRB* trb){
 				printf("ENDPOINT INT IN STATE:\n");
 
 				
-				XHCI_SETIDLE(slot,2,0);
+				XHCI_SETIDLE(slot,2,2);
 				XHCI_DOORBELL(slot,3);
 
 				hexdump(endp->endpoints[2].trbs,0x80,0x20);
@@ -939,9 +966,9 @@ void XHCI_ON_TRANSFER_COMPLETE(XHCI_TRB* trb){
 		//printf("DESC:\t");
 		//hexdump(&endp->desc,18,1000);
 		//printf("\t FOUND DEVICE [%x][%x] -> [%x][%x]\n",endp->desc.clazz,endp->desc.subclass,endp->desc.vendorid,endp->desc.productid);
-		endp->configs=malloc(sizeof(XHCI_CONFIG)*endp->desc.numConfigs);
+		endp->configs=MemoryPhysical(malloc(sizeof(XHCI_CONFIG)*endp->desc.numConfigs));
 		FORI(endp->desc.numConfigs){
-			endp->configs[i].config=malloc(9);
+			endp->configs[i].config=MemoryPhysical(malloc(9));
 			XHCI_GetDescriptor(endp,endp->configs[i].config,USB_DESC_TYPE_CONFIG,i,9);
 		}
 		XHCI_DOORBELL(slot,1);
@@ -950,7 +977,7 @@ void XHCI_ON_TRANSFER_COMPLETE(XHCI_TRB* trb){
 		FORI(endp->desc.numConfigs){
 			USB_CONFIG_DESCRIPTOR* conf=endp->configs[i].config;
 			int len=conf->total_len;
-			endp->configs[i].config=malloc(len);
+			endp->configs[i].config=MemoryPhysical(malloc(len));
 			XHCI_GetDescriptor(endp, endp->configs[i].config,USB_DESC_TYPE_CONFIG, i, len);
 		}
 		XHCI_DOORBELL(slot,1);
@@ -961,13 +988,13 @@ void XHCI_ON_TRANSFER_COMPLETE(XHCI_TRB* trb){
 			int len=conf->total_len;
 			//hexdump(conf,len,32);
 		}
-		endp->desc_product=malloc(8);
+		endp->desc_product=MemoryPhysical(malloc(8));
 		XHCI_GetDescriptor(endp,endp->desc_product,USB_DESC_TYPE_STRING,endp->desc.product_idx,8);
 		XHCI_DOORBELL(slot,1);
 		endp->done++;
 	}else if(endp->done==4){
 		int len=endp->desc_product->len;
-		endp->desc_product=malloc(len);
+		endp->desc_product=MemoryPhysical(malloc(len));
 		XHCI_GetDescriptor(endp,endp->desc_product,USB_DESC_TYPE_STRING,endp->desc.product_idx,len);
 		XHCI_DOORBELL(slot,1);
 		endp->done++;

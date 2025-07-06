@@ -10,9 +10,19 @@ bits 32
 section .bss
 align 16
 	stack_bottom:
-	resb 16384 ; 16 KiB
+	resb 0x10000 ; 16 KiB
 	stack_top:
+
+global stack_top_syscall
+align 16
+	stack_bottom_syscall:
+	resb 0x10000 ; 16 KiB
+	stack_top_syscall:
 section .text
+
+global TEST_SYSCALL
+TEST_SYSCALL:
+	hlt
 
 global PagingInit
 PagingInit:
@@ -24,6 +34,19 @@ PagingInit:
 	mov [p4_table + 511 * 8], eax
 
 	call Paging_Enable
+
+	extern loadGDT
+	extern GDT_Descriptor
+	;call loadGDT
+	;lgdt [GDT_Descriptor]
+	; mov ebx,TSS
+	; mov eax,0x68
+	; shl ebx,16
+	; or eax,ebx
+	; mov [gdt64+gdt64.tss],eax
+	; mov eax,0x89
+	; shl eax,8
+	; mov [gdt64+gdt64.tss1],eax
 	lgdt [gdt64.pointer]
 
 	ret
@@ -52,4 +75,4 @@ _start:
 
 %include "src/interrupts/idt.asm"
 %include "src/interrupts/isr.asm"
-%include "src/task/task.asm"
+%include "src/core/user.asm"

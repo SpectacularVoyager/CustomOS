@@ -10,3 +10,5 @@
 #define ENDL "\n"
 
 void SetColor(uint32_t val);
+
+void strwrite(char* s,int len);

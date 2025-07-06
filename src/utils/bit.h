@@ -30,11 +30,17 @@
 #define U32(addr) (*(uint32_t*)(addr))
 #define U16(addr) (*(uint16_t*)(addr))
 #define U8(addr) (*(uint8_t*)(addr))
+#define ADDR(long_addr) ((void*)(long_addr))
 
 #define BIT_RANGE(a,l,h)	(a&BIT_RANGE_MASK(h+1,l))>>l
 
 #define MASK(a,b)	((a)&(~(b)))
 #define VAL(a)		(a)
+
+typedef struct {
+	uint8_t* data;
+	int len;
+} BITMASK;
 
 inline void printWSTR(void* ptr){
 	uint16_t* p=(void*)ptr;

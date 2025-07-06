@@ -10,26 +10,36 @@
 #include <utils/bit.h>
 
 
-unsigned int BUFFER_READ_U32(AHCI_HBA_PORT* port,AHCI_BUFFER* buffer,unsigned long address){
+unsigned int BUFFER_READ_U32(AHCI_BUFFER* buffer,unsigned long address){
 	unsigned long lba=address/GPT_SECTOR_SIZE;
 	int off=address%(GPT_SECTOR_SIZE*buffer->n_sectors);
 	if(!BETWEEN(lba,buffer->currentLBA,buffer->currentLBA+buffer->n_sectors-1)){
-		BUFFER_REFRESH(port,buffer,address);
+		BUFFER_REFRESH(buffer,address);
 	}
 	off=address%(GPT_SECTOR_SIZE*buffer->n_sectors);
 	return ((uint32_t*)buffer->buffer)[off];
 
 }
-void BUFFER_REFRESH(AHCI_HBA_PORT* port,AHCI_BUFFER* buffer,unsigned long address){
+unsigned int BUFFER_READ(AHCI_BUFFER* buffer,unsigned long address){
+	unsigned long lba=address/GPT_SECTOR_SIZE;
+	int off=address%(GPT_SECTOR_SIZE*buffer->n_sectors);
+	if(!BETWEEN(lba,buffer->currentLBA,buffer->currentLBA+buffer->n_sectors-1)){
+		BUFFER_REFRESH(buffer,address);
+	}
+	off=address%(GPT_SECTOR_SIZE*buffer->n_sectors);
+	return ((uint32_t*)buffer->buffer)[off];
+
+}
+void BUFFER_REFRESH(AHCI_BUFFER* buffer,unsigned long address){
 	unsigned long lba=address/GPT_SECTOR_SIZE;
 	buffer->currentLBA=lba;
-	AHCI_READ(port,lba,buffer->n_sectors,buffer->buffer);
+	AHCI_READ(buffer->port,lba,buffer->n_sectors,buffer->buffer);
 }
 AHCI_BUFFER BUFFER_INIT(AHCI_HBA_PORT* port,int n,unsigned long address){
 	unsigned long lba=address/GPT_SECTOR_SIZE;
 	void* buffer=malloc(GPT_SECTOR_SIZE*n);
 	AHCI_READ(port,lba,n,buffer);
-	return (AHCI_BUFFER){.buffer=buffer,.currentLBA=lba,.n_sectors=n};
+	return (AHCI_BUFFER){.buffer=buffer,.currentLBA=lba,.n_sectors=n,.port=port};
 }
 ListNode* dirLBA(FAT32_FILESYSTEM* data,unsigned long lba){
 	FAT_STRUCT* files=malloc(GPT_SECTOR_SIZE*2);

@@ -12,3 +12,5 @@ void* callocAB(unsigned long size,unsigned long align,unsigned long boundary);
 void MallocSetStart(unsigned long ptr);
 
 void MallocDebug();
+
+void updateMallocPtr();

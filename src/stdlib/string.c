@@ -1,4 +1,5 @@
 #include "string.h"
+#include "stdlib.h"
 void memcpy(void* dest,const void* src,int size){
 	uint8_t* _dest=(uint8_t*)dest;
 	uint8_t* _src=(uint8_t*)src;
@@ -14,6 +15,14 @@ void memset(void* dest,uint8_t val,int size){
 	}
 	return 0;
 }
+int strlen(const char* c){
+	int count=0;
+	while(*c!='\0'){
+		count++;
+		c++;
+	}
+	return count;
+}
 char* strchr(char *s, int c){
 	while(1){
 		if(*s=='\0')return NULL;
@@ -28,6 +37,17 @@ char* strchrnul(char *s, int c){
 		s++;
 	}
 }
+char* strntokch(char* str,unsigned int len, const char delim){
+	for(unsigned int i=0;i<len;i++){
+		if(str[i]=='\0') return NULL;
+		if(str[i]==delim){
+			str[i]='\0';
+			if(i==len-1)return NULL;
+			return &str[i+1];
+		}
+	}
+	return NULL;
+}
 
 void memcpy32(uint32_t* src,uint32_t* dest,int n){
 	for(volatile int i=0;i<n;i++){
@@ -38,4 +58,11 @@ void memset32(uint32_t* dest,uint32_t src,int n){
 	for(volatile int i=0;i<n;i++){
 		dest[i]=src;
 	}
+}
+char* strdup(const char* c){
+	int len=strlen(c);
+	char* s=malloc(len+1);
+	memcpy(s,c,len);
+	s[len]=0;
+	return s;
 }

@@ -26,6 +26,13 @@ void IDT_EnableGate(int interupt){
 void IDT_DisableGate(int interupt){
 	FLAG_RESET(g_IDT[interupt].flags,IDT_FLAG_PRESENT);
 }
+void IDT_SetPriviledge(int interupt,int priv){
+	int flags=g_IDT[interupt].flags;
+	//flags&=~(3<<5);
+	flags|=priv<<3;
+	g_IDT[interupt].flags=IDT_FLAG_RING3;
+
+}
 void IDT_Initialize(uint16_t code){
 	for(int i=0;i<15;i++){
 		//IDT_SetGate(i,ISRFunctions[i],code,0x8E);

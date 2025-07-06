@@ -1,6 +1,7 @@
 #include "stdlib.h"
 #include "stdio.h"
 #include "string.h"
+#include "paging/paging.h"
 
 
 unsigned long malloc_start=0x270000;
@@ -8,11 +9,13 @@ unsigned long malloc_end=0;
 
 unsigned long ms=0;
 unsigned long me=0;
+#define PAGE_MALLOC	7
 void AssignMallocMemoryMap(struct multiboot_tag *tag,uint64_t safe_offset){
 	int i=1;
 	unsigned long malloc_len=0;
 	multiboot_memory_map_t* mmap;
 
+	kprintf("MEMORY MAP\n");
 	for (mmap = ((struct multiboot_tag_mmap *) tag)->entries;
 			(multiboot_uint8_t *) mmap
 			< (multiboot_uint8_t *) tag + tag->size;
@@ -21,6 +24,7 @@ void AssignMallocMemoryMap(struct multiboot_tag *tag,uint64_t safe_offset){
 			 + ((struct multiboot_tag_mmap *) tag)->entry_size))
 	{
 
+		kprintf("\t[%p]->[%p]\t\t[%d]\n",mmap->addr,mmap->addr+mmap->len,mmap->type);
 		if(mmap->type==MULTIBOOT_MEMORY_AVAILABLE){
 			if(malloc_len<mmap->len&&mmap->addr<0x10000000){
 				malloc_start=mmap->addr;
@@ -32,8 +36,15 @@ void AssignMallocMemoryMap(struct multiboot_tag *tag,uint64_t safe_offset){
 		}
 	}
 	malloc_start+=safe_offset;
+	// malloc_start+=7*PAGE_WIDTH;
+	// malloc_end+=7*PAGE_WIDTH;
 	kprintf(INFO"MALLOC-> %p\t%p\n",malloc_start,malloc_end);
 	//malloc_start+=safe_offset;
+}
+void updateMallocPtr(){
+
+	malloc_start+=7*PAGE_WIDTH;
+	malloc_end+=7*PAGE_WIDTH;
 }
 void MallocDebug(){
 	printf(INFO"[%p -> %p]\n",ms,me);

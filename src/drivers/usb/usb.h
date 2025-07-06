@@ -123,7 +123,14 @@ typedef struct {
 }__attribute__((packed)) USB_MOUSE_REPORT;
 
 typedef struct {
-	uint8_t modifiers;
+	uint8_t LCTRL:1;
+	uint8_t LSHIFT:1;
+	uint8_t LALT:1;
+	uint8_t LMETA:1;
+	uint8_t RCTRL:1;
+	uint8_t RSHIFT:1;
+	uint8_t RALT:1;
+	uint8_t RMETA:1;
 	uint8_t res;
 	uint8_t keys[6];
 }__attribute__((packed)) USB_KEYBOARD_REPORT;

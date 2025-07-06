@@ -14,9 +14,25 @@ int TERM_GET_Y(){
 	return y;
 }
 
+void _putCursor(){
+	WriteChar(x*8+10, y*12+10,'_');
+	Flush(x*8+10, y*12+10,8,8);
+}
+void strwrite(char* s,int len){
+	for (int i=0; i<len;i++) {
+		_putchar(s[i]);	
+	}
+	_putchar('\n');
+}
 void _putchar(char c){
 	if(c=='\n'){x=0;y++;return;}
 	if(c=='\t'){x=x+4-(x%4);return;}
+	if(c=='\b'){
+		x--;
+		WriteChar(x*8+10, y*12+10,' ');
+		Flush(x*8+10, y*12+10,8,8);
+		return;
+	}
 	WriteChar(x*8+10, y*12+10,c);
 	Flush(x*8+10, y*12+10,8,8);
 	x++;

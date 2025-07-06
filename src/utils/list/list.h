@@ -9,6 +9,10 @@ typedef struct ListNode_t{
 
 ListNode* ListAdd(ListNode* first,void* val);
 
+ListNode* ListRemove(ListNode* first,ListNode* n);
+
+unsigned int ListLength(ListNode* node);
+
 //#define LIST_NODE_DEF(x) typedef struct ListNode##x##_t{\
 //	x* val;\
 //	struct ListNode##x* next;\
