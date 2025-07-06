@@ -54,12 +54,14 @@ int ELF_PARSE(ELF_FILE* elf,void* file,int len){
 	if(elf->header->Ident.OsAbi!=ELF_OSABI_SYSV){
 		return ERROR_ELF_UNSUPPORTED_ABI;
 	}
+	//CHECK DATA LSB/MSB
 	//TODO: DO SOMETING WITH TYPE
 	switch(elf->header->Type){
 		case ELF_TYPE_NONE:
 			return ERROR_ELF_UNSUPPORTED_TYPE;
 			break;
 		case ELF_TYPE_EXEC:
+		case ELF_TYPE_DYN:
 			break;
 		default:
 			return ERROR_ELF_UNSUPPORTED_TYPE;

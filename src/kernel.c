@@ -245,7 +245,6 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 
 	ClearScreen();
 	TERM_SET_POS(0,0);
-	/*
 	{
 		EXT2_INODE elf;
 		if(EXT2_GET_INODE_FROM_PATH(&elf,"/usr/local/bash")!=0){
@@ -260,9 +259,9 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 				printf("FILE NOT EXECUTABLE [%s]\n",errno_ELF(s));
 			}
 		}
-	}*/
+	}
 	//FIX MAX LIMIT FOR EXT2 READ
-	
+	/**
 	{
 
 		EXT2_INODE libc;
@@ -279,6 +278,7 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 			}
 		}
 	}
+	*/
 
 	//USERMODE_ADD();
 	//USERMODE_ADD();
