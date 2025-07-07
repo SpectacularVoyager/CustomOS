@@ -29,6 +29,12 @@ void addARP(PACKET_ETHERNET2_BEGIN* eth,PACKET_ARP* arp){
 	//SET TRAILER
 	ETH_ADDTRAILER(ethdata+sizeof(PACKET_ARP),0);
 }
+void addARPUnix(PACKET_ETHERNET2_BEGIN* eth,PACKET_ARP_UNIX* arp){
+	void* ethdata=&eth->data;
+	memcpy(ethdata,arp,sizeof(PACKET_ARP_UNIX));
+	//SET TRAILER
+	ETH_ADDTRAILER(ethdata+sizeof(PACKET_ARP),0);
+}
 void addIP(PACKET_ETHERNET2_BEGIN* eth,PACKET_IP* ip){
 	void* ethdata=&eth->data;
 	memcpy(ethdata,ip,ip->len);
@@ -108,7 +114,7 @@ void IP_default(PACKET_IP* ip,unsigned long src,unsigned long dest,int ident,int
 	ip->source_ip=src;
 	ip->dest_ip=dest;
 	
-	IP_Recompute(ip,0);
+	IP_Recompute(ip,len);
 
 	//ip->header_checksum=checksum(ip,20);
 }

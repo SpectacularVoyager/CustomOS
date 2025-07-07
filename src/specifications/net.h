@@ -1,7 +1,16 @@
+#pragma once
+
 #include "stdint.h"
 
 #define ETH_TYPE_ARP	0x806
 #define ETH_TYPE_IP		0x800
+
+#define ARP_OP_REQ		1
+#define ARP_OP_REPLY	2
+
+#define IP_PROTO_ICMP	1
+
+#define ICMP_TYPE_ECHO	8
 
 uint16_t htons(uint16_t nb);
 
@@ -46,6 +55,17 @@ typedef struct {
 	uint8_t hardware_len;
 	uint8_t protocol_len;
 	uint16_t operation;
+	uint8_t senderHardware[6];
+	uint8_t senderProtocol[6];
+	uint8_t targetHardware[4];
+	uint8_t targetProtocol[4];
+} __attribute__((packed)) PACKET_ARP_UNIX;
+typedef struct {
+	uint16_t hardware_type;
+	uint16_t protocol_type;
+	uint8_t hardware_len;
+	uint8_t protocol_len;
+	uint16_t operation;
 	uint8_t data[1];
 } __attribute__((packed)) PACKET_ARP;
 typedef struct {
@@ -67,8 +87,24 @@ typedef struct {
 	uint8_t options[1];
 } __attribute__((packed)) PACKET_DHCP;
 
+typedef uint16_t net16;
+typedef struct {
+	uint8_t type;
+	uint8_t code;
+	uint16_t checksum;
+	union{
+		struct{
+			uint16_t ident;
+			uint16_t seq;
+			char data[1];
+		} echo;
+		char raw[1];
+	} data;
+} __attribute__((packed)) PACKET_ICMP;
+
 void ETH_ADDTRAILER(void* eth_end,uint32_t trailer);
 void addARP(PACKET_ETHERNET2_BEGIN* eth,PACKET_ARP* arp);
+void addARPUnix(PACKET_ETHERNET2_BEGIN* eth,PACKET_ARP_UNIX* arp);
 void addIP(PACKET_ETHERNET2_BEGIN* eth,PACKET_IP* ip);
 void addUDP(PACKET_IP* ip,int src,int dest,void* data,int len);
 
@@ -91,8 +127,9 @@ inline void* ARP_GET_TARGET_PROTOCOL(PACKET_ARP* arp){
 	return arp->data+2*arp->hardware_len+arp->protocol_len;
 }
 inline int ARP_SIZE(PACKET_ARP* arp){
-	return 2*arp->hardware_len+arp->protocol_len*2;
+	return sizeof(PACKET_ARP)+2*arp->hardware_len+arp->protocol_len*2;
 }
+unsigned int checksum(void* _data,int len);
 
 #define DHCP_OPTION_MESSAGE_TYPE	0x35
 #define DHCP_OPTION_REQUEST_LIST	0x37

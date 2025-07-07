@@ -41,7 +41,7 @@ inline unsigned short inw(unsigned short int port){
 	return ret;
 }
 
-inline void outw(unsigned short int port, unsigned char value)
+inline void outw(unsigned short int port, unsigned short value)
 {
         asm volatile ("outw %%ax,%%dx": :"d" (port), "a"(value));
 }

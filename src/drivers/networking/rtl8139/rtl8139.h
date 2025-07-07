@@ -1,3 +1,4 @@
+#pragma once
 #include "drivers/pci.h"
 #include <stdint.h>
 
@@ -14,6 +15,8 @@
 #define RTL8139_STATUS_TOK 1<<2
 
 void RTL8139_INIT(PCI_device* device,void* base);
+
+void RTL8139_SEND(void* data,unsigned long len);
 
 //TODO RECHECK VALIDITY
 typedef struct  RTL8139_HEADER_t{
@@ -77,4 +80,7 @@ typedef struct {
 	void* mmio;
 	void* recv;
 	RTL8139_HEADER* header;
+	unsigned int recv_offset;
 } RTL8139;
+
+RTL8139* nic();
