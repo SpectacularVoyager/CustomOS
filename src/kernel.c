@@ -69,6 +69,10 @@ void* graphicsStuff(MULTIBOOT_HEADERS headers){
 	AllocatePage(2,2L*PAGE_WIDTH,flag);
 	AllocatePage(3,3L*PAGE_WIDTH,flag);
 	AllocatePage(4,4L*PAGE_WIDTH,flag);
+
+	AllocatePage(0x40000000L/PAGE_WIDTH + 0 ,0x40000000L + 0 * PAGE_WIDTH,flag);
+	AllocatePage(0x40000000L/PAGE_WIDTH + 1 ,0x40000000L + 1 * PAGE_WIDTH,flag);
+	AllocatePage(0x40000000L/PAGE_WIDTH + 2 ,0x40000000L + 2 * PAGE_WIDTH,flag);
 	// AllocatePage(5,5L*PAGE_WIDTH,flag);
 	// AllocatePage(6,6L*PAGE_WIDTH,flag);
 	GraphicsInit(
@@ -258,7 +262,7 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 			if(s==1){
 				USERMODE_EXEC_ELF(&file,args,NULL);
 			}else{
-				printf("FILE NOT EXECUTABLE [%s]\n",errno_ELF(s));
+				printf("%s -> FILE NOT EXECUTABLE [%s]\n",args[0],errno_ELF(s));
 			}
 		}
 	}

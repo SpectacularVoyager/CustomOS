@@ -1,7 +1,9 @@
+#include "interrupts/idt.h"
 #include "usertask/Task.h"
 #include <userspace/syscall.h>
 #include "utils/utils.h"
 #include <stdlib/string.h>
+#include "CharacterDevice/CharacterDevice.h"
 
 int write(int fd,char* buffer,unsigned int len){
 	if(fd!=1)return -1;
@@ -11,6 +13,13 @@ int write(int fd,char* buffer,unsigned int len){
 	return len;
 }
 int read(int fd,char* buffer,unsigned int len){
+	if(fd==0){
+		//STDIN
+		int x= CharacterDeviceRead(STDIO(),buffer,len);
+		if(x==0)return 0;
+		return x;
+	}
+
 	TASK* t=TaskCurrent();
 	FILE_DESC* desc=&t->fd[fd];
 	if(desc->used!=1)return 0;
@@ -39,9 +48,16 @@ int execve(const char* path,char **argv,char **envp){
 	}
 	return 0;
 }
-int fork(void){
+int len=3;
+int fork(registers* r){
+	if(--len<=0)return -1;
 	TASK* t=TaskCurrent();
+
+	printf("__RIP:\t%p\n",t->r->rip);
+	printf("__RIP:\t%p\n",r->rip);
 	TASK* _new=malloc(sizeof(TASK));
+	_new->r->rip=r->rip;
+	_new->r->rsp=r->rsp;
 	TaskDup(_new,t);
 	_new->r->rax=0;
 	TaskAddList(_new);

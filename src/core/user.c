@@ -53,6 +53,20 @@ int ARGS_LEN(char** args,int max){
 	}
 	return i;
 }
+void USERMODE_DO_STUFF(TASK* task){
+	//char* address=PageAllocateN(CEILDIV(elf->len, PAGE_P2_SIZE));
+	char* address=PageAllocateN(2);
+
+	MemoryRemap(0x400000,(uint64_t)address,0b111);
+	MemoryRemap(0x600000,(uint64_t)address+0x200000,0b111);
+	MemoryRemap(0x800000,(uint64_t)address+0x400000,0b111);
+
+	void* stack=address+0x200000;
+
+	task->r->rip=(uint64_t)address;
+	task->r->rsp=(uint64_t)stack;
+	task->r->rbp=(uint64_t)stack;
+}
 //GET PAGE DYNAMICALLY
 int USERMODE_EXEC_ELF(ELF_FILE* elf,char** args,char** env){
 	printf("STARTING PROCESS %s\n",args[0]);
@@ -109,6 +123,9 @@ int USERMODE_EXEC_ELF(ELF_FILE* elf,char** args,char** env){
 	//LOGVAL(U64(stack-16))
 	// hexdump(args[0],8,8);
 	//hexdump(address+_start_addr,elf->len,32);
-	TASK* t=TaskCreate(args,address+_start_addr,address+0x200000-16);
+	//
+	//LOGVAL(address);
+	TASK* t=TaskCreate(args,address+_start_addr,address+0x200000);
+	t->base=address;
 	return 1;
 }

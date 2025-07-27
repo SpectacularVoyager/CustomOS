@@ -26,7 +26,7 @@ int execve(const char* path,char **argv,char **envp);
 
 int getpid();
 
-int fork(void);
+int fork(registers* r);
 
 int dup(int fd);
 

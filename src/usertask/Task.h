@@ -15,6 +15,8 @@ typedef struct {
 	registers* r;
 	FILE_DESC fd[256];
 	void* address;
+	void* stackTop;
+	void * base;
 } TASK;
 
 TASK* TaskCreate(char** args,void* address,void* stack);

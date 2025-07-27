@@ -25,18 +25,40 @@ int TaskNewPID(){
 	return  ++PID;
 }
 int TaskDup(TASK* n,TASK* old){
+
+	long stackLen=(long)(old->stackTop-old->r->rsp);
+	memcpy(n->r,old->r,sizeof(registers));
+	void* address=PageAllocateN(1);
+
+	MemoryRemap(0x400000,(uint64_t)address,0b111);
+	MemoryRemap(0x600000,(uint64_t)address+0x200000,0b111);
+	MemoryRemap(0x800000,(uint64_t)address+0x400000,0b111);
+
+	void* stack=address+0x200000;
+	n->base=address;
+	n->r->rsp=(uint64_t)stack;
+	n->stackTop=stack;	
 	n->id=TaskNewPID();
 	n->ready=1;
-	memcpy(n->r,old->r,sizeof(registers));
+	n->address=address+(long)(old->address-old->base);
+	n->r->rip=(uint64_t)n->address;
+	LOGVALD(stackLen);
+	LOGVALD(n->r->rip);
+	memcpy(stack-stackLen,old->stackTop-stackLen,stackLen);
+
+	// hexdump(old->stackTop-64,256,32);
+	// hexdump(stack-64,256,32);
 	FORI(256){
 		if(FILE_DESC_DUP(&n->fd[i],&old->fd[i])==0){
-			return 0;
+			//return 0;
+			continue;
 		}
 	}
 
 	return 1;
 }
 void TaskChange(TASK* t){
+	printf("CHANGING TO TASK:%d AT %p\n",t->id,t->r->rip);
 	//MemoryRemap(0x400000,(uint64_t)t->address,0b111);
 	//MemoryRemap(0x402000,(uint64_t)t->address+0x2000,0b111);
 
@@ -46,11 +68,12 @@ TASK* TaskCurrent(){return current->val;}
 
 TASK* TaskCreate(char** args,void* address,void* stack){
 	TASK* t=malloc(sizeof(TASK));
+	t->stackTop=stack;
 	t->id=TaskNewPID();
 	t->ready=1;
 	memset(t->r,0,sizeof(registers));
 	t->r->rip=(uint64_t)address;
-	t->r->rsp=(uint64_t)stack;
+	t->r->rsp=(uint64_t)stack-16;
 	t->r->rdi=(uint64_t)args;
 	//tasks=ListAdd(tasks,t);
 	TaskAddList(t);
@@ -88,15 +111,19 @@ void TaskKill(){
 	__asm__ volatile("CLI");
 	//EMPTYLOOP();
 	ListNode* temp=current;
-	((TASK*)(current->val))->r->rip=(uint64_t)USER_PRIV_LOOP;
 	PageDealloc(((TASK*)temp->val)->address);
+	TASK* _task=	((TASK*)(current->val));
+	_task->ready=0;
 	int _tasklen=ListLength(tasks);
 	if(_tasklen==0){
 		kprintf(INFO "UNEXPECTED NO TASK FOUND\n");
+		//((TASK*)(current->val))->r->rip=(uint64_t)USER_PRIV_LOOP;
+		_task->r->rip=(uint64_t)USER_PRIV_LOOP;
 		current=0;
 		return;
 	}else if(_tasklen==1){
 		tasks=ListRemove(tasks,temp);
+		_task->r->rip=(uint64_t)USER_PRIV_LOOP;
 		current=0;
 	}else{
 		if(current->next==0){
@@ -126,6 +153,7 @@ void Scheduler_LOOP_ROUND_ROBIN(registers* r){
 			// printf(INFO "QUE\n");
 			current=tasks;
 			registers* cur=((TASK*)(current->val))->r;
+
 			APIC_SEND_EOI();
 			TaskChange((TASK*)(current->val));
 		}

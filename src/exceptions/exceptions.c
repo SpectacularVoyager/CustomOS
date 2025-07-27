@@ -30,6 +30,11 @@ void PageFaultHandler(registers* r){
 	}
 		
 	
+	TASK* t=TaskCurrent();
+	if(t!=NULL){
+		printf("DURING EXECUTION OF TASK:%d\n",t->id);
+		printf("\tTASK RIP:\t%p\n",t->r->rip);
+	}
 
     uint64_t cr2_value;
     asm volatile ("mov %%cr2, %0" : "=r" (cr2_value));

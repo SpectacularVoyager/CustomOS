@@ -1,6 +1,10 @@
 #include "syscall.h"
 #include "drivers/ext2/ext2.h"
+#include "interrupts/idt.h"
+#include "signal.h"
 #include "usertask/Task.h"
+#include "stdlib/string.h"
+#include <sys/syscall.h>
 
 #define ARG1(r) r->rdi
 #define ARG2(r) r->rsi
@@ -11,7 +15,10 @@ int ioctl(int fd, int op,...);
 
 char* SYSCALL_GET_NAME(int v);
 void syscall(registers* r){
-	// printf("PROCESSING SYSCALL [%s]\n",SYSCALL_GET_NAME(r->rax));
+	//printf("PROCESSING SYSCALL [%s]\n",SYSCALL_GET_NAME(r->rax));
+	
+	//TASK* t=TaskCurrent();
+	//memcpy(t->r,r,sizeof(registers));
 	int ret=0;
 	switch(r->rax){
 		case SYS_exit:
@@ -36,7 +43,13 @@ void syscall(registers* r){
 			ret=getpid();
 			break;
 		case SYS_fork:
-			ret=fork();
+
+			// TASK* t=TaskCurrent();
+			// if(t!=NULL){
+			// 	printf("__RIP:\t%p\n",r->rip);
+			// 	t->r->rip=r->rip;
+			// }
+			ret=fork(r);
 			break;
 		case SYS_stat:
 			ret=fstat(ARG1(r),(void*)ARG2(r));
@@ -56,9 +69,14 @@ void syscall(registers* r){
 		case SYS_ioctl:
 			ret=ioctl(ARG1(r),ARG2(r));
 			break;
+		case SYS_rt_sigprocmask:
+			ret=sigprocmask(ARG1(r), (const sigset_t *)ARG2(r),(sigset_t *)ARG3(r));
+			//exit(r,-1);
+			break;
 		default:
 			printf("UNRECOGNISED SYSCALL [0x%x][%s]\n",r->rax,SYSCALL_GET_NAME(r->rax));
 			kprintf("UNRECOGNISED SYSCALL [0x%x][%s]\n",r->rax,SYSCALL_GET_NAME(r->rax));
+			exit(r,-1);
 	}
 	RETURN(r) ret;
 }

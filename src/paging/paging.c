@@ -63,15 +63,16 @@ void* PageAllocateN(unsigned int n){
 	int id=-1;
 	FORI(512){
 		int valid=1;
-		FORI(n){
-			if(i>=512)break;
-			if(page_allocator[i]!=0){
+		FORJ(n){
+			if(i+j>=512)break;
+			if(page_allocator[i+j]!=0){
 				valid=0;
 			}
 		}
 		if(valid==1){id=i;break;}
 	}
 	if(id==-1){
+		kprintf(INFO "FAILED TO ALLOCATE %d pages\n",n);
 		return 0;
 	}
 
