@@ -5,9 +5,33 @@
 #include "utils/utils.h"
 #include "utils/bit.h"
 
+int ProcessFromFilePath(char* fp,EXT2_INODE* elf,Process* process){
+	if(EXT2_GET_INODE_FROM_PATH(elf,fp)!=0){
+		char* hex=malloc(elf->size);
+		EXT2_READFILE(elf,hex,elf->size);
+		ELF_FILE file;
+		int s=ELF_PARSE(&file,hex,elf->size);
+		if(s==1){
+			Process proc;
+			int val=ProcessFromELF(&file,&proc);
+			if(val==0){
+				printf("CANNOT EXECUTE ELF %s\n",fp);
+				return 0;
+			}else{
+				ProcessInitialise(&proc,NULL,NULL);
+				return 1;
+			}
+		}else{
+			printf("%s -> FILE NOT EXECUTABLE [%s]\n",fp,errno_ELF(s));
+			return 0;
+		}
+	}
+	return 1;
+}
+
 int ProcessFromELF(ELF_FILE* elf,Process* process){
 
-	printf("STARTING PROCESS %s\n");
+	//printf("STARTING PROCESS %s\n");
 	char* address=PageAllocateN(CEILDIV(elf->len, PAGE_P2_SIZE));
 
 	ELF_Symbol* _start=ELF_LookUpSymbol(elf,"_start");

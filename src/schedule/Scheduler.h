@@ -4,6 +4,7 @@
 #include "specifications/elf/elf.h"
 #include "stdlib/stdio.h"
 #include "core/user.h"
+#include "filesystem/vfs.h"
 
 typedef struct{
 	void* entry;
@@ -15,6 +16,8 @@ typedef struct{
 	int id;
 	Memory memory;
 	registers r;
+	FILE_DESC fd[256];
+	int ready;
 } Process;
 
 typedef struct{
@@ -26,6 +29,8 @@ typedef struct{
 	Process* current;
 } Processes;
 
+Process* TrySchedule();
+
 void ProcessSetHollow(Process* proc);
 
 void SchedulerStart();
@@ -34,12 +39,18 @@ int SchedulerSubmit(Process* p);
 
 int ProcessFromELF(ELF_FILE* elf,Process* process);
 
+int ProcessFromFilePath(char* fp,EXT2_INODE* elf,Process* process);
+
 void SchedulerInterrupt(registers* r);
 
 int ProcessReady(Process* process);
 
 void ProcessRun(Process* process);
 
+void ProcessKillCurrent();
+
 void ProcessInitialise(Process* proc,char** args,char** env);
 
 Process* getProcess();
+
+void UserSpaceDoNothing(registers* r);

@@ -1,5 +1,6 @@
 #pragma once
 #include "stdlib/stdlib.h"
+#include "stdlib/string.h"
 
 #define NOB_ASSERT(...)
 #define NOB_REALLOC realloc
@@ -45,3 +46,17 @@
         nob_da_reserve((da), new_size); \
         (da)->count = (new_size);       \
     } while (0)
+
+#define nob_da_remove_unordered(da, i)               \
+    do {                                             \
+        size_t j = (i);                              \
+        NOB_ASSERT(j < (da)->count);                 \
+        (da)->items[j] = (da)->items[--(da)->count]; \
+    } while(0)
+
+#define nob_da_remove_element(da, i)               \
+    do {                                             \
+        size_t j = (i);                              \
+		memcpy(&(da)->items[j],&(da)->items[j+1],sizeof((da)->items[0]));		\
+		(da)->count--;\
+    } while(0)

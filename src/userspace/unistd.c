@@ -4,6 +4,7 @@
 #include "utils/utils.h"
 #include <stdlib/string.h>
 #include "CharacterDevice/CharacterDevice.h"
+#include "schedule/Scheduler.h"
 
 int write(int fd,char* buffer,unsigned int len){
 	if(fd!=1)return -1;
@@ -20,8 +21,8 @@ int read(int fd,char* buffer,unsigned int len){
 		return x;
 	}
 
-	TASK* t=TaskCurrent();
-	FILE_DESC* desc=&t->fd[fd];
+	Process* proc=getProcess();
+	FILE_DESC* desc=&proc->fd[fd];
 	if(desc->used!=1)return 0;
 	void* hex=FILE_GetBuffer(&desc->file);
 	int bytes_read=MIN(len,FILE_GetRemaining(desc));
@@ -31,8 +32,15 @@ int read(int fd,char* buffer,unsigned int len){
 	return bytes_read;
 }
 void exit(registers* r,int code){
-	r->rip=(uint64_t)USER_PRIV_LOOP;
-	TaskKill();
+	ProcessKillCurrent();
+	Process* proc=TrySchedule();
+	if(proc){
+		ProcessRun(proc);
+	}else{
+		UserSpaceDoNothing(r);
+	}
+	// r->rip=(uint64_t)USER_PRIV_LOOP;
+	// TaskKill();
 }
 int execve(const char* path,char **argv,char **envp){
 
