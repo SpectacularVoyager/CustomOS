@@ -97,7 +97,7 @@ void MTRStuff(){
 	SetColor(0xffffff);
 }
 
-#define NOUSB
+//#define NOUSB
 
 
 void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long cpuid,uint64_t* gdt)
@@ -242,10 +242,48 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 	}
 #endif
 	//EXT2_DIR_READ_ENTRY("/home",0,0);
-	//Scheduler_START();
+	Scheduler_START();
 	//evaluate("/usr/bin/test ");
 
 	ClearScreen();
-	startWindows(fb);
+	TERM_SET_POS(0,0);
+	{
+		EXT2_INODE elf;
+		char* args[]={"/usr/local/ls","/home",0};
+		if(EXT2_GET_INODE_FROM_PATH(&elf,args[0])!=0){
+			char* hex=malloc(elf.size);
+			EXT2_READFILE(&elf,hex,elf.size);
+			ELF_FILE file;
+			int s=ELF_PARSE(&file,hex,elf.size);
+			if(s==1){
+				USERMODE_EXEC_ELF(&file,args,NULL);
+			}else{
+				printf("FILE NOT EXECUTABLE [%s]\n",errno_ELF(s));
+			}
+		}
+	}
+	//FIX MAX LIMIT FOR EXT2 READ
+	/**
+	{
+
+		EXT2_INODE libc;
+		int inode;
+		if((inode=EXT2_GET_INODE_FROM_PATH(&libc,"/lib/libc.so"))!=0){
+			char* hex=malloc(libc.size);
+			LOGVALD(inode*0x200);
+			EXT2_READFILE(&libc,hex,libc.size);
+			ELF_FILE file;
+			int s=ELF_PARSE(&file,hex,libc.size);
+			if(s==1){
+			}else{
+				printf("FILE NOT EXECUTABLE [%s]\n",errno_ELF(s));
+			}
+		}
+	}
+	*/
+
+	//USERMODE_ADD();
+	//USERMODE_ADD();
+
 	while(1);
 }
