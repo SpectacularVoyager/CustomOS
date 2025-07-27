@@ -59,15 +59,17 @@ int execve(const char* path,char **argv,char **envp){
 int len=3;
 int fork(registers* r){
 	if(--len<=0)return -1;
-	TASK* t=TaskCurrent();
-
-	printf("__RIP:\t%p\n",t->r->rip);
-	printf("__RIP:\t%p\n",r->rip);
-	TASK* _new=malloc(sizeof(TASK));
-	_new->r->rip=r->rip;
-	_new->r->rsp=r->rsp;
-	TaskDup(_new,t);
-	_new->r->rax=0;
-	TaskAddList(_new);
-	return _new->id;
+	Process* proc=getProcess();
+	printf("TODO!(FORK)");
+	while(1);
+	//
+	// printf("__RIP:\t%p\n",t->r->rip);
+	// printf("__RIP:\t%p\n",r->rip);
+	// TASK* _new=malloc(sizeof(TASK));
+	// _new->r->rip=r->rip;
+	// _new->r->rsp=r->rsp;
+	// TaskDup(_new,t);
+	// _new->r->rax=0;
+	// TaskAddList(_new);
+	//return _new->id;
 }
