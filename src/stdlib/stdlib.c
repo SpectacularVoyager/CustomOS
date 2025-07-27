@@ -58,6 +58,12 @@ void* malloc(unsigned long size){
 	malloc_start+=size;
 	return start;
 }
+void* realloc(void* addr,unsigned long size){
+	void* data=malloc(size);
+	memcpy(data, addr,size);
+	return data;
+}
+void free(void*){}
 void* calloc(unsigned long size){
 	void* start=malloc(size);
 	memset(start,0,size);
@@ -88,4 +94,8 @@ void* callocAB(unsigned long size,unsigned long align,unsigned long boundary){
 	void* start=mallocAB(size,align,boundary);
 	memset(start,0,size);
 	return start;
+}
+
+int abs(int j){
+	return j>0?j:-j;
 }

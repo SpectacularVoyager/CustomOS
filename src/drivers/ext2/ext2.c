@@ -57,7 +57,7 @@ int EXT2_READFILE(EXT2_INODE*inode,void* data,unsigned long len){
 	}
 	FORI(15){
 		unsigned long block=inode->blockPointers[i]*blocksizelba+ext2.part->startLBA;
-		// printf("BLOCK PTR[%d] %x\n",i,block*0x200);
+		// kprintf("BLOCK PTR[%d] %x\n",i,inode->blockPointers[i]);
 	}
 
 	if(inode->blockPointerIndirect==0){
@@ -73,17 +73,26 @@ int EXT2_READFILE(EXT2_INODE*inode,void* data,unsigned long len){
 		ptr+=blocksize;
 		//kprintf("BLOCK PTR[%d] %x\n",i,0x200*block);
 	}
-	if(inode->blockPointerIndirectDouble>0){
-		printf("EXT2:CANNOT HANDLE DOUBLE INDIRECT PTRS\n");
+	uint32_t indirect_pointers[256*blocksizelba];
+	FREAD(inode->blockPointerIndirectDouble*blocksizelba+ext2.part->startLBA,indirect_pointers,sizeof(indirect_pointers));
+	FORJ(256*blocksizelba){
+		if(indirect_pointers[j]==0)break;
+
+		uint32_t indirect_block_pointers[256*blocksizelba];
+		FREAD(indirect_pointers[j]*blocksizelba+ext2.part->startLBA,indirect_block_pointers,sizeof(indirect_block_pointers));
+		FORI(256*blocksizelba){
+			if(indirect_block_pointers[i]==0)break;
+			unsigned long block=indirect_block_pointers[i]*blocksizelba+ext2.part->startLBA;
+			FREAD(block,ptr,MIN(rem,blocksize));
+			rem-=blocksize;
+			ptr+=blocksize;
+		}
+	}
+	if(inode->blockPointerIndirectTriple>0){
+		kprintf("EXT2:CANNOT HANDLE TRIPLE INDIRECT PTRS\n");
 		return 0;
 	}
-	uint32_t indirect_pointers[256];
-	FREAD(inode->blockPointerIndirectDouble*blocksizelba+ext2.part->startLBA,indirect_pointers,sizeof(indirect_pointers));
-	// FORI(0x8){
-	// 	FORJ(0x4){
-	// 		printf("%p\t",*(uint32_t*)(&(data[0x1000*(i*4+j)])));
-	// 	}printf("\n");
-	// }
+	kprintf("DRAWING\n");
 	return 1;
 }
 void EXT2_READ_INODE_FROM_LBA(EXT2_INODE* inode,uint64_t lba){
