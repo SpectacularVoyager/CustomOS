@@ -53,7 +53,7 @@
 #include "specifications/tga/tga.h"
 #include "file/ext2_file.h"
 #include "windows/windows.h"
-
+#include "schedule/Scheduler.h"
 void Debug();
 void evaluate(char* buffer);
 extern char* cpuid_flags[62];
@@ -246,26 +246,39 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 	}
 #endif
 	//EXT2_DIR_READ_ENTRY("/home",0,0);
-	Scheduler_START();
+	//Scheduler_START();
 	//evaluate("/usr/bin/test ");
 
 	ClearScreen();
 	TERM_SET_POS(0,0);
 	{
 		EXT2_INODE elf;
-		char* args[]={"/usr/local/ls","/home",0};
+		char* args[]={"/usr/local/loop","/home",0};
 		if(EXT2_GET_INODE_FROM_PATH(&elf,args[0])!=0){
 			char* hex=malloc(elf.size);
 			EXT2_READFILE(&elf,hex,elf.size);
 			ELF_FILE file;
 			int s=ELF_PARSE(&file,hex,elf.size);
 			if(s==1){
-				USERMODE_EXEC_ELF(&file,args,NULL);
+				Process proc;
+				int val=ProcessFromELF(&file,&proc);
+				if(val==0){
+					printf("CANNOT EXECUTE ELF %s\n",args[0]);
+				}else{
+					ProcessInitialise(&proc,NULL,NULL);
+					SchedulerSubmit(&proc);
+				}
 			}else{
 				printf("%s -> FILE NOT EXECUTABLE [%s]\n",args[0],errno_ELF(s));
 			}
 		}
 	}
+	AllocatePage(10, 0x40000000, 0b111);
+	AllocatePage(11, 0x40000000+1*PAGE_P2_SIZE, 0b111);
+	AllocatePage(12, 0x40000000+2*PAGE_P2_SIZE, 0b111);
+	AllocatePage(13, 0x40000000+3*PAGE_P2_SIZE, 0b111);
+	AllocatePage(14, 0x40000000+4*PAGE_P2_SIZE, 0b111);
+	SchedulerStart();
 	//FIX MAX LIMIT FOR EXT2 READ
 	/**
 	{

@@ -5,6 +5,7 @@
 #include "usertask/Task.h"
 #include "stdlib/string.h"
 #include <sys/syscall.h>
+#include "schedule/Scheduler.h"
 
 #define ARG1(r) r->rdi
 #define ARG2(r) r->rsi
@@ -19,6 +20,10 @@ void syscall(registers* r){
 	
 	//TASK* t=TaskCurrent();
 	//memcpy(t->r,r,sizeof(registers));
+	Process* proc=getProcess();
+	if(proc!=NULL){
+		memcpy(&proc->r,r,sizeof(registers));
+	}
 	int ret=0;
 	switch(r->rax){
 		case SYS_exit:
