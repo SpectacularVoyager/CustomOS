@@ -52,12 +52,13 @@
 #include "vga/term.h"
 #include "specifications/tga/tga.h"
 #include "file/ext2_file.h"
+#include "windows/windows.h"
 
 void Debug();
 void evaluate(char* buffer);
 extern char* cpuid_flags[62];
 //#define PRINT_CPUID
-void graphicsStuff(MULTIBOOT_HEADERS headers){
+void* graphicsStuff(MULTIBOOT_HEADERS headers){
 	struct multiboot_tag_framebuffer* fb=(struct multiboot_tag_framebuffer*)headers.fb;
 	unsigned long addr=fb->common.framebuffer_addr;
 	unsigned long page=addr/PAGE_WIDTH;
@@ -78,6 +79,7 @@ void graphicsStuff(MULTIBOOT_HEADERS headers){
 			);
 	printf(INFO"FRAMEBUFFER_ADDR:\t%p\n",fb->common.framebuffer_addr);
 	kprintf(INFO"FRAMEBUFFER_ADDR:\t%p\n",fb->common.framebuffer_addr);
+	return (void*)addr;
 }
 void MTRStuff(){
 	SetColor(0xff8c00);
@@ -95,7 +97,7 @@ void MTRStuff(){
 	SetColor(0xffffff);
 }
 
-//#define NOUSB
+#define NOUSB
 
 
 void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long cpuid,uint64_t* gdt)
@@ -129,7 +131,7 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 
 	//Better Page Allocations
 	AssignMallocMemoryMap(headers.mmap,0x170000);
-	graphicsStuff(headers);
+	void* fb=graphicsStuff(headers);
 	InitAllocator();
 	AllocatePage(7,0L*PAGE_WIDTH,0b111);
 	updateMallocPtr();
@@ -240,48 +242,10 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 	}
 #endif
 	//EXT2_DIR_READ_ENTRY("/home",0,0);
-	Scheduler_START();
+	//Scheduler_START();
 	//evaluate("/usr/bin/test ");
 
 	ClearScreen();
-	TERM_SET_POS(0,0);
-	{
-		EXT2_INODE elf;
-		if(EXT2_GET_INODE_FROM_PATH(&elf,"/usr/local/bash")!=0){
-			char* hex=malloc(elf.size);
-			EXT2_READFILE(&elf,hex,elf.size);
-			ELF_FILE file;
-			int s=ELF_PARSE(&file,hex,elf.size);
-			if(s==1){
-				char* args[]={"/usr/local/bash",0};
-				USERMODE_EXEC_ELF(&file,args,NULL);
-			}else{
-				printf("FILE NOT EXECUTABLE [%s]\n",errno_ELF(s));
-			}
-		}
-	}
-	//FIX MAX LIMIT FOR EXT2 READ
-	/**
-	{
-
-		EXT2_INODE libc;
-		int inode;
-		if((inode=EXT2_GET_INODE_FROM_PATH(&libc,"/lib/libc.so"))!=0){
-			char* hex=malloc(libc.size);
-			LOGVALD(inode*0x200);
-			EXT2_READFILE(&libc,hex,libc.size);
-			ELF_FILE file;
-			int s=ELF_PARSE(&file,hex,libc.size);
-			if(s==1){
-			}else{
-				printf("FILE NOT EXECUTABLE [%s]\n",errno_ELF(s));
-			}
-		}
-	}
-	*/
-
-	//USERMODE_ADD();
-	//USERMODE_ADD();
-
+	startWindows(fb);
 	while(1);
 }

@@ -3,7 +3,9 @@
 void AssignMallocMemoryMap(struct multiboot_tag *tag,uint64_t safe_offset);
 
 void* malloc(unsigned long size);
+void* realloc(void* addr,unsigned long size);
 void* calloc(unsigned long size);
+void free(void*);
 
 void* mallocA(unsigned long size,unsigned long align);
 void* mallocAB(unsigned long size,unsigned long align,unsigned long boundary);
@@ -14,3 +16,5 @@ void MallocSetStart(unsigned long ptr);
 void MallocDebug();
 
 void updateMallocPtr();
+
+int abs(int j);
