@@ -76,7 +76,6 @@ int ProcessFromELF(ELF_FILE* elf,Process* process){
 	if(elf->rela!=0){
 		printf("RELA\t[%x %x]\n",elf->rela->Offset,elf->rela->Addend);
 	}
-	TRACK
 
 	return 1;
 }

@@ -36,11 +36,12 @@ void ProcessRemap(Process* p){
 		while(1);
 	}
 	//MemoryRemap(0x400000,(uint64_t)base,0b111);
+	MemoryRemap(0x400000,(uint64_t)base,0b111);
 	FORI(pages){
-		MemoryRemap(0x400000+PAGE_P2_SIZE*i,(uint64_t)base+i*PAGE_P2_SIZE,0b111);
+		//MemoryRemap(0x400000+PAGE_P2_SIZE*i,(uint64_t)base+i*PAGE_P2_SIZE,0b111);
 	}
-	MemoryRemap(0x800000,(uint64_t)p->memory.stackBase,0b111);
-	//MemoryRemap(0x800000,(uint64_t)stack,0b111);
+	//MemoryRemap((uint64_t)p->memory.stackBase,(uint64_t)p->memory.stackBase,0b111);
+	MemoryRemap(0x800000,(uint64_t)stack,0b111);
 }
 //SET UP ENTRY MANUALLY
 void ProcessSetUpPages(Process* p){

@@ -5,6 +5,7 @@
 #include "stdlib/stdio.h"
 #include "core/user.h"
 #include "filesystem/vfs.h"
+#include "ProcessBlock.h"
 
 typedef struct{
 	void* entry;
@@ -19,6 +20,7 @@ typedef struct{
 	registers r;
 	FILE_DESC fd[256];
 	int ready;
+	BLOCK block;
 } Process;
 
 typedef struct{
