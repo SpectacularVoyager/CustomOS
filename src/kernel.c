@@ -272,49 +272,51 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 				printf("%s -> FILE NOT EXECUTABLE [%s]\n",args[0],errno_ELF(s));
 			}
 		}
-	}{
-		EXT2_INODE elf;
-		char* args[]={"/usr/local/loop","/home",0};
-		if(EXT2_GET_INODE_FROM_PATH(&elf,args[0])!=0){
-			char* hex=malloc(elf.size);
-			EXT2_READFILE(&elf,hex,elf.size);
-			ELF_FILE file;
-			int s=ELF_PARSE(&file,hex,elf.size);
-			if(s==1){
-				Process proc;
-				int val=ProcessFromELF(&file,&proc);
-				if(val==0){
-					printf("CANNOT EXECUTE ELF %s\n",args[0]);
-				}else{
-					ProcessInitialise(&proc,NULL,NULL);
-					SchedulerSubmit(&proc);
-				}
-			}else{
-				printf("%s -> FILE NOT EXECUTABLE [%s]\n",args[0],errno_ELF(s));
-			}
-		}
-	}{
-		EXT2_INODE elf;
-		char* args[]={"/usr/local/loop","/home",0};
-		if(EXT2_GET_INODE_FROM_PATH(&elf,args[0])!=0){
-			char* hex=malloc(elf.size);
-			EXT2_READFILE(&elf,hex,elf.size);
-			ELF_FILE file;
-			int s=ELF_PARSE(&file,hex,elf.size);
-			if(s==1){
-				Process proc;
-				int val=ProcessFromELF(&file,&proc);
-				if(val==0){
-					printf("CANNOT EXECUTE ELF %s\n",args[0]);
-				}else{
-					ProcessInitialise(&proc,NULL,NULL);
-					SchedulerSubmit(&proc);
-				}
-			}else{
-				printf("%s -> FILE NOT EXECUTABLE [%s]\n",args[0],errno_ELF(s));
-			}
-		}
 	}
+	/**
+	 {
+		EXT2_INODE elf;
+		char* args[]={"/usr/local/loop","/home",0};
+		if(EXT2_GET_INODE_FROM_PATH(&elf,args[0])!=0){
+			char* hex=malloc(elf.size);
+			EXT2_READFILE(&elf,hex,elf.size);
+			ELF_FILE file;
+			int s=ELF_PARSE(&file,hex,elf.size);
+			if(s==1){
+				Process proc;
+				int val=ProcessFromELF(&file,&proc);
+				if(val==0){
+					printf("CANNOT EXECUTE ELF %s\n",args[0]);
+				}else{
+					ProcessInitialise(&proc,NULL,NULL);
+					SchedulerSubmit(&proc);
+				}
+			}else{
+				printf("%s -> FILE NOT EXECUTABLE [%s]\n",args[0],errno_ELF(s));
+			}
+		}
+	}{
+		EXT2_INODE elf;
+		char* args[]={"/usr/local/loop","/home",0};
+		if(EXT2_GET_INODE_FROM_PATH(&elf,args[0])!=0){
+			char* hex=malloc(elf.size);
+			EXT2_READFILE(&elf,hex,elf.size);
+			ELF_FILE file;
+			int s=ELF_PARSE(&file,hex,elf.size);
+			if(s==1){
+				Process proc;
+				int val=ProcessFromELF(&file,&proc);
+				if(val==0){
+					printf("CANNOT EXECUTE ELF %s\n",args[0]);
+				}else{
+					ProcessInitialise(&proc,NULL,NULL);
+					SchedulerSubmit(&proc);
+				}
+			}else{
+				printf("%s -> FILE NOT EXECUTABLE [%s]\n",args[0],errno_ELF(s));
+			}
+		}
+	}*/
 	// EXT2_INODE temp;
 	// Process p1;
 	// if(ProcessFromFilePath("usr/local/loop", &temp,&p1)){

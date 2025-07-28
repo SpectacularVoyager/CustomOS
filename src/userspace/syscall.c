@@ -17,6 +17,7 @@ int ioctl(int fd, int op,...);
 char* SYSCALL_GET_NAME(int v);
 void syscall(registers* r){
 	//printf("PROCESSING SYSCALL [%s]\n",SYSCALL_GET_NAME(r->rax));
+	kprintf("PROCESSING SYSCALL [%s]\n",SYSCALL_GET_NAME(r->rax));
 	
 	//TASK* t=TaskCurrent();
 	//memcpy(t->r,r,sizeof(registers));
@@ -47,15 +48,6 @@ void syscall(registers* r){
 		case SYS_getpid:
 			ret=getpid();
 			break;
-		case SYS_fork:
-
-			// TASK* t=TaskCurrent();
-			// if(t!=NULL){
-			// 	printf("__RIP:\t%p\n",r->rip);
-			// 	t->r->rip=r->rip;
-			// }
-			ret=fork(r);
-			break;
 		case SYS_stat:
 			ret=fstat(ARG1(r),(void*)ARG2(r));
 			break;
@@ -77,6 +69,9 @@ void syscall(registers* r){
 		case SYS_rt_sigprocmask:
 			ret=sigprocmask(ARG1(r), (const sigset_t *)ARG2(r),(sigset_t *)ARG3(r));
 			//exit(r,-1);
+			break;
+		case SYS_fork:
+			ret=fork(r);
 			break;
 		default:
 			printf("UNRECOGNISED SYSCALL [0x%x][%s]\n",r->rax,SYSCALL_GET_NAME(r->rax));

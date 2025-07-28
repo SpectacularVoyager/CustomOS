@@ -5,6 +5,7 @@
 #include "userspace/syscall.h"
 #include "utils/inst.h"
 #include "utils/utils.h"
+#include "schedule/Scheduler.h"
 
 #include "usertask/Task.h"
 #define PAGE_FAULT_EXCEPTION_PRESENT	0
@@ -12,9 +13,11 @@
 #define PAGE_FAULT_EXCEPTION_USER		2
 #define PAGE_FAULT_EXCEPTION_RES_WRITE	3
 
+extern void USER_PRIV_LOOP();
+
 void PageFaultHandler(registers* r){
 
-	//SetColor(0xFF00000);
+	SetColor(0xFF00000);
 	printf(ERROR "PAGE FAULT\n");
 	int error=r->zero;
 	if(BIT(error,PAGE_FAULT_EXCEPTION_WRITE)){
@@ -28,14 +31,6 @@ void PageFaultHandler(registers* r){
 	if(BIT(error,PAGE_FAULT_EXCEPTION_USER)){
 		printf("\tPAGE PROTECTION VIOLATION\n");
 	}
-		
-	
-	// TASK* t=TaskCurrent();
-	// if(t!=NULL){
-	// 	printf("DURING EXECUTION OF TASK:%d\n",t->id);
-	// 	printf("\tTASK RIP:\t%p\n",t->r->rip);
-	// }
-
     uint64_t cr2_value;
     asm volatile ("mov %%cr2, %0" : "=r" (cr2_value));
 	if(cr2_value==0){
@@ -46,13 +41,17 @@ void PageFaultHandler(registers* r){
 	printf("\tERROR REGISTER:\t%x\n",error);
 	if((r->rflags>>12)==3){
 		r->rip=(uint64_t)USER_PRIV_LOOP;
-		TaskKill();
+		Process* p=getProcess();
+		if(p!=NULL){
+			ProcessKillCurrent();
+		}
 	}else{
 		__asm__ volatile("cli;hlt");
 	}
 }
 void InvalidOpcodeException(registers* r){
 	//SetColor(0xFF00000);
+	SetColor(0xFF00000);
 	printf(ERROR "INVALID OPCODE\n");
 	uint8_t* inst=((uint8_t*)r->rip);
 	printf("THE EXCEPTION OCCURED AT %p\n",r->rip);
@@ -61,7 +60,10 @@ void InvalidOpcodeException(registers* r){
 	printf("THE Previous Bytes Are %02X %02X %02X %02X\n",inst[-1],inst[-2],inst[-3],inst[-4]);
 	if((r->rflags>>12)==3){
 		r->rip=(uint64_t)USER_PRIV_LOOP;
-		TaskKill();
+		Process* p=getProcess();
+		if(p!=NULL){
+			ProcessKillCurrent();
+		}
 	}else{
 		__asm__ volatile("cli;hlt");
 	}

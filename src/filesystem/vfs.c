@@ -78,6 +78,7 @@ void FILE_DESC_FREE(FILE_DESC* desc){
 	desc->used=0;
 }
 int FILE_DESC_DUP(FILE_DESC* n,FILE_DESC* o){
+	if(o->used==0)return 1;
 	n->used=o->used;
 	n->offset=o->offset;
 	n->file.type=o->file.type;

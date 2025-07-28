@@ -10,6 +10,7 @@ typedef struct{
 	void* entry;
 	void* base;
 	void* stackTop;
+	void* stackBase;
 }Memory;
 
 typedef struct{
@@ -54,3 +55,9 @@ void ProcessInitialise(Process* proc,char** args,char** env);
 Process* getProcess();
 
 void UserSpaceDoNothing(registers* r);
+
+int ProcessDup(Process* n,Process* old);
+
+void ProcessSetUpPages(Process* p);
+
+void ProcessRemap(Process* p);
