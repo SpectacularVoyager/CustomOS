@@ -29,9 +29,8 @@ Process* getProcess(){
 
 void ProcessRun(Process* p){
 	globalProcs.current=p;
-	kprintf("RUNNING PROCESS:[%d]\n",p->id);
-	kprintf("\tADDRESS:%p\n",p->r.rip);
 	ProcessRemap(p);
+	kprintf("RUNNING PROCESS:[%d]\n",p->id);
 	USER_JUMP_ASM(&p->r,(void*)p->r.rip,(void*)p->r.rsp);
 }
 

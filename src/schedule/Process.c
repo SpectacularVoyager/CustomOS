@@ -35,12 +35,9 @@ void ProcessRemap(Process* p){
 		printf("CANNOT ALLOCATED (%d) PAGES\n",pages);
 		while(1);
 	}
-	//MemoryRemap(0x400000,(uint64_t)base,0b111);
-	MemoryRemap(0x400000,(uint64_t)base,0b111);
 	FORI(pages){
-		//MemoryRemap(0x400000+PAGE_P2_SIZE*i,(uint64_t)base+i*PAGE_P2_SIZE,0b111);
+		MemoryRemap(0x400000+PAGE_P2_SIZE*i,(uint64_t)base+i*PAGE_P2_SIZE,0b111);
 	}
-	//MemoryRemap((uint64_t)p->memory.stackBase,(uint64_t)p->memory.stackBase,0b111);
 	MemoryRemap(0x800000,(uint64_t)stack,0b111);
 }
 //SET UP ENTRY MANUALLY
@@ -50,11 +47,9 @@ void ProcessSetUpPages(Process* p){
 	unsigned int pages=1;
 	void* base=PageAllocateN(pages);
 	void* stack=PageAllocateN(1);
-
 	p->memory.base=base;
 	p->memory.stackTop=stack+PAGE_P2_SIZE-0x10;
 	p->memory.stackBase=stack;
-	ProcessRemap(p);
 }
 
 void ProcessInitialise(Process* proc,char** args,char** env){
