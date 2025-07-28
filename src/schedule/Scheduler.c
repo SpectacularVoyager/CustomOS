@@ -16,6 +16,7 @@ void ProcessSetHollow(Process* proc){
 	}
 	proc->id=globalProcs.id++;
 	proc->ready=1;
+	proc->block.type=0;
 }
 
 void ProcessKillCurrent(){

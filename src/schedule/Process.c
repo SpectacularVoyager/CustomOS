@@ -2,6 +2,7 @@
 #include "devices/apic/timer.h"
 #include "drivers/apic/apic.h"
 #include "interrupts/idt.h"
+#include "schedule/ProcessBlock.h"
 #include "stdlib/stdio.h"
 #include "utils/list/da_array.h"
 #include "utils/utils.h"
@@ -64,4 +65,7 @@ void ProcessInitialise(Process* proc,char** args,char** env){
 	}
 	proc->r.rdi=argc;
 	proc->r.rsi=(uint64_t)args;
+}
+int ProcessReady(Process* process){
+	return process->block.type==block_none;
 }

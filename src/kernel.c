@@ -258,7 +258,7 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 	TERM_SET_POS(0,0);
 	{
 		EXT2_INODE elf;
-		char* args[]={"/usr/local/loop","/home",0};
+		char* args[]={"/usr/local/bash","/home",0};
 		if(EXT2_GET_INODE_FROM_PATH(&elf,args[0])!=0){
 			char* hex=malloc(elf.size);
 			EXT2_READFILE(&elf,hex,elf.size);
@@ -278,7 +278,6 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 			}
 		}
 	}
-/**
 	{
 		EXT2_INODE elf;
 		char* args[]={"/usr/local/loop","/home/",0};
@@ -301,7 +300,6 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 			}
 		}
 	}
-	*/
 	SchedulerStart();
 	//FIX MAX LIMIT FOR EXT2 READ
 	/**

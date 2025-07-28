@@ -2,7 +2,7 @@
 
 enum BLOCK_TYPE{
 	block_none=0,
-	block_pid=1
+	block_fd=1
 };
 
 
