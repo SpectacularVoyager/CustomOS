@@ -31,7 +31,7 @@ int FILE_GetRemaining(FILE_DESC* file){
 }
 int FILE_GET(FILE_DESC* desc,FILE* f,char* path){
 	EXT2_INODE* ext2=&desc->file.file.ext2.inode;
-	if(EXT2_GET_INODE_FROM_PATH(ext2,path)==1){
+	if(EXT2_GET_INODE_FROM_PATH(ext2,path)!=0){
 		char* hex=malloc(ext2->size);
 		EXT2_READFILE(ext2,hex,ext2->size);
 		desc->used=1;

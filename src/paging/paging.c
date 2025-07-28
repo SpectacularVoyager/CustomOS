@@ -44,13 +44,13 @@ void PageRemap(int p,uint64_t offset,uint64_t address,int flags){
 	table[offset]=address|0b10000111L|flags;
 	invlpg(address);
 }
-void MemoryRemap(uint64_t memory,uint64_t address,int flags){
-	int p=memory/PAGE_WIDTH;
-	int offset=(memory%PAGE_WIDTH)/PAGE_P2_SIZE;
+void MemoryRemap(uint64_t to,uint64_t from,int flags){
+	int p=to/PAGE_WIDTH;
+	int offset=(to%PAGE_WIDTH)/PAGE_P2_SIZE;
 	uint64_t* table=TABLE(p3_table[p]);
-	kprintf(TRACE"REMAPPING %p to %x[%x]\n",address,p,offset);
-	table[offset]=address|0b10000111L|flags;
-	asm volatile("invlpg (%0)" ::"r" (address) : "memory");
+	kprintf(TRACE"REMAPPING %p to %x[%x]\n",from,p,offset);
+	table[offset]=from|0b10000111L|flags;
+	asm volatile("invlpg (%0)" ::"r" (from) : "memory");
 }
 void PageIdentity(int p1,int p2,int flags){
 	p3_table[p1]=(p2*PAGE_WIDTH)|0b111|flags;

@@ -64,12 +64,12 @@ c:$(OBJECT_FILES)
 
 $(OBJECT_FILES):out/%.o: src/%.c
 	@mkdir -p $(shell dirname $@)
-	@$(CC) -c $< -o $@ -std=gnu99 -ffreestanding -Isrc/include -Isrc $(CFLAGS)
+	@$(CC) -c $< -o $@ -std=gnu99 -ffreestanding -Isrc/include -Isrc -g $(CFLAGS)
 	@echo "\033[0;32mCOMPILING\t\033[0m" $<
 
 link :$(ISO)
 $(ISO):$(OBJECT_FILES) $(OBJECT_FILES_ASM)
-	@$(CC) -T linker.ld -o $(ISO) -ffreestanding -O2 -nostdlib $(OBJECT_FILES) $(OBJECT_FILES_ASM) -lgcc
+	@$(CC) -T linker.ld -o $(ISO) -ffreestanding -O2 -nostdlib -g $(OBJECT_FILES) $(OBJECT_FILES_ASM) -lgcc
 	@echo "\033[0;34mLINKING\t\033[0m" $@
 
 

@@ -137,12 +137,16 @@ int dup2(int fd,int _new){
 int open(const char* path,int flags,umode_t mode){
 	Process* t=getProcess();
 	int idx=FD_FIND();
-	if(idx==-1)return 0;
+	if(idx==-1){
+		printf("CANNOT FIND VALID INDEX\n");
+		return 0;
+	}
 	FILE_DESC* emptyfd=&t->fd[idx];
 	FILE f;
 	if(FILE_GET(emptyfd,&f,path)){
 		return idx;
 	}else{
+		printf("FILE_GET() RETURNED 0\n");
 		return 0;
 	}
 	return 0;

@@ -37,7 +37,6 @@ int ProcessFromELF(ELF_FILE* elf,Process* process){
 	ProcessSetHollow(process);
 	ProcessSetUpPages(process);
 	void* base=process->memory.base;
-
 	ELF_Symbol* _start=ELF_LookUpSymbol(elf,"_start");
 	if(_start==NULL){
 		return 0;
@@ -77,6 +76,7 @@ int ProcessFromELF(ELF_FILE* elf,Process* process){
 	if(elf->rela!=0){
 		printf("RELA\t[%x %x]\n",elf->rela->Offset,elf->rela->Addend);
 	}
+	TRACK
 
 	return 1;
 }
