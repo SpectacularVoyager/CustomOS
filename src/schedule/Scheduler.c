@@ -53,6 +53,24 @@ Process* TrySchedule(){
 	if(globalProcs.i>=globalProcs.count){
 		globalProcs.i=0;
 	}
+	unsigned int i;
+	int flag=0;
+	for( i=globalProcs.i;i<globalProcs.count;i++){
+		if(globalProcs.items[i].block.type==block_none){
+			flag=1;
+			break;
+		}
+	}
+	if(!flag){
+		for( i=0;i<globalProcs.i;i++){
+			if(globalProcs.items[i].block.type==block_none){
+				flag=1;
+				break;
+			}
+		}
+	}
+	if(!flag)return NULL;
+	globalProcs.i=i;
 	return &globalProcs.items[globalProcs.i];
 
 }

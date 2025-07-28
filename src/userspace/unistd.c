@@ -5,12 +5,14 @@
 #include <stdlib/string.h>
 #include "CharacterDevice/CharacterDevice.h"
 #include "schedule/Scheduler.h"
+#include "specifications/ANSI/ANSI.h"
 
 int write(int fd,char* buffer,unsigned int len){
 	if(fd!=1)return -1;
-	FORI(len){
-		printf("%c",buffer[i]);
-	}
+	writeAnsiString(buffer,len);
+	// FORI(len){
+	// 	printf("%c",buffer[i]);
+	// }
 	return len;
 }
 int read(int fd,char* buffer,unsigned int len){
