@@ -36,7 +36,7 @@ void __attribute__((optimize("O0"))) USERMODE_ENTER(){
 
 	memcpy(address,TEST_HALT,100);
 
-	USER_JUMP_ASM(NULL,address,address+0x100000);
+	USER_JUMP_ASM(NULL,address,address+0x100000,0);
 }
 void USERMODE_ADD(){
 	AllocatePage(5, 0x40000000, 0b111);

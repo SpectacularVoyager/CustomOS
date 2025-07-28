@@ -6,7 +6,7 @@
 #include "stdlib/string.h"
 #include <sys/syscall.h>
 #include "schedule/Scheduler.h"
-
+#include "utils/ports.h"
 #define ARG1(r) r->rdi
 #define ARG2(r) r->rsi
 #define ARG3(r) r->rdx
@@ -18,7 +18,6 @@ char* SYSCALL_GET_NAME(int v);
 void syscall(registers* r){
 	//printf("PROCESSING SYSCALL [%s]\n",SYSCALL_GET_NAME(r->rax));
 	kprintf("PROCESSING SYSCALL [%s]\n",SYSCALL_GET_NAME(r->rax));
-	
 	//TASK* t=TaskCurrent();
 	//memcpy(t->r,r,sizeof(registers));
 	Process* proc=getProcess();
@@ -77,6 +76,9 @@ void syscall(registers* r){
 			printf("UNRECOGNISED SYSCALL [0x%x][%s]\n",r->rax,SYSCALL_GET_NAME(r->rax));
 			kprintf("UNRECOGNISED SYSCALL [0x%x][%s]\n",r->rax,SYSCALL_GET_NAME(r->rax));
 			exit(r,-1);
+	}
+	if(proc!=NULL){
+		//ProcessRemap(proc);
 	}
 	RETURN(r) ret;
 }

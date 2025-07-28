@@ -1,3 +1,5 @@
+#pragma once
+
 #define CHARACTER_DEVICE_MAX_LEN 81920
 
 typedef struct {

@@ -97,7 +97,7 @@ part:
 
 # INSPECT MEM x/128b 0xfee00000
 debug: all
-	@$(QEMU) $(QEMU_FLAGS) -hda $(IMAGE) -hdb disks/fat.img -monitor stdio
+	@$(QEMU) $(QEMU_FLAGS) -hda $(IMAGE) -hdb disks/ext2.img -monitor stdio
 gdb: all
 	# @$(QEMU) -s -S -net nic,model=e1000 -hda $(IMAGE)
 

@@ -16,9 +16,11 @@ int write(int fd,char* buffer,unsigned int len){
 int read(int fd,char* buffer,unsigned int len){
 	if(fd==0){
 		//STDIN
-		int x= CharacterDeviceRead(STDIO(),buffer,len);
-		if(x==0)return 0;
-		return x;
+		memcpy(buffer,"Hello\n World\n",13);
+		return 13;
+		//int x= CharacterDeviceRead(STDIO(),buffer,len);
+		// if(x==0)return 0;
+		// return x;
 	}
 
 	Process* proc=getProcess();
@@ -63,6 +65,7 @@ int fork(registers* r){
 	int i=ProcessDup(&n,proc);
 	if(i==0)return -1; 
 	n.r.rax=0;
+	ProcessRemap(proc);
 	SchedulerSubmit(&n);
 	return n.id;
 }

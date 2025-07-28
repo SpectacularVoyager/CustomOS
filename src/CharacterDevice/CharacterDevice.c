@@ -1,3 +1,5 @@
+#pragma once
+
 #include "CharacterDevice.h"
 #include "stdlib/string.h"
 #include "utils/utils.h"

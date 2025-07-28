@@ -2,9 +2,11 @@
 
 #include "drivers/ext2/ext2.h"
 #include "include/sys/stat.h"
+#include "CharacterDevice/CharacterDevice.h"
 
 #define FILE_TYPE_EXT	1
 #define FILE_TYPE_VIRT	2
+#define FILE_TYPE_CHAR	3
 
 typedef struct {
 	EXT2_INODE inode;
@@ -15,11 +17,17 @@ typedef struct {
 	char* data;
 	int length;
 } FILE_DESC_VIRT;
+
+typedef struct {
+	CharacterDevice* device;
+} FILE_DESC_CHAR;
 typedef struct{
 	int type;
 	union{
 		FILE_DESC_EXT2 ext2;
 		FILE_DESC_VIRT virt;
+		FILE_DESC_VIRT charDev;
+
 	} file;
 } FILE;
 

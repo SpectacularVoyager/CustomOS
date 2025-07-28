@@ -27,8 +27,10 @@ TEST_HALT:
 	mov rdi,0
 	int 0x80
 	hlt
+
+
 ;; https://f.osdev.org/viewtopic.php?t=40894
-;USER_JUMP_ASM(registers* r,void* entry,void* stack);
+;USER_JUMP_ASM(registers* r,void* entry,void* stack,void* tib);
 USER_JUMP_ASM:
 	mov rax,0x20 | USER_PREV
 	mov ds,ax
@@ -40,6 +42,11 @@ USER_JUMP_ASM:
 	push 0x202|0x3000					; RFLAGS INT ENABLE AND RESERVED
 	push 0x18 | USER_PREV				; Selector
 	push rsi							; ENTRY POINT
+	
+	mov	rax,0xC0000100
+	mov rdx,rcx
+	shr rdx,32
+	wrmsr
 
 	mov r15,[rdi+0x8]
 	mov r14,[rdi+0x10]

@@ -4,6 +4,7 @@
 #include "interrupts/idt.h"
 #include "utils/list/da_array.h"
 #include "utils/utils.h"
+#include "utils/ports.h"
 #include "paging/paging.h"
 
 extern void USER_PRIV_LOOP();
@@ -28,11 +29,16 @@ Process* getProcess(){
 }
 
 void ProcessRun(Process* p){
+	uint64_t fs;
+	__asm__ __volatile__(
+        "mov %%fs:0, %0"
+        : "=r"(fs)
+    );
 	globalProcs.current=p;
 	kprintf("RUNNING PROCESS:[%d]\n",p->id);
 	kprintf("\tADDRESS:%p\n",p->r.rip);
 	ProcessRemap(p);
-	USER_JUMP_ASM(&p->r,(void*)p->r.rip,(void*)p->r.rsp);
+	USER_JUMP_ASM(&p->r,(void*)p->r.rip,(void*)p->r.rsp,(void*)0x20);
 }
 
 void SchedulerStart(){

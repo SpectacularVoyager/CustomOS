@@ -1,6 +1,6 @@
 #include "specifications/elf/elf.h"
 
-extern void USER_JUMP_ASM(void* args,void* func,void* stack);
+extern void USER_JUMP_ASM(void* args,void* func,void* stack,void* tib);
 void TSS_load(int r);
 void USERMODE_ENTER();
 

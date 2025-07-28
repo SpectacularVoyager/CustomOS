@@ -48,8 +48,10 @@ void MemoryRemap(uint64_t to,uint64_t from,int flags){
 	int p=to/PAGE_WIDTH;
 	int offset=(to%PAGE_WIDTH)/PAGE_P2_SIZE;
 	uint64_t* table=TABLE(p3_table[p]);
-	kprintf(TRACE"REMAPPING %p to %x[%x]\n",from,p,offset);
+	kprintf(TRACE"\tREMAPPING 0x%x to 0x%x\n",from,to);
 	table[offset]=from|0b10000111L|flags;
+	invlpg(to);
+	invlpg(from);
 	asm volatile("invlpg (%0)" ::"r" (from) : "memory");
 }
 void PageIdentity(int p1,int p2,int flags){
@@ -79,7 +81,7 @@ void* PageAllocateN(unsigned int n){
 	uint64_t* ptr= TABLE(p3_table[1]);
 	FORI(n)
 		page_allocator[id+i]=n;
-	kprintf(INFO "ALLOCATED %d PAGES AT %p\n",n,PAGE(ptr[id]));
+	kprintf(INFO "ALLOCATED %d PAGES AT 0x%x\n",n,PAGE(ptr[id]));
 	return PAGE(ptr[id]);
 }
 void* PageAllocate(){

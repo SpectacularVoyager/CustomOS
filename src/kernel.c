@@ -43,6 +43,7 @@
 #include "utils/list/list.h"
 
 #include "core/user.h"
+#include "core/TIB.h"
 #include "arch/GDT.h"
 #include "usertask/Task.h"
 #include "drivers/ext2/ext2.h"
@@ -119,7 +120,7 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 	AllocatePage(8,0,0b111);
 	multiboot_address+=8*PAGE_WIDTH;
 	FPUEnable();
-	
+
 #ifdef PRINT_CPUID
 	kprintf(INFO "CPUID:\t%p\n",cpuid);
 	for(int i=0;i<62;i++){
@@ -251,9 +252,10 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 
 	ClearScreen();
 	TERM_SET_POS(0,0);
+
 	{
 		EXT2_INODE elf;
-		char* args[]={"/usr/local/loop","/home",0};
+		char* args[]={"/usr/local/bash","/home",0};
 		if(EXT2_GET_INODE_FROM_PATH(&elf,args[0])!=0){
 			char* hex=malloc(elf.size);
 			EXT2_READFILE(&elf,hex,elf.size);
@@ -274,7 +276,8 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 		}
 	}
 	
-	 {
+	setFS();
+	/** {
 		EXT2_INODE elf;
 		char* args[]={"/usr/local/loop","/home/",0};
 		if(EXT2_GET_INODE_FROM_PATH(&elf,args[0])!=0){
@@ -295,62 +298,8 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 				printf("%s -> FILE NOT EXECUTABLE [%s]\n",args[0],errno_ELF(s));
 			}
 		}
-	}
-	 /**{
-		EXT2_INODE elf;
-		char* args[]={"/usr/local/loop","/home",0};
-		if(EXT2_GET_INODE_FROM_PATH(&elf,args[0])!=0){
-			char* hex=malloc(elf.size);
-			EXT2_READFILE(&elf,hex,elf.size);
-			ELF_FILE file;
-			int s=ELF_PARSE(&file,hex,elf.size);
-			if(s==1){
-				Process proc;
-				int val=ProcessFromELF(&file,&proc);
-				if(val==0){
-					printf("CANNOT EXECUTE ELF %s\n",args[0]);
-				}else{
-					ProcessInitialise(&proc,NULL,NULL);
-					SchedulerSubmit(&proc);
-				}
-			}else{
-				printf("%s -> FILE NOT EXECUTABLE [%s]\n",args[0],errno_ELF(s));
-			}
-		}
 	}*/
-	// EXT2_INODE temp;
-	// Process p1;
-	// if(ProcessFromFilePath("usr/local/loop", &temp,&p1)){
-	// 	SchedulerSubmit(&p1);
-	// }
-	AllocatePage(10, 0x40000000, 0b111);
-	AllocatePage(11, 0x40000000+1*PAGE_P2_SIZE, 0b111);
-	AllocatePage(12, 0x40000000+2*PAGE_P2_SIZE, 0b111);
-	AllocatePage(13, 0x40000000+3*PAGE_P2_SIZE, 0b111);
-	AllocatePage(14, 0x40000000+4*PAGE_P2_SIZE, 0b111);
 	SchedulerStart();
-	//FIX MAX LIMIT FOR EXT2 READ
-	/**
-	{
-
-		EXT2_INODE libc;
-		int inode;
-		if((inode=EXT2_GET_INODE_FROM_PATH(&libc,"/lib/libc.so"))!=0){
-			char* hex=malloc(libc.size);
-			LOGVALD(inode*0x200);
-			EXT2_READFILE(&libc,hex,libc.size);
-			ELF_FILE file;
-			int s=ELF_PARSE(&file,hex,libc.size);
-			if(s==1){
-			}else{
-				printf("FILE NOT EXECUTABLE [%s]\n",errno_ELF(s));
-			}
-		}
-	}
-	*/
-
-	//USERMODE_ADD();
-	//USERMODE_ADD();
 
 	while(1);
 }

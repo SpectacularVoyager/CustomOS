@@ -43,7 +43,7 @@ int ProcessFromELF(ELF_FILE* elf,Process* process){
 	}
 	uint64_t _start_addr=elf->sections[_start->SectionTableIndex].Offset;
 
-	process->memory.entry=process->memory.base+_start_addr;
+	process->memory.entry=(void*)0x400000+_start_addr;
 	memcpy(base,elf->file,elf->len);
 
 	

@@ -43,6 +43,7 @@ void PageFaultHandler(registers* r){
 		r->rip=(uint64_t)USER_PRIV_LOOP;
 		Process* p=getProcess();
 		if(p!=NULL){
+			kprintf("FORCEFULLY KILLING %d\n",p->id);
 			ProcessKillCurrent();
 		}
 	}else{
