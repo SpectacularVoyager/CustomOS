@@ -2,6 +2,7 @@
 
 #include "../printf/printf.h"
 #include "../SerialPrintf/printf.h"
+#include "stdint.h"
 
 #define INFO "[INFO]\t"
 #define DEBUG "[DEBUG]\t"

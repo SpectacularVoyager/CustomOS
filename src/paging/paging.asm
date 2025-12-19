@@ -40,13 +40,13 @@ gdt64:
 	GDT_ENTRY 0,0,0,0
 .code: equ $ - gdt64 ; new
 	GDT_ENTRY 0,0,0x9A,0xA
-	;dq (0xA)<<52 | (0x9A)<<40 
+	;dq (0xA)<<52 | (0x9A)<<40
 .data: equ $ - gdt64 ; new
 	GDT_ENTRY 0,0,0x92,0xC
 	;dq (0xC)<<52 | (0x92)<<40
 .usercode: equ $ - gdt64 ; new
 	GDT_ENTRY 0,0,0x9A,0xA
-	;dq (0xA)<<52 | (0xFA)<<40 
+	;dq (0xA)<<52 | (0xFA)<<40
 .userdata: equ $ - gdt64 ; new
 	GDT_ENTRY 0,0,0x92,0xC
 	;dq (0xC)<<52 | (0xF2)<<40
@@ -80,16 +80,17 @@ Paging_Enable:
   or eax, 1 << 5
   mov cr4, eax
 
-  ; set the long mode bit in the EFER MSR (model specific register)
-  mov ecx, 0xC0000080
-  rdmsr
-  or eax, 1 << 8
-  wrmsr
 
   ; enable paging in the cr0 register
   mov eax, cr0
   or eax, 1 << 31
   mov cr0, eax
+
+  ; set the long mode bit in the EFER MSR (model specific register)
+  mov ecx, 0xC0000080
+  rdmsr
+  or eax, 1 << 8
+  wrmsr
 
   ret
 Paging_SetUpTables:
