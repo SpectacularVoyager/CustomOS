@@ -7,6 +7,10 @@ __attribute__((aligned(4096))) unsigned long pagetable_4[512];
 __attribute__((aligned(4096))) unsigned long pagetable_3[512];
 __attribute__((aligned(4096))) unsigned long pagetable_2[512];
 
+extern volatile uint64_t p4_table[512];
+extern volatile uint64_t p3_table[512];
+extern volatile uint64_t p2_table[512];
+
 void setCR0(unsigned long val){
     asm __volatile__("mov %0,%%cr0"::"r"(val):"memory");
 }
@@ -34,11 +38,9 @@ unsigned long getCR4(){
 
 
 void PagingEnable(){
-    LOGVALD(getCR3());
-    LOGVALD(((unsigned long)pagetable_4&(~0xFFF)));
-    //setCR3(((unsigned long)pagetable_4&(~0xFFF)));
+    setCR3(((unsigned long)p4_table&(~0xFFF)));
     // setCR4(getCR4()|1<<5);                      // ENABLE PAE
-    // setCR0(getCR0()|1<<31);                     //PAGING ENABLE
+    //setCR0(getCR0()|1<<31);                     //PAGING ENABLE
 }
 void PagingDisable(){
 
@@ -46,19 +48,14 @@ void PagingDisable(){
 }
 #define PAGETABLE(addr,ops) ((((unsigned long)(addr)&(~0xFFF)))|(ops))
 
-
 void Paging_SetTables(){
-    memset(pagetable_4,0,4096);
-    memset(pagetable_3,0,4096);
-    memset(pagetable_2,0,4096);
-    LOGVALD(pagetable_2);
-    LOGVALD(pagetable_3);
-    LOGVALD(pagetable_4);
-    pagetable_4[0]=PAGETABLE(pagetable_3, 0b111);
-    pagetable_4[511]=PAGETABLE(pagetable_4, 0b11);
-    pagetable_3[0]=PAGETABLE(pagetable_2, 0b111);
-    // pagetable_2[0]=0b111;
-    for(size_t i=0;i<512;i++){
-        pagetable_2[i]=(0x200000*i)|0b111;
-    }
+        // LOGVALD(p3_table[0]);
+        // LOGVALD(p3_table[1]);
+    memset(p4_table,0,4096);
+    //memset(p3_table,0,4096);
+    p4_table[0]=PAGETABLE(p3_table, 0b111);
+    p3_table[0]=PAGETABLE(p2_table, 0b111);
+    // for(size_t i=0;i<512;i++){
+    //     p2_table[i]=(0x200000*i)|0b10000111;
+    // }
 }

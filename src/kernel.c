@@ -15,6 +15,7 @@
 #include "arch/GDT.h"
 
 #include "paging64/paging.h"
+#include "utils/utils.h"
 void Debug();
 void evaluate(char* buffer);
 extern char* cpuid_flags[62];
@@ -25,7 +26,9 @@ void* graphicsStuff(MULTIBOOT_HEADERS headers){
 	unsigned long page=addr/PAGE_WIDTH;
 
 	int flag=0b111;
+	KLOGVALD(p3_table[3]);
 	AllocatePage(page,page*PAGE_WIDTH,flag);
+	KLOGVALD(p3_table[3]);
 	//UnmapPage(0);
 	GraphicsInit(
 			addr,
@@ -63,17 +66,22 @@ void kernel_main(unsigned long multiboot_address,int magic,int cs,unsigned long 
 		}
 	}
 #endif
-	kprintf("%p\n",multiboot_address);
+	KLOGVALD(multiboot_address);
 	MULTIBOOT_HEADERS headers=MultibootProcessHeaders(multiboot_address);
+	KLOGVALD(p3_table[3]);
+
+	// struct multiboot_tag_framebuffer* fb=(struct multiboot_tag_framebuffer*)headers.fb;
+	// unsigned long addr=fb->common.framebuffer_addr;
 
 	//Better Page Allocations
 	AssignMallocMemoryMap(headers.mmap,0x170000);
 	void* fb=graphicsStuff(headers);
 	GDT_LOAD();
-	GDT_FLUSH();
-	printf("HELLO WORLD\n");
+GDT_FLUSH();
 	Paging_SetTables();
     PagingDisable();
     PagingEnable();
+	//printf("HELLO WORLD\n");
     //printf("Hello World\n");
+
 }
